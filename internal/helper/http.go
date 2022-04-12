@@ -96,7 +96,6 @@ func ResolveUrl(url string) (string, bool) {
 
 	// use dscacheutil tool to resolve the dns correctly in darwin
 	// this is because macOS uses a local dns resolver, which is not used by golang's native resolver
-	// our R&D vpn requires this local resolver to resolve crto.in domain correctly
 	urlObj, err := u.Parse(url)
 	if err != nil {
 		log.Debugf("Parsing %s has failed", url)
