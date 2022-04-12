@@ -35,7 +35,7 @@ func generateTestRegistryFile(path string, numOfPkgs int, numOfCmds int) (*cdtRe
 				CmdExecutable:       "#CACHE#/#OS#/#ARCH#/test#EXT#",
 				CmdArguments:        []string{"option1", "option2"},
 				CmdDocFile:          "#CACHE#/doc/index.md",
-				CmdDocLink:          "https://test-cmd.crto.in/doc/",
+				CmdDocLink:          "https://dummy/doc/",
 				CmdValidArgs:        []string{"arg1", "arg2", "arg3"},
 				CmdRequiredFlags:    []string{"moab", "moab-id"},
 				PkgDir:              "",
