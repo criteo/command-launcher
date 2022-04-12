@@ -1,0 +1,45 @@
+[
+    {
+      "name": "ls",
+      "version": "0.0.1",
+      "checksum": "",
+      "startPartition": 0,
+      "endPartition": 9
+    },
+    {
+      "name": "ls",
+      "version": "0.0.2",
+      "checksum": "",
+      "startPartition": 0,
+      "endPartition": 9
+    },
+    {
+      "name": "env",
+      "version": "1.0.0-43736",
+      "checksum": "80e3e1ca43f23f48f571e6eaa8ddfd50bf710f264ed59a50f630a38a4027cf75",
+      "startPartition": 21,
+      "endPartition": 9
+    },
+    {
+      "name": "hotfix",
+      "version": "1.0.0-43596",
+      "checksum": "8bf09482401a24fe6c0d1e004d3ad2131f69512017b0b842406e70a2f28a925f",
+      "startPartition": 0,
+      "endPartition": 9
+    },
+    {
+      "name": "hotfix",
+      "version": "1.0.0-43603",
+      "checksum": "208a9cd329c91e16473eef9b113c26115bac24f254b128a7d84ce3088d2d8027",
+      "startPartition": 0,
+      "endPartition": 9
+    },
+    {
+      "name": "hotfix",
+      "version": "1.0.0-43736",
+      "checksum": "7f9e6dd49eac954f85f8fbebd9c6c4651d5c2409626b2598c3ff99102dd12ec6",
+      "startPartition": 7,
+      "endPartition": 8
+    }
+]
+  

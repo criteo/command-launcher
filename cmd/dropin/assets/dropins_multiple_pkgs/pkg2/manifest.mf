@@ -1,0 +1,23 @@
+{
+  "pkgName": "test-pkg-2",
+  "version": "123",
+  "cmds": [
+    {
+      "name": "wf-2",
+      "type": "group",
+      "group": "",
+      "short": "commands to improve productivity",
+      "long": "",
+      "executable": "#CACHE#/src/wf.sh"
+    },
+    {
+      "name": "debug-cdt-env-2",
+      "type": "executable",
+      "group": "",
+      "short": "print cdt environment variable",
+      "long": "",
+      "executable": "printenv"
+    }
+
+  ]
+}

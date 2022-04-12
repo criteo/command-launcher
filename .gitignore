@@ -1,0 +1,6 @@
+*.code-workspace
+**/.vscode
+dist/
+build/
+.DS_Store
+command-launcher

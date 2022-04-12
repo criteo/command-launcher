@@ -1,0 +1,17 @@
+[
+    {
+      "name": "ls",
+      "version": "0.0.1",
+      "checksum": "",
+      "startPartition": 0,
+      "endPartition": 9
+    },
+    {
+      "name": "ls",
+      "version": "0.0.2",
+      "checksum": "",
+      "startPartition": 0,
+      "endPartition": 9
+    }
+]
+ 

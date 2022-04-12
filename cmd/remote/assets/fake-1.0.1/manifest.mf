@@ -1,0 +1,28 @@
+{
+    "pkgName": "fake",
+    "version": "1.0.0",
+    "cmds": [
+        {
+            "name": "fake",
+            "type": "executable",
+            "group": "fake_group_cmd",
+            "category": "test",
+            "short": "Fake manifest",
+            "long": "Fake manifest",
+            "executable": "fake",
+            "args": [ "A", "B" ],
+            "docFile": "doc/doc.md",
+            "docLink": "https://criteo.com"
+        },
+        {
+            "name": "fake_group_cmd",
+            "type": "group",
+            "group": "",
+            "category": "test",
+            "short": "Fake manifest",
+            "long": "Fake manifest",
+            "docFile": "doc/doc.md",
+            "docLink": "https://criteo.com"
+        }
+    ]
+}
