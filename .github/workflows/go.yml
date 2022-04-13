@@ -6,8 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
-jobs:
+env:
+  CDT_VAULT_SECRET: very_secret
 
+jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
