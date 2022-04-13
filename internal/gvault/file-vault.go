@@ -153,6 +153,13 @@ func (fv *FileVault) encrypt(data []byte) ([]byte, error) {
 }
 
 func readSecret() ([]byte, error) {
+	// first get the secret from environment variable
+	secret := os.Getenv("CDT_VAULT_SECRET")
+	if secret != "" {
+		hash := sha256.Sum256([]byte(secret))
+		return hash[:], nil
+	}
+
 	empty := []byte{}
 	homedir, err := os.UserHomeDir()
 	if err != nil {
@@ -163,13 +170,6 @@ func readSecret() ([]byte, error) {
 	_, err = os.Stat(sshDir)
 	if err != nil {
 		return empty, err
-	}
-
-	// first get the secret from environment variable
-	secret := os.Getenv("CDT_VAULT_SECRET")
-	if secret != "" {
-		hash := sha256.Sum256([]byte(secret))
-		return hash[:], nil
 	}
 
 	// get the secret file from environment variable
