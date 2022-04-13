@@ -88,6 +88,10 @@ func HttpNewRequestWrapper(method, url string, body io.Reader) (*http.Request, e
 }
 
 func ResolveUrl(url string) (string, bool) {
+	// disable mac os dns resolver
+	// TODO: remove this function, when the testing of macosx resolver is done
+	return url, false
+
 	if runtime.GOOS != "darwin" {
 		return url, false
 	}
