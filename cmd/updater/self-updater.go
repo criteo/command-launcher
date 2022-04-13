@@ -68,12 +68,12 @@ func (u *SelfUpdater) Update() {
 	}
 
 	fmt.Printf("update and install the latest version of %s (%s)\n", u.BinaryName, u.latestVersion.Version)
-	cdtDownloadUrl, err := u.latestCdtDownloadUrl()
+	downloadUrl, err := u.latestDownloadUrl()
 	if err != nil {
 		console.Error("update failed: %s\n", err)
 		return
 	}
-	if err = u.doSelfUpdate(cdtDownloadUrl); err != nil {
+	if err = u.doSelfUpdate(downloadUrl); err != nil {
 		console.Error("update failed: %s\n", err)
 	}
 }
@@ -127,7 +127,7 @@ func (u *SelfUpdater) doSelfUpdate(url string) error {
 	return nil
 }
 
-func (u *SelfUpdater) latestCdtDownloadUrl() (string, error) {
+func (u *SelfUpdater) latestDownloadUrl() (string, error) {
 	updateUrl, err := url.Parse(u.SelfUpdateRootUrl)
 	if err != nil {
 		return "", err

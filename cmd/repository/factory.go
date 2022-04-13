@@ -5,7 +5,7 @@ import (
 )
 
 func CreateLocalRepository(repoDirname string) (PackageRepository, error) {
-	repo := newCdtPackageRepository(repoDirname)
+	repo := newdefaultPackageRepository(repoDirname)
 	if err := repo.Load(); err != nil {
 		return nil, err
 	}

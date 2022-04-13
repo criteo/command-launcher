@@ -8,7 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func CdtDir() string {
+func LauncherDir() string {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal(err)
@@ -19,7 +19,7 @@ func CdtDir() string {
 }
 
 func LogsDir() string {
-	return filepath.Join(CdtDir(), "logs")
+	return filepath.Join(LauncherDir(), "logs")
 }
 
 func createLogsDir() error {
@@ -32,12 +32,12 @@ func createLogsDir() error {
 	return nil
 }
 
-func createCdtDir() {
-	err := maybeCreateDir(CdtDir())
+func createLauncherDir() {
+	err := maybeCreateDir(LauncherDir())
 	if err != nil {
-		log.Fatalf("cannot create the CDT folder %s, err=%v", CdtDir(), err)
+		log.Fatalf("cannot create the launcher folder %s, err=%v", LauncherDir(), err)
 	}
-	log.Infof("Create CDT folder: %s", CdtDir())
+	log.Infof("Create Launcher folder: %s", LauncherDir())
 }
 
 func maybeCreateDir(path string) error {

@@ -16,7 +16,7 @@ var (
 	isAnsiSequenceSupported = checkAnsiSequenceSupported()
 )
 
-func cdtProcessName() string {
+func processName() string {
 	if runtime.GOOS == "windows" {
 		return "cdt.exe"
 	}
@@ -24,13 +24,13 @@ func cdtProcessName() string {
 	return "cdt"
 }
 
-func cdtParentName() (string, error) {
+func parentName() (string, error) {
 	parent, err := ps.FindProcess(os.Getppid())
 	if err != nil {
 		return "", err
 	}
 
-	if parent.Executable() == cdtProcessName() {
+	if parent.Executable() == processName() {
 		parent, err = ps.FindProcess(parent.PPid())
 		if err != nil {
 			return "", err
@@ -44,7 +44,7 @@ func checkAnsiSequenceSupported() bool {
 	maybeSupported := !color.NoColor
 	// The Powershell console does not support the escape ANSI chars
 	if runtime.GOOS == "windows" && maybeSupported {
-		parent, err := cdtParentName()
+		parent, err := parentName()
 		if err != nil {
 			maybeSupported = false
 		} else {

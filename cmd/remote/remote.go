@@ -35,8 +35,8 @@ func (t *PackageInfo) UnmarshalJSON(data []byte) error {
 type PackagesByVersion []PackageInfo
 
 func (a PackagesByVersion) Less(i, j int) bool {
-	var l cdtVersion
-	var r cdtVersion
+	var l defaultVersion
+	var r defaultVersion
 
 	err := ParseVersion(a[i].Version, &l)
 	if err != nil { // wrong format version is considered smaller

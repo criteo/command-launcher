@@ -13,18 +13,18 @@ const (
 	FILE_REGISTRY = "registry.json"
 )
 
-type cdtPackageRepository struct {
+type defaultPackageRepository struct {
 	RepoDir  string
-	registry *cdtRegistry
+	registry *defaultRegistry
 }
 
-func newCdtPackageRepository(repoDirname string) *cdtPackageRepository {
-	return &cdtPackageRepository{
+func newdefaultPackageRepository(repoDirname string) *defaultPackageRepository {
+	return &defaultPackageRepository{
 		RepoDir: repoDirname,
 	}
 }
 
-func (repo *cdtPackageRepository) Load() error {
+func (repo *defaultPackageRepository) Load() error {
 	_, err := os.Stat(repo.RepoDir)
 	if os.IsNotExist(err) {
 		err := os.MkdirAll(repo.RepoDir, 0755)
@@ -45,7 +45,7 @@ func (repo *cdtPackageRepository) Load() error {
 	return nil
 }
 
-func (repo *cdtPackageRepository) Install(pkg command.Package) error {
+func (repo *defaultPackageRepository) Install(pkg command.Package) error {
 	pkgDir := filepath.Join(repo.RepoDir, pkg.Name())
 	err := os.MkdirAll(pkgDir, 0755)
 	if err != nil {
@@ -57,7 +57,7 @@ func (repo *cdtPackageRepository) Install(pkg command.Package) error {
 		return fmt.Errorf("cannot install the command package %s: %v", pkg.Name(), err)
 	}
 
-	err = repo.registry.Add(NewCdtPackage(pkg, pkgDir))
+	err = repo.registry.Add(NewPackage(pkg, pkgDir))
 	if err != nil {
 		return fmt.Errorf("cannot add the command package %s: %v", pkg.Name(), err)
 	}
@@ -70,7 +70,7 @@ func (repo *cdtPackageRepository) Install(pkg command.Package) error {
 	return nil
 }
 
-func (repo *cdtPackageRepository) Uninstall(name string) error {
+func (repo *defaultPackageRepository) Uninstall(name string) error {
 	err := repo.registry.Remove(name)
 	if err != nil {
 		return fmt.Errorf("cannot remove the command %s: %v", name, err)
@@ -89,7 +89,7 @@ func (repo *cdtPackageRepository) Uninstall(name string) error {
 	return nil
 }
 
-func (repo *cdtPackageRepository) Update(pkg command.Package) error {
+func (repo *defaultPackageRepository) Update(pkg command.Package) error {
 	err := repo.Uninstall(pkg.Name())
 	if err != nil {
 		return err
@@ -98,27 +98,27 @@ func (repo *cdtPackageRepository) Update(pkg command.Package) error {
 	return repo.Install(pkg)
 }
 
-func (repo *cdtPackageRepository) InstalledPackages() []command.PackageManifest {
+func (repo *defaultPackageRepository) InstalledPackages() []command.PackageManifest {
 	return repo.registry.AllPackages()
 }
 
-func (repo *cdtPackageRepository) InstalledCommands() []command.Command {
+func (repo *defaultPackageRepository) InstalledCommands() []command.Command {
 	return repo.registry.AllCommands()
 }
 
-func (repo *cdtPackageRepository) InstalledGroupCommands() []command.Command {
+func (repo *defaultPackageRepository) InstalledGroupCommands() []command.Command {
 	return repo.registry.GroupCommands()
 }
 
-func (repo *cdtPackageRepository) InstalledExecutableCommands() []command.Command {
+func (repo *defaultPackageRepository) InstalledExecutableCommands() []command.Command {
 	return repo.registry.ExecutableCommands()
 }
 
-func (repo *cdtPackageRepository) Package(name string) (command.PackageManifest, error) {
+func (repo *defaultPackageRepository) Package(name string) (command.PackageManifest, error) {
 	return repo.registry.Package(name)
 }
 
-func (repo *cdtPackageRepository) Command(group string, name string) (command.Command, error) {
+func (repo *defaultPackageRepository) Command(group string, name string) (command.Command, error) {
 	cmd, err := repo.registry.Command(group, name)
 	if err != nil {
 		return nil, fmt.Errorf("cannot find the command %s", name)

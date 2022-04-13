@@ -11,21 +11,21 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func generateTestRegistryFile(path string, numOfPkgs int, numOfCmds int) (*cdtRegistry, error) {
+func generateTestRegistryFile(path string, numOfPkgs int, numOfCmds int) (*defaultRegistry, error) {
 	reg, err := LoadRegistry(path)
 	if err != nil {
 		return nil, err
 	}
 
 	for i := 0; i < numOfPkgs; i++ {
-		pkg := cdtPackage{
+		pkg := defaultPackage{
 			PkgName:     fmt.Sprintf("test-%d", i),
 			PkgVersion:  "1.0.0",
-			PkgCommands: []*command.CdtCommand{},
+			PkgCommands: []*command.DefaultCommand{},
 		}
 
 		for j := 0; j < numOfCmds; j++ {
-			cmd := command.CdtCommand{
+			cmd := command.DefaultCommand{
 				CmdName:             fmt.Sprintf("test-%d-%d", i, j),
 				CmdType:             "executable",
 				CmdGroup:            "test-group",
