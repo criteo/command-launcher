@@ -101,7 +101,7 @@ my-package.pkg
 ├─linux/
 ├─windows/
 ├─macosx/
-└─manifest.md
+└─manifest.mf
 ```
 
 ### Package manifest file, manifest.mf
