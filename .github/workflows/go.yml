@@ -20,6 +20,7 @@ jobs:
         include:
           - os: macos-latest
             arch: arm64
+            cgo: 1
     steps:
     - uses: actions/checkout@v3
 
@@ -32,7 +33,7 @@ jobs:
       env:
         GOARCH: ${{matrix.arch}}
         CGO_ENABLED: ${{matrix.cgo}}
-      run: go build -v ./...
+      run: go build -o cdt -ldflags='-X main.version=dev -X main.binaryName=cdt'
 
     - name: Test
       run: go test -v ./...
