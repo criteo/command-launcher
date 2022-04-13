@@ -21,23 +21,23 @@ func IsPackageNotFound(err error) bool {
 	return strings.HasPrefix(err.Error(), ErrMsg_PackageNotFound)
 }
 
-type cdtRemoteRepository struct {
+type defaultRemoteRepository struct {
 	repoBaseUrl    string
 	PackagesByName map[string]PackagesByVersion
 }
 
-func newCdtRemoteRepository(baseUrl string) *cdtRemoteRepository {
-	return &cdtRemoteRepository{
+func newRemoteRepository(baseUrl string) *defaultRemoteRepository {
+	return &defaultRemoteRepository{
 		repoBaseUrl:    baseUrl,
 		PackagesByName: make(map[string]PackagesByVersion),
 	}
 }
 
-func (remote *cdtRemoteRepository) Fetch() error {
+func (remote *defaultRemoteRepository) Fetch() error {
 	return remote.load()
 }
 
-func (remote *cdtRemoteRepository) All() ([]PackageInfo, error) {
+func (remote *defaultRemoteRepository) All() ([]PackageInfo, error) {
 	packages := make([]PackageInfo, 0)
 	if err := remote.load(); err != nil {
 		return packages, err
@@ -48,7 +48,7 @@ func (remote *cdtRemoteRepository) All() ([]PackageInfo, error) {
 	return packages, nil
 }
 
-func (remote *cdtRemoteRepository) PackageNames() ([]string, error) {
+func (remote *defaultRemoteRepository) PackageNames() ([]string, error) {
 	packages := make([]string, 0)
 	if err := remote.load(); err != nil {
 		return packages, err
@@ -59,7 +59,7 @@ func (remote *cdtRemoteRepository) PackageNames() ([]string, error) {
 	return packages, nil
 }
 
-func (remote *cdtRemoteRepository) Versions(pkgName string) ([]string, error) {
+func (remote *defaultRemoteRepository) Versions(pkgName string) ([]string, error) {
 	results := make([]string, 0)
 	if err := remote.load(); err != nil {
 		return results, err
@@ -67,7 +67,7 @@ func (remote *cdtRemoteRepository) Versions(pkgName string) ([]string, error) {
 	pkgInfos, exists := remote.PackagesByName[pkgName]
 	if exists {
 		for _, info := range pkgInfos {
-			var version cdtVersion
+			var version defaultVersion
 			err := ParseVersion(info.Version, &version)
 			if err == nil && info.Name == pkgName {
 				results = append(results, version.String())
@@ -78,7 +78,7 @@ func (remote *cdtRemoteRepository) Versions(pkgName string) ([]string, error) {
 	return results, nil
 }
 
-func (remote *cdtRemoteRepository) PackageInfosByCmdName(pkgName string) ([]PackageInfo, error) {
+func (remote *defaultRemoteRepository) PackageInfosByCmdName(pkgName string) ([]PackageInfo, error) {
 	if err := remote.load(); err != nil {
 		return []PackageInfo{}, err
 	}
@@ -89,13 +89,13 @@ func (remote *cdtRemoteRepository) PackageInfosByCmdName(pkgName string) ([]Pack
 	return make(PackagesByVersion, 0), nil
 }
 
-func (remote *cdtRemoteRepository) LatestVersion(pkgName string) (string, error) {
+func (remote *defaultRemoteRepository) LatestVersion(pkgName string) (string, error) {
 	return remote.QueryLatestVersion(pkgName, func(pkgInfo *PackageInfo) bool {
 		return true
 	})
 }
 
-func (remote *cdtRemoteRepository) QueryLatestVersion(pkgName string, filter PackageInfoFilterFunc) (string, error) {
+func (remote *defaultRemoteRepository) QueryLatestVersion(pkgName string, filter PackageInfoFilterFunc) (string, error) {
 	pkgInfo, err := remote.QueryLatestPackageInfo(pkgName, filter)
 	if err != nil {
 		return "", err
@@ -106,13 +106,13 @@ func (remote *cdtRemoteRepository) QueryLatestVersion(pkgName string, filter Pac
 	return pkgInfo.Version, nil
 }
 
-func (remote *cdtRemoteRepository) LatestPackageInfo(pkgName string) (*PackageInfo, error) {
+func (remote *defaultRemoteRepository) LatestPackageInfo(pkgName string) (*PackageInfo, error) {
 	return remote.QueryLatestPackageInfo(pkgName, func(pkgInfo *PackageInfo) bool {
 		return true
 	})
 }
 
-func (remote *cdtRemoteRepository) QueryLatestPackageInfo(pkgName string, filter PackageInfoFilterFunc) (*PackageInfo, error) {
+func (remote *defaultRemoteRepository) QueryLatestPackageInfo(pkgName string, filter PackageInfoFilterFunc) (*PackageInfo, error) {
 	pkgInfos, err := remote.PackageInfosByCmdName(pkgName)
 	if err != nil {
 		return nil, err
@@ -128,7 +128,7 @@ func (remote *cdtRemoteRepository) QueryLatestPackageInfo(pkgName string, filter
 	return nil, fmt.Errorf("%s in remote repository: %s. The package exists, but no version match the query filter", ErrMsg_PackageNotFound, pkgName)
 }
 
-func (remote *cdtRemoteRepository) Package(pkgName string, pkgVersion string) (command.Package, error) {
+func (remote *defaultRemoteRepository) Package(pkgName string, pkgVersion string) (command.Package, error) {
 	tmpDir, err := os.MkdirTemp("", "package-download-*")
 	if err != nil {
 		return nil, fmt.Errorf("cannot create temporary dir (%v)", err)
@@ -150,15 +150,15 @@ func (remote *cdtRemoteRepository) Package(pkgName string, pkgVersion string) (c
 	return pkg, nil
 }
 
-func (remote *cdtRemoteRepository) url(name string, version string) string {
+func (remote *defaultRemoteRepository) url(name string, version string) string {
 	return fmt.Sprintf("%s/%s", remote.repoBaseUrl, remote.pkgFilename(name, version))
 }
 
-func (remote *cdtRemoteRepository) pkgFilename(name string, version string) string {
+func (remote *defaultRemoteRepository) pkgFilename(name string, version string) string {
 	return fmt.Sprintf("%s-%s.pkg", name, version)
 }
 
-func (remote *cdtRemoteRepository) load() error {
+func (remote *defaultRemoteRepository) load() error {
 	if !remote.isLoaded() {
 		body, err := helper.LoadFile(fmt.Sprintf("%s/index.json", remote.repoBaseUrl))
 		if err != nil {
@@ -194,6 +194,6 @@ func (remote *cdtRemoteRepository) load() error {
 	return nil
 }
 
-func (remote *cdtRemoteRepository) isLoaded() bool {
+func (remote *defaultRemoteRepository) isLoaded() bool {
 	return len(remote.PackagesByName) > 0
 }

@@ -13,7 +13,7 @@ const (
 	graphitePort = 3341
 )
 
-type cdtMetrics struct {
+type defaultMetrics struct {
 	graphiteHost   string
 	CmdName        string
 	SubCmdName     string
@@ -22,12 +22,12 @@ type cdtMetrics struct {
 }
 
 func NewMetricsCollector(host string) Metrics {
-	return &cdtMetrics{
+	return &defaultMetrics{
 		graphiteHost: host,
 	}
 }
 
-func (metrics *cdtMetrics) Collect(uid uint8, cmd string, subCmd string) error {
+func (metrics *defaultMetrics) Collect(uid uint8, cmd string, subCmd string) error {
 	if cmd == "" {
 		return fmt.Errorf("unknown command")
 	}
@@ -40,7 +40,7 @@ func (metrics *cdtMetrics) Collect(uid uint8, cmd string, subCmd string) error {
 	return nil
 }
 
-func (metrics *cdtMetrics) Send(cmdError error) error {
+func (metrics *defaultMetrics) Send(cmdError error) error {
 	duration := time.Now().UnixNano() - metrics.StartTimestamp.UnixNano()
 
 	resolvedHost, _ := helper.DarwinDnsResolve(metrics.graphiteHost)
@@ -65,6 +65,6 @@ func (metrics *cdtMetrics) Send(cmdError error) error {
 	return err
 }
 
-func (metrics *cdtMetrics) prefix() string {
+func (metrics *defaultMetrics) prefix() string {
 	return fmt.Sprintf("devtools.cdt.%s.%s.%d", metrics.CmdName, metrics.SubCmdName, metrics.UserPartition)
 }

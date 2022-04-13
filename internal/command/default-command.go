@@ -20,7 +20,7 @@ const (
 )
 
 /*
-CdtCommand implements the command.Command interface
+DefaultCommand implements the command.Command interface
 
 
 There are two types of cdt command:
@@ -44,7 +44,7 @@ The group field of group command is ignored.
 An additional "category" field is reserved in case we have too much first level commands,
 we can use it to category them in the cdt help output.
 */
-type CdtCommand struct {
+type DefaultCommand struct {
 	CmdName             string   `json:"name"`
 	CmdCategory         string   `json:"category"`
 	CmdType             string   `json:"type"`
@@ -63,7 +63,7 @@ type CdtCommand struct {
 	PkgDir string `json:"pkgDir"`
 }
 
-func (cmd *CdtCommand) Execute(envVars []string, args ...string) (int, error) {
+func (cmd *DefaultCommand) Execute(envVars []string, args ...string) (int, error) {
 	arguments := append(cmd.CmdArguments, args...)
 	cmd.interpolateArgs(&arguments)
 	command := cmd.interpolateCmd()
@@ -87,15 +87,15 @@ func (cmd *CdtCommand) Execute(envVars []string, args ...string) (int, error) {
 	return 0, nil
 }
 
-func (cmd *CdtCommand) ExecuteValidArgsCmd(envVars []string, args ...string) (int, string, error) {
+func (cmd *DefaultCommand) ExecuteValidArgsCmd(envVars []string, args ...string) (int, string, error) {
 	return cmd.executeArrayCmd(envVars, cmd.CmdValidArgsCmd, args...)
 }
 
-func (cmd *CdtCommand) ExecuteFlagValuesCmd(envVars []string, args ...string) (int, string, error) {
+func (cmd *DefaultCommand) ExecuteFlagValuesCmd(envVars []string, args ...string) (int, string, error) {
 	return cmd.executeArrayCmd(envVars, cmd.CmdFlagValuesCmd, args...)
 }
 
-func (cmd *CdtCommand) executeArrayCmd(envVars []string, cmdArray []string, args ...string) (int, string, error) {
+func (cmd *DefaultCommand) executeArrayCmd(envVars []string, cmdArray []string, args ...string) (int, string, error) {
 	wd, err := os.Getwd()
 	if err != nil {
 		return 1, "", err
@@ -120,11 +120,11 @@ func (cmd *CdtCommand) executeArrayCmd(envVars []string, cmdArray []string, args
 	return helper.CallExternalWithOutput(envVars, wd, cmd.interpolate(validCmd), append(validArgs, args...)...)
 }
 
-func (cmd *CdtCommand) Name() string {
+func (cmd *DefaultCommand) Name() string {
 	return cmd.CmdName
 }
 
-func (cmd *CdtCommand) Type() string {
+func (cmd *DefaultCommand) Type() string {
 	if cmd.CmdType != "group" && cmd.CmdType != "executable" {
 		// for invalid cmd type, set it to group to make it do nothing
 		return "group"
@@ -132,68 +132,68 @@ func (cmd *CdtCommand) Type() string {
 	return cmd.CmdType
 }
 
-func (cmd *CdtCommand) Category() string {
+func (cmd *DefaultCommand) Category() string {
 	return cmd.CmdCategory
 }
 
-func (cmd *CdtCommand) Group() string {
+func (cmd *DefaultCommand) Group() string {
 	return cmd.CmdGroup
 }
 
-func (cmd *CdtCommand) LongDescription() string {
+func (cmd *DefaultCommand) LongDescription() string {
 	return cmd.CmdLongDescription
 }
 
-func (cmd *CdtCommand) ShortDescription() string {
+func (cmd *DefaultCommand) ShortDescription() string {
 	return cmd.CmdShortDescription
 }
 
-func (cmd *CdtCommand) Executable() string {
+func (cmd *DefaultCommand) Executable() string {
 	return cmd.CmdExecutable
 }
 
-func (cmd *CdtCommand) Arguments() []string {
+func (cmd *DefaultCommand) Arguments() []string {
 	return cmd.CmdArguments
 }
 
-func (cmd *CdtCommand) DocFile() string {
+func (cmd *DefaultCommand) DocFile() string {
 	return cmd.interpolate(cmd.CmdDocFile)
 }
 
-func (cmd *CdtCommand) DocLink() string {
+func (cmd *DefaultCommand) DocLink() string {
 	return cmd.CmdDocLink
 }
 
-func (cmd *CdtCommand) ValidArgs() []string {
+func (cmd *DefaultCommand) ValidArgs() []string {
 	if cmd.CmdValidArgs != nil && len(cmd.CmdValidArgs) > 0 {
 		return cmd.CmdValidArgs
 	}
 	return []string{}
 }
 
-func (cmd *CdtCommand) ValidArgsCmd() []string {
+func (cmd *DefaultCommand) ValidArgsCmd() []string {
 	if cmd.CmdValidArgsCmd != nil && len(cmd.CmdValidArgsCmd) > 0 {
 		return cmd.CmdValidArgsCmd
 	}
 	return []string{}
 }
 
-func (cmd *CdtCommand) RequiredFlags() []string {
+func (cmd *DefaultCommand) RequiredFlags() []string {
 	if cmd.CmdRequiredFlags != nil && len(cmd.CmdRequiredFlags) > 0 {
 		return cmd.CmdRequiredFlags
 	}
 	return []string{}
 }
 
-func (cmd *CdtCommand) FlagValuesCmd() []string {
+func (cmd *DefaultCommand) FlagValuesCmd() []string {
 	if cmd.CmdFlagValuesCmd != nil && len(cmd.CmdFlagValuesCmd) > 0 {
 		return cmd.CmdFlagValuesCmd
 	}
 	return []string{}
 }
 
-func (cmd *CdtCommand) Clone() *CdtCommand {
-	return &CdtCommand{
+func (cmd *DefaultCommand) Clone() *DefaultCommand {
+	return &DefaultCommand{
 		CmdName:             cmd.CmdName,
 		CmdCategory:         cmd.CmdCategory,
 		CmdType:             cmd.CmdType,
@@ -212,14 +212,14 @@ func (cmd *CdtCommand) Clone() *CdtCommand {
 	}
 }
 
-func (cmd *CdtCommand) copyArray(src []string) []string {
+func (cmd *DefaultCommand) copyArray(src []string) []string {
 	if len(src) == 0 {
 		return []string{}
 	}
 	return append([]string{}, src...)
 }
 
-func (cmd *CdtCommand) interpolateArgs(values *[]string) {
+func (cmd *DefaultCommand) interpolateArgs(values *[]string) {
 	for i := range *values {
 		(*values)[i] = strings.ReplaceAll((*values)[i], CACHE_DIR_PATTERN, cmd.PkgDir)
 		(*values)[i] = strings.ReplaceAll((*values)[i], OS_PATTERN, runtime.GOOS)
@@ -229,25 +229,25 @@ func (cmd *CdtCommand) interpolateArgs(values *[]string) {
 	}
 }
 
-func (cmd *CdtCommand) interpolateCmd() string {
+func (cmd *DefaultCommand) interpolateCmd() string {
 	return cmd.interpolate(cmd.CmdExecutable)
 }
 
-func (cmd *CdtCommand) binary() string {
+func (cmd *DefaultCommand) binary() string {
 	if runtime.GOOS == "windows" {
 		return fmt.Sprintf("%s.exe", cmd.CmdName)
 	}
 	return cmd.CmdName
 }
 
-func (cmd *CdtCommand) extension() string {
+func (cmd *DefaultCommand) extension() string {
 	if runtime.GOOS == "windows" {
 		return ".exe"
 	}
 	return ""
 }
 
-func (cmd *CdtCommand) interpolate(text string) string {
+func (cmd *DefaultCommand) interpolate(text string) string {
 	output := strings.ReplaceAll(text, CACHE_DIR_PATTERN, cmd.PkgDir)
 	output = strings.ReplaceAll(output, OS_PATTERN, runtime.GOOS)
 	output = strings.ReplaceAll(output, ARCH_PATTERN, runtime.GOARCH)

@@ -6,16 +6,16 @@ import (
 	"strconv"
 )
 
-// cdtVersion presents a version in format:
+// defaultVersion presents a version in format:
 // Major.Minor.Patch-Tag
-type cdtVersion struct {
+type defaultVersion struct {
 	Major int
 	Minor int
 	Patch int
 	Tag   string
 }
 
-type cdtVersionList []cdtVersion
+type defaultVersionList []defaultVersion
 
 func toInt(str string) int {
 	val, err := strconv.Atoi(str)
@@ -26,11 +26,11 @@ func toInt(str string) int {
 	return val
 }
 
-func ParseVersion(versionAsString string, version *cdtVersion) error {
+func ParseVersion(versionAsString string, version *defaultVersion) error {
 	t := regexp.MustCompile(`([0-9]+)\.?([0-9]+)?\.?([0-9]+)?([-_]{1}([a-zA-Z0-9]+))?`)
 	if t.MatchString(versionAsString) {
 		fields := t.FindStringSubmatch(versionAsString)
-		*version = cdtVersion{
+		*version = defaultVersion{
 			Major: toInt(fields[1]),
 			Minor: toInt(fields[2]),
 			Patch: toInt(fields[3]),
@@ -42,7 +42,7 @@ func ParseVersion(versionAsString string, version *cdtVersion) error {
 	return fmt.Errorf("version does not match with pattern (major.minor.path-tag)")
 }
 
-func (version cdtVersion) String() string {
+func (version defaultVersion) String() string {
 	if version.Tag != "" {
 		return fmt.Sprintf("%d.%d.%d-%s", version.Major, version.Minor, version.Patch, version.Tag)
 	}
@@ -50,7 +50,7 @@ func (version cdtVersion) String() string {
 	return fmt.Sprintf("%d.%d.%d", version.Major, version.Minor, version.Patch)
 }
 
-func Less(l cdtVersion, r cdtVersion) bool {
+func Less(l defaultVersion, r defaultVersion) bool {
 	if l.Major < r.Major {
 		return true
 	} else if l.Minor < r.Minor {
@@ -63,8 +63,8 @@ func Less(l cdtVersion, r cdtVersion) bool {
 }
 
 func IsVersionSmaller(v1 string, v2 string) bool {
-	var l cdtVersion
-	var r cdtVersion
+	var l defaultVersion
+	var r defaultVersion
 
 	err := ParseVersion(v1, &l)
 	if err != nil { // wrong format version is considered smaller
@@ -78,14 +78,14 @@ func IsVersionSmaller(v1 string, v2 string) bool {
 	return Less(l, r)
 }
 
-func (lst cdtVersionList) Len() int {
+func (lst defaultVersionList) Len() int {
 	return len(lst)
 }
 
-func (lst cdtVersionList) Less(i, j int) bool {
+func (lst defaultVersionList) Less(i, j int) bool {
 	return Less(lst[i], lst[j])
 }
 
-func (lst cdtVersionList) Swap(i, j int) {
+func (lst defaultVersionList) Swap(i, j int) {
 	lst[i], lst[j] = lst[j], lst[i]
 }
