@@ -41,7 +41,9 @@ var (
 	BuildVersion string
 	AppName      string
 	LongAppName  string
-	rootCtxt     = rootContext{}
+	rootCtxt     = rootContext{
+		appCtx: ctx.InitContext(defaultAppName()),
+	}
 
 	rootCmd = &cobra.Command{
 		Use:   AppName,
@@ -64,8 +66,16 @@ Example:
 	}
 )
 
+// Use for the unit tests
+func defaultAppName() string {
+	if AppName != "" {
+		return AppName
+	}
+
+	return "test"
+}
+
 func init() {
-	rootCtxt.appCtx = ctx.InitContext(AppName)
 	log.SetLevel(log.FatalLevel)
 	config.LoadConfig()
 	initUser()
@@ -414,6 +424,7 @@ func executeCommand(group, name string, args []string) error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -430,6 +441,7 @@ func executeValidArgsOfCommand(group, name string, args []string) (string, error
 	if err != nil {
 		return "", err
 	}
+
 	return output, nil
 }
 
@@ -446,6 +458,7 @@ func executeFlagValuesOfCommand(group, name string, args []string) (string, erro
 	if err != nil {
 		return "", err
 	}
+
 	return output, nil
 }
 
@@ -461,6 +474,7 @@ func parseFlagDefinition(line string) (string, string, string) {
 		short = strings.TrimSpace(flagParts[1])
 		description = strings.TrimSpace(flagParts[2])
 	}
+
 	return name, short, description
 }
 
