@@ -35,7 +35,7 @@ func LoadConfig() {
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
 	} else {
-		viper.AddConfigPath(CdtDir())
+		viper.AddConfigPath(AppDir())
 		viper.SetConfigType("json")
 		viper.SetConfigName("config")
 	}
@@ -61,8 +61,8 @@ func SetDefaultConfig() {
 	viper.SetDefault(SELF_UPDATE_BASE_URL_KEY, "https://dummy/")
 	viper.SetDefault(COMMAND_REPOSITORY_BASE_URL_KEY, "https://dummy/repos")
 
-	viper.SetDefault(DROPIN_FOLDER_KEY, filepath.Join(CdtDir(), "dropins"))
-	viper.SetDefault(LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY, filepath.Join(CdtDir(), "current"))
+	viper.SetDefault(DROPIN_FOLDER_KEY, filepath.Join(AppDir(), "dropins"))
+	viper.SetDefault(LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY, filepath.Join(AppDir(), "current"))
 
 	viper.SetDefault(USAGE_METRICS_ENABLED_KEY, true)
 
@@ -72,7 +72,7 @@ func SetDefaultConfig() {
 
 func initDefaultConfig() {
 	log.Info("Create default config file")
-	createCdtDir()
+	createAppDir()
 	if err := viper.SafeWriteConfig(); err != nil {
 		log.Error("cannot write the default configuration: ", err)
 	}

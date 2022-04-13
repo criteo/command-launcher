@@ -13,6 +13,7 @@ import (
 	"github.com/criteo/command-launcher/cmd/user"
 	"github.com/criteo/command-launcher/internal/command"
 	"github.com/criteo/command-launcher/internal/config"
+	ctx "github.com/criteo/command-launcher/internal/context"
 	"github.com/criteo/command-launcher/internal/helper"
 	"github.com/criteo/command-launcher/internal/metrics"
 
@@ -27,6 +28,7 @@ const (
 )
 
 type rootContext struct {
+	appCtx      ctx.LauncherContext
 	localRepo   repository.PackageRepository
 	dropinRepo  dropin.DropinRepository
 	selfUpdater updater.SelfUpdater
@@ -35,26 +37,23 @@ type rootContext struct {
 	metrics     metrics.Metrics
 }
 
-const (
-	BINARY_NAME = "cdt"
-)
-
 var (
-	BuildNum string
-	rootCtxt = rootContext{}
+	BuildVersion string
+	AppName      string
+	LongAppName  string
+	rootCtxt     = rootContext{}
 
 	rootCmd = &cobra.Command{
-		Use:   BINARY_NAME,
-		Short: "Criteo Dev Toolkit - A command launcher 🚀 made with <3",
-		Long: `
-Criteo Dev Toolkit - A command launcher 🚀 made with <3
+		Use:   AppName,
+		Short: fmt.Sprintf("%s - A command launcher 🚀 made with <3", LongAppName),
+		Long: fmt.Sprintf(`
+%s - A command launcher 🚀 made with <3
 
 Happy Coding!
 
 Example:
-  cdt hotfix
-  cdt --help
-`,
+  %s --help
+`, LongAppName, AppName),
 		PersistentPreRun: preRun,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
@@ -66,6 +65,7 @@ Example:
 )
 
 func init() {
+	rootCtxt.appCtx = ctx.InitContext(AppName)
 	log.SetLevel(log.FatalLevel)
 	config.LoadConfig()
 	initUser()
@@ -113,7 +113,7 @@ func selfUpdateEnabled(cmd *cobra.Command, args []string) bool {
 	}
 
 	cmdPath := cmd.CommandPath()
-	cmdPath = strings.TrimSpace(strings.TrimPrefix(cmdPath, BINARY_NAME))
+	cmdPath = strings.TrimSpace(strings.TrimPrefix(cmdPath, AppName))
 	// exclude commands for update check
 	// for example version command, you don't want to check new update when requesting current version
 	for _, w := range []string{"version", "config", "completion", "help", "__complete"} {
@@ -126,7 +126,7 @@ func selfUpdateEnabled(cmd *cobra.Command, args []string) bool {
 
 func cmdUpdateEnabled(cmd *cobra.Command, args []string) bool {
 	cmdPath := cmd.CommandPath()
-	cmdPath = strings.TrimSpace(strings.TrimPrefix(cmdPath, BINARY_NAME))
+	cmdPath = strings.TrimSpace(strings.TrimPrefix(cmdPath, AppName))
 	for _, w := range []string{"version", "config", "completion", "help", "__complete"} {
 		if strings.HasPrefix(cmdPath, w) {
 			return false
@@ -140,7 +140,7 @@ func metricsEnabled(cmd *cobra.Command, args []string) bool {
 		return false
 	}
 	cmdPath := cmd.CommandPath()
-	cmdPath = strings.TrimSpace(strings.TrimPrefix(cmdPath, BINARY_NAME))
+	cmdPath = strings.TrimSpace(strings.TrimPrefix(cmdPath, AppName))
 	for _, w := range []string{"version", "config", "completion", "help", "__complete"} {
 		if strings.HasPrefix(cmdPath, w) {
 			return false
@@ -160,11 +160,11 @@ func initUser() {
 
 func initSelfUpdater() {
 	rootCtxt.selfUpdater = updater.SelfUpdater{
-		BinaryName:        BINARY_NAME,
+		BinaryName:        AppName,
 		LatestVersionUrl:  viper.GetString(config.SELF_UPDATE_LATEST_VERSION_URL_KEY),
 		SelfUpdateRootUrl: viper.GetString(config.SELF_UPDATE_BASE_URL_KEY),
 		User:              rootCtxt.user,
-		CurrentVersion:    BuildNum,
+		CurrentVersion:    BuildVersion,
 		Timeout:           viper.GetDuration(config.SELF_UPDATE_TIMEOUT_KEY),
 	}
 }
@@ -408,7 +408,7 @@ func executeCdtCommand(group, name string, args []string) error {
 	if iCmd.Executable() == "" {
 		return errors.New(EXECUTABLE_NOT_DEFINED)
 	}
-	secrets := cdtSecrets()
+	secrets := secrets()
 	_, err = iCmd.Execute(secrets, args...)
 	if err != nil {
 		return err
@@ -422,7 +422,7 @@ func executeValidArgsOfCdtCommand(group, name string, args []string) (string, er
 	if err != nil {
 		return "", err
 	}
-	secrets := cdtSecrets()
+	secrets := secrets()
 	_, output, err := iCmd.ExecuteValidArgsCmd(secrets, args...)
 	if err != nil {
 		return "", err
@@ -436,7 +436,7 @@ func executeFlagValuesOfCdtCommand(group, name string, args []string) (string, e
 	if err != nil {
 		return "", err
 	}
-	secrets := cdtSecrets()
+	secrets := secrets()
 	_, output, err := iCmd.ExecuteFlagValuesCmd(secrets, args...)
 	if err != nil {
 		return "", err
@@ -459,31 +459,32 @@ func parseFlagDefinition(line string) (string, string, string) {
 	return name, short, description
 }
 
-func cdtSecrets() []string {
-	cdtVars := []string{}
+func secrets() []string {
+	vars := []string{}
 	// user credential
-	username, err := helper.GetSecret("cdt-username")
+	username, err := helper.GetUsername()
 	if err != nil {
 		username = ""
 	}
-	password, err := helper.GetSecret("cdt-password")
+	password, err := helper.GetPassword()
 	if err != nil {
 		password = ""
 	}
 	if username != "" {
-		cdtVars = append(cdtVars, fmt.Sprintf("CDT_USERNAME=%s", username))
+		vars = append(vars, fmt.Sprintf("%s=%s", rootCtxt.appCtx.UsernameVarEnv(), username))
 	}
 	if password != "" {
-		cdtVars = append(cdtVars, fmt.Sprintf("CDT_PASSWORD=%s", password))
+		vars = append(vars, fmt.Sprintf("%s=%s", rootCtxt.appCtx.PasswordVarEnv(), password))
 	}
 	// append debug flags from configuration
-	debugFlags := os.Getenv("CDT_DEBUG_FLAGS")
-	cdtVars = append(cdtVars, fmt.Sprintf("CDT_DEBUG_FLAGS=%s,%s",
+	debugFlags := os.Getenv(rootCtxt.appCtx.DebugFlagsVarEnv())
+	vars = append(vars, fmt.Sprintf("%s=%s,%s",
+		rootCtxt.appCtx.DebugFlagsVarEnv(),
 		debugFlags,
 		viper.GetString(config.DEBUG_FLAGS_KEY),
 	))
 
-	return cdtVars
+	return vars
 }
 
 // We have to add the ctrl+C

@@ -18,15 +18,15 @@ func init() {
 var configCmd = &cobra.Command{
 	Use:   "config",
 	Short: "Manage configurations",
-	Long: `Manage the command launcher configurations
+	Long: fmt.Sprintf(`Manage the command launcher configurations
 
 Example:
   get configuration
-    cdt config [key]
+    %s config [key]
 
   set configuration
-    cdt config [key] [value]
-`,
+    %s config [key] [value]
+`, rootCmd.Use, rootCmd.Use),
 	Run: func(cmd *cobra.Command, args []string) {
 		// list all configs
 		if len(args) == 0 {
