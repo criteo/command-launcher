@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCdtCommandValidArgs(t *testing.T) {
-	cdtCommand := CdtCommand{
+func TestCommandValidArgs(t *testing.T) {
+	cmd := DefaultCommand{
 		CmdName:             "test",
 		CmdCategory:         "",
 		CmdType:             "executable",
@@ -25,21 +25,21 @@ func TestCdtCommandValidArgs(t *testing.T) {
 		PkgDir:              "/tmp/test/root",
 	}
 
-	validArgs := cdtCommand.ValidArgs()
+	validArgs := cmd.ValidArgs()
 
 	assert.Equal(t, 2, len(validArgs))
 	assert.Equal(t, "args1", validArgs[0])
 	assert.Equal(t, "args2", validArgs[1])
 
-	validArgsCmd := cdtCommand.ValidArgsCmd()
+	validArgsCmd := cmd.ValidArgsCmd()
 	assert.Equal(t, 0, len(validArgsCmd))
 
-	flagValuesCmd := cdtCommand.FlagValuesCmd()
+	flagValuesCmd := cmd.FlagValuesCmd()
 	assert.Equal(t, 0, len(flagValuesCmd))
 }
 
-func TestCdtCommandValidArgsCmd(t *testing.T) {
-	cdtCommand := CdtCommand{
+func TestCommandValidArgsCmd(t *testing.T) {
+	cmd := DefaultCommand{
 		CmdName:             "test",
 		CmdCategory:         "",
 		CmdType:             "executable",
@@ -57,26 +57,26 @@ func TestCdtCommandValidArgsCmd(t *testing.T) {
 		PkgDir:              "/tmp/test/root",
 	}
 
-	validArgsCmd := cdtCommand.ValidArgsCmd()
+	validArgsCmd := cmd.ValidArgsCmd()
 	assert.Equal(t, 3, len(validArgsCmd))
 	assert.Equal(t, "#CACHE#/test", validArgsCmd[0])
 	assert.Equal(t, "arg1", validArgsCmd[1])
 	assert.Equal(t, "arg2", validArgsCmd[2])
 
-	flagValuesCmd := cdtCommand.FlagValuesCmd()
+	flagValuesCmd := cmd.FlagValuesCmd()
 	assert.Equal(t, 3, len(flagValuesCmd))
 	assert.Equal(t, "#CACHE#/test", flagValuesCmd[0])
 	assert.Equal(t, "arg1", flagValuesCmd[1])
 	assert.Equal(t, "arg2", flagValuesCmd[2])
 
-	flags := cdtCommand.RequiredFlags()
+	flags := cmd.RequiredFlags()
 	assert.Equal(t, 2, len(flags))
 	assert.Equal(t, "moab", flags[0])
 	assert.Equal(t, "moab-id", flags[1])
 }
 
 func TestNullFields(t *testing.T) {
-	cdtCommand := CdtCommand{
+	cmd := DefaultCommand{
 		CmdName:             "test",
 		CmdCategory:         "",
 		CmdType:             "executable",
@@ -94,15 +94,15 @@ func TestNullFields(t *testing.T) {
 		PkgDir:              "/tmp/test/root",
 	}
 
-	assert.NotNil(t, cdtCommand.ValidArgs())
-	assert.NotNil(t, cdtCommand.RequiredFlags())
-	validArgsCmd := cdtCommand.ValidArgsCmd()
+	assert.NotNil(t, cmd.ValidArgs())
+	assert.NotNil(t, cmd.RequiredFlags())
+	validArgsCmd := cmd.ValidArgsCmd()
 	assert.NotNil(t, validArgsCmd)
 	assert.Equal(t, 0, len(validArgsCmd))
 }
 
-func TestCloneCdtCommand(t *testing.T) {
-	cdtCommand := CdtCommand{
+func TestCloneCommand(t *testing.T) {
+	cmd := DefaultCommand{
 		CmdName:             "test",
 		CmdCategory:         "",
 		CmdType:             "executable",
@@ -120,7 +120,7 @@ func TestCloneCdtCommand(t *testing.T) {
 		PkgDir:              "/tmp/test/root",
 	}
 
-	newCmd := cdtCommand.Clone()
+	newCmd := cmd.Clone()
 	assert.NotNil(t, newCmd.CmdValidArgs)
 	assert.Equal(t, 0, len(newCmd.CmdValidArgs))
 	assert.NotNil(t, newCmd.CmdValidArgsCmd)

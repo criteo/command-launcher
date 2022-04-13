@@ -13,21 +13,21 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type cdtPackageManifest struct {
-	PkgName     string                `json:"pkgName"`
-	PkgVersion  string                `json:"version"`
-	PkgCommands []*command.CdtCommand `json:"cmds"`
+type defaultPackageManifest struct {
+	PkgName     string                    `json:"pkgName"`
+	PkgVersion  string                    `json:"version"`
+	PkgCommands []*command.DefaultCommand `json:"cmds"`
 }
 
-func (mf *cdtPackageManifest) Name() string {
+func (mf *defaultPackageManifest) Name() string {
 	return mf.PkgName
 }
 
-func (mf *cdtPackageManifest) Version() string {
+func (mf *defaultPackageManifest) Version() string {
 	return mf.PkgVersion
 }
 
-func (mf *cdtPackageManifest) Commands() []command.Command {
+func (mf *defaultPackageManifest) Commands() []command.Command {
 	cmds := make([]command.Command, 0)
 	for _, cmd := range mf.PkgCommands {
 		//newCmd := cmd
@@ -36,24 +36,24 @@ func (mf *cdtPackageManifest) Commands() []command.Command {
 	return cmds
 }
 
-type cdtPackage struct {
+type defaultPackage struct {
 	Manifest command.PackageManifest
 	ZipFile  string
 }
 
-func (pkg *cdtPackage) Name() string {
+func (pkg *defaultPackage) Name() string {
 	return pkg.Manifest.Name()
 }
 
-func (pkg *cdtPackage) Version() string {
+func (pkg *defaultPackage) Version() string {
 	return pkg.Manifest.Version()
 }
 
-func (pkg *cdtPackage) Commands() []command.Command {
+func (pkg *defaultPackage) Commands() []command.Command {
 	return pkg.Manifest.Commands()
 }
 
-func (pkg *cdtPackage) InstallTo(targetDir string) (command.PackageManifest, error) {
+func (pkg *defaultPackage) InstallTo(targetDir string) (command.PackageManifest, error) {
 	zipReader, _ := zip.OpenReader(pkg.ZipFile)
 	defer zipReader.Close()
 	for _, file := range zipReader.Reader.File {
@@ -117,7 +117,7 @@ func CreatePackage(zipFilename string) (command.Package, error) {
 		return nil, fmt.Errorf("failed to read the manifest: %s", err)
 	}
 
-	var pkg = cdtPackage{
+	var pkg = defaultPackage{
 		Manifest: mf,
 		ZipFile:  zipFilename,
 	}
@@ -137,7 +137,7 @@ func ReadManifest(file fs.File) (command.PackageManifest, error) {
 		return nil, fmt.Errorf("cannot read the manifest (%s)", err)
 	}
 
-	var mf = cdtPackageManifest{}
+	var mf = defaultPackageManifest{}
 	err = json.Unmarshal(payload, &mf)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read the json content (%s)", err)

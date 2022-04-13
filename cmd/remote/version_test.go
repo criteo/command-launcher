@@ -6,7 +6,7 @@ import (
 )
 
 func TestToString(t *testing.T) {
-	var version cdtVersion
+	var version defaultVersion
 	err := ParseVersion("1.2.3-test", &version)
 	if err != nil {
 		t.Fail()
@@ -18,7 +18,7 @@ func TestToString(t *testing.T) {
 }
 
 func TestParseVersion(t *testing.T) {
-	var version cdtVersion
+	var version defaultVersion
 	err := ParseVersion("1.2.3-test", &version)
 	if err != nil {
 		t.Fail()
@@ -52,7 +52,7 @@ func TestParseVersions(t *testing.T) {
 		"1.2.3_tag",
 	}
 
-	var version cdtVersion
+	var version defaultVersion
 	for _, verAsString := range versions {
 		err := ParseVersion(verAsString, &version)
 		if err != nil {
@@ -69,14 +69,14 @@ func TestSorter(t *testing.T) {
 		"1.2.3",
 	}
 
-	var versions []cdtVersion
+	var versions []defaultVersion
 	for _, val := range values {
-		var version cdtVersion
+		var version defaultVersion
 		_ = ParseVersion(val, &version)
 		versions = append(versions, version)
 	}
 
-	sort.Sort(cdtVersionList(versions))
+	sort.Sort(defaultVersionList(versions))
 	if versions[0].Major != 1 {
 		t.Log(versions)
 	}

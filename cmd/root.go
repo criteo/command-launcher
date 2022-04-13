@@ -278,7 +278,7 @@ func addCommands(groups []command.Command, executables []command.Command) {
 			Short:              v.ShortDescription(),
 			Long:               v.LongDescription(),
 			RunE: func(cmd *cobra.Command, args []string) error {
-				err := executeCdtCommand(group, name, args)
+				err := executeCommand(group, name, args)
 				if err != nil && err.Error() == EXECUTABLE_NOT_DEFINED {
 					cmd.Help()
 					return nil
@@ -313,14 +313,14 @@ func addCommands(groups []command.Command, executables []command.Command) {
 				// so the args pass to the subcommand will not include the flags
 				// we need to restore the flags into args here
 				// considering the complexity here, we will cover it later
-				return executeCdtCommand(group, name, args)
+				return executeCommand(group, name, args)
 			},
 		}
 
 		// TODO: uncomment to enable the flag value auto-completion
 		/*
 			cmd.SetHelpFunc(func(c *cobra.Command, args []string) {
-				err := executeCdtCommand(group, name, args)
+				err := executeCommand(group, name, args)
 				if err != nil {
 					c.Help()
 				}
@@ -338,7 +338,7 @@ func addCommands(groups []command.Command, executables []command.Command) {
 					// call external command for flag value completon
 					if len(flagValuesCmd) > 0 {
 						flagValuesCmdArgs := append([]string{flagName}, args...)
-						output, err := executeFlagValuesOfCdtCommand(group, name, flagValuesCmdArgs)
+						output, err := executeFlagValuesOfCommand(group, name, flagValuesCmdArgs)
 						if err != nil {
 							return []string{}, cobra.ShellCompDirectiveNoFileComp
 						}
@@ -357,7 +357,7 @@ func addCommands(groups []command.Command, executables []command.Command) {
 
 		cmd.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			if len(validArgsCmd) > 0 {
-				output, err := executeValidArgsOfCdtCommand(group, name, args)
+				output, err := executeValidArgsOfCommand(group, name, args)
 				if err != nil {
 					return []string{}, cobra.ShellCompDirectiveNoFileComp
 				}
@@ -400,7 +400,7 @@ func getExecutableCommand(group, name string) (command.Command, error) {
 }
 
 // execute a cdt command
-func executeCdtCommand(group, name string, args []string) error {
+func executeCommand(group, name string, args []string) error {
 	iCmd, err := getExecutableCommand(group, name)
 	if err != nil {
 		return err
@@ -408,6 +408,7 @@ func executeCdtCommand(group, name string, args []string) error {
 	if iCmd.Executable() == "" {
 		return errors.New(EXECUTABLE_NOT_DEFINED)
 	}
+
 	secrets := secrets()
 	_, err = iCmd.Execute(secrets, args...)
 	if err != nil {
@@ -417,12 +418,14 @@ func executeCdtCommand(group, name string, args []string) error {
 }
 
 // execute the valid args command of the cdt command
-func executeValidArgsOfCdtCommand(group, name string, args []string) (string, error) {
+func executeValidArgsOfCommand(group, name string, args []string) (string, error) {
 	iCmd, err := getExecutableCommand(group, name)
 	if err != nil {
 		return "", err
 	}
+
 	secrets := secrets()
+
 	_, output, err := iCmd.ExecuteValidArgsCmd(secrets, args...)
 	if err != nil {
 		return "", err
@@ -431,12 +434,14 @@ func executeValidArgsOfCdtCommand(group, name string, args []string) (string, er
 }
 
 // execute the flag values command of the cdt command
-func executeFlagValuesOfCdtCommand(group, name string, args []string) (string, error) {
+func executeFlagValuesOfCommand(group, name string, args []string) (string, error) {
 	iCmd, err := getExecutableCommand(group, name)
 	if err != nil {
 		return "", err
 	}
+
 	secrets := secrets()
+
 	_, output, err := iCmd.ExecuteFlagValuesCmd(secrets, args...)
 	if err != nil {
 		return "", err

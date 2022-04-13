@@ -14,27 +14,27 @@ Internal data structure to represent the local registry
 You can find an example of the file in the path specified by
 config "local_command_repository_dirname"
 */
-type cdtRegistry struct {
-	packages       map[string]cdtPackage
-	groupCmds      map[string]*command.CdtCommand // key is in form of [group]_[cmd name] ex. "_hotfix"
-	executableCmds map[string]*command.CdtCommand // key is in form of [group]_[cmd name] ex. "hotfix_create"
+type defaultRegistry struct {
+	packages       map[string]defaultPackage
+	groupCmds      map[string]*command.DefaultCommand // key is in form of [group]_[cmd name] ex. "_hotfix"
+	executableCmds map[string]*command.DefaultCommand // key is in form of [group]_[cmd name] ex. "hotfix_create"
 }
 
-type cdtPackage struct {
-	PkgName     string                `json:"pkgName"`
-	PkgVersion  string                `json:"version"`
-	PkgCommands []*command.CdtCommand `json:"cmds"`
+type defaultPackage struct {
+	PkgName     string                    `json:"pkgName"`
+	PkgVersion  string                    `json:"version"`
+	PkgCommands []*command.DefaultCommand `json:"cmds"`
 }
 
-func (pkg *cdtPackage) Name() string {
+func (pkg *defaultPackage) Name() string {
 	return pkg.PkgName
 }
 
-func (pkg *cdtPackage) Version() string {
+func (pkg *defaultPackage) Version() string {
 	return pkg.PkgVersion
 }
 
-func (pkg *cdtPackage) Commands() []command.Command {
+func (pkg *defaultPackage) Commands() []command.Command {
 	cmds := []command.Command{}
 	for _, c := range pkg.PkgCommands {
 		cmds = append(cmds, c)
@@ -42,15 +42,15 @@ func (pkg *cdtPackage) Commands() []command.Command {
 	return cmds
 }
 
-func NewCdtPackage(pkg command.Package, pkgDir string) cdtPackage {
-	cdtPkg := cdtPackage{
+func NewPackage(pkg command.Package, pkgDir string) defaultPackage {
+	defPkg := defaultPackage{
 		PkgName:     pkg.Name(),
 		PkgVersion:  pkg.Version(),
-		PkgCommands: []*command.CdtCommand{},
+		PkgCommands: []*command.DefaultCommand{},
 	}
 
 	for _, cmd := range pkg.Commands() {
-		newCmd := command.CdtCommand{
+		newCmd := command.DefaultCommand{
 			CmdName:             cmd.Name(),
 			CmdCategory:         cmd.Category(),
 			CmdType:             cmd.Type(),
@@ -67,17 +67,17 @@ func NewCdtPackage(pkg command.Package, pkgDir string) cdtPackage {
 			CmdFlagValuesCmd:    cmd.FlagValuesCmd(),
 			PkgDir:              pkgDir,
 		}
-		cdtPkg.PkgCommands = append(cdtPkg.PkgCommands, &newCmd)
+		defPkg.PkgCommands = append(defPkg.PkgCommands, &newCmd)
 	}
 
-	return cdtPkg
+	return defPkg
 }
 
-func LoadRegistry(pathname string) (*cdtRegistry, error) {
-	registry := cdtRegistry{
-		packages:       make(map[string]cdtPackage),
-		groupCmds:      make(map[string]*command.CdtCommand),
-		executableCmds: make(map[string]*command.CdtCommand),
+func LoadRegistry(pathname string) (*defaultRegistry, error) {
+	registry := defaultRegistry{
+		packages:       make(map[string]defaultPackage),
+		groupCmds:      make(map[string]*command.DefaultCommand),
+		executableCmds: make(map[string]*command.DefaultCommand),
 	}
 
 	_, err := os.Stat(pathname)
@@ -98,7 +98,7 @@ func LoadRegistry(pathname string) (*cdtRegistry, error) {
 	return &registry, nil
 }
 
-func (reg *cdtRegistry) Store(pathname string) error {
+func (reg *defaultRegistry) Store(pathname string) error {
 	payload, err := json.Marshal(reg.packages)
 	if err != nil {
 		return fmt.Errorf("cannot encode in json: %v", err)
@@ -112,25 +112,25 @@ func (reg *cdtRegistry) Store(pathname string) error {
 	return nil
 }
 
-func (reg *cdtRegistry) Add(pkg cdtPackage) error {
+func (reg *defaultRegistry) Add(pkg defaultPackage) error {
 	reg.packages[pkg.PkgName] = pkg
 	reg.extractCmds()
 	return nil
 }
 
-func (reg *cdtRegistry) Remove(pkgName string) error {
+func (reg *defaultRegistry) Remove(pkgName string) error {
 	delete(reg.packages, pkgName)
 	reg.extractCmds()
 	return nil
 }
 
-func (reg *cdtRegistry) Update(pkg cdtPackage) error {
+func (reg *defaultRegistry) Update(pkg defaultPackage) error {
 	reg.packages[pkg.PkgName] = pkg
 	reg.extractCmds()
 	return nil
 }
 
-func (reg *cdtRegistry) AllPackages() []command.PackageManifest {
+func (reg *defaultRegistry) AllPackages() []command.PackageManifest {
 	pkgs := []command.PackageManifest{}
 	for _, p := range reg.packages {
 		newPkg := p
@@ -139,14 +139,14 @@ func (reg *cdtRegistry) AllPackages() []command.PackageManifest {
 	return pkgs
 }
 
-func (reg *cdtRegistry) Package(name string) (command.PackageManifest, error) {
+func (reg *defaultRegistry) Package(name string) (command.PackageManifest, error) {
 	if pkg, exists := reg.packages[name]; exists {
 		return &pkg, nil
 	}
 	return nil, fmt.Errorf("cannot find the package '%s'", name)
 }
 
-func (reg *cdtRegistry) Command(group string, name string) (command.Command, error) {
+func (reg *defaultRegistry) Command(group string, name string) (command.Command, error) {
 	if cmd, exist := reg.groupCmds[fmt.Sprintf("%s_%s", group, name)]; exist {
 		return cmd, nil
 	}
@@ -158,13 +158,13 @@ func (reg *cdtRegistry) Command(group string, name string) (command.Command, err
 	return nil, fmt.Errorf("cannot find the command %s %s", group, name)
 }
 
-func (reg *cdtRegistry) AllCommands() []command.Command {
+func (reg *defaultRegistry) AllCommands() []command.Command {
 	cmds := reg.GroupCommands()
 	cmds = append(cmds, reg.ExecutableCommands()...)
 	return cmds
 }
 
-func (reg *cdtRegistry) GroupCommands() []command.Command {
+func (reg *defaultRegistry) GroupCommands() []command.Command {
 	cmds := make([]command.Command, 0)
 
 	for _, v := range reg.groupCmds {
@@ -175,7 +175,7 @@ func (reg *cdtRegistry) GroupCommands() []command.Command {
 	return cmds
 }
 
-func (reg *cdtRegistry) ExecutableCommands() []command.Command {
+func (reg *defaultRegistry) ExecutableCommands() []command.Command {
 	cmds := make([]command.Command, 0)
 
 	for _, v := range reg.executableCmds {
@@ -186,9 +186,9 @@ func (reg *cdtRegistry) ExecutableCommands() []command.Command {
 	return cmds
 }
 
-func (reg *cdtRegistry) extractCmds() {
-	reg.groupCmds = make(map[string]*command.CdtCommand)
-	reg.executableCmds = make(map[string]*command.CdtCommand)
+func (reg *defaultRegistry) extractCmds() {
+	reg.groupCmds = make(map[string]*command.DefaultCommand)
+	reg.executableCmds = make(map[string]*command.DefaultCommand)
 	// initiate group cmds and exectuable cmds map
 	// the key is in format of [group]_[cmd name]
 	for _, pkg := range reg.packages {

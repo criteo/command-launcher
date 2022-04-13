@@ -12,14 +12,14 @@ import (
 )
 
 type DropinRepository struct {
-	groupCmds      map[string]*command.CdtCommand // key is in form of [group]_[cmd name] ex. "_hotfix"
-	executableCmds map[string]*command.CdtCommand // key is in form of [group]_[cmd name] ex. "hotfix_create"
+	groupCmds      map[string]*command.DefaultCommand // key is in form of [group]_[cmd name] ex. "_hotfix"
+	executableCmds map[string]*command.DefaultCommand // key is in form of [group]_[cmd name] ex. "hotfix_create"
 }
 
 func Load(pathname string) (*DropinRepository, error) {
 	registry := DropinRepository{
-		groupCmds:      make(map[string]*command.CdtCommand),
-		executableCmds: make(map[string]*command.CdtCommand),
+		groupCmds:      make(map[string]*command.DefaultCommand),
+		executableCmds: make(map[string]*command.DefaultCommand),
 	}
 
 	_, err := os.Stat(pathname)
@@ -39,7 +39,7 @@ func Load(pathname string) (*DropinRepository, error) {
 				manifest, err := remote.ReadManifest(dropinPkgManifestFile)
 				if err == nil {
 					for _, cmd := range manifest.Commands() {
-						newCmd := command.CdtCommand{
+						newCmd := command.DefaultCommand{
 							CmdName:             cmd.Name(),
 							CmdCategory:         cmd.Category(),
 							CmdType:             cmd.Type(),
