@@ -12,7 +12,8 @@ func TestCallExternalWithOutput(t *testing.T) {
 	code, output, err := CallExternalWithOutput([]string{}, cwd, "echo", "hello world!")
 
 	assert.Equal(t, 0, code)
-	assert.Equal(t, "hello world!\n", output)
+	// Note here the returned string contains a newline different in fucntion of the OS
+	assert.Contains(t, output, "hello world!")
 	assert.Nil(t, err)
 }
 
