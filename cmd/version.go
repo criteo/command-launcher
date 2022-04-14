@@ -9,19 +9,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const semanticVersion = "1.0.0"
-
 func printVersion() {
 	ctx, _ := context.AppContext()
-	fmt.Printf("%s version %s\n", ctx.AppName(), getVersion(ctx.AppVersion()))
+	fmt.Printf("%s version %s\n", ctx.AppName(), getVersion(ctx.AppVersion(), ctx.AppBuildNum()))
 }
 
-func getVersion(version string) string {
+func getVersion(version string, buildNum string) string {
 	if version == "" {
-		return fmt.Sprintf("%s, build dev-%s", semanticVersion, os.Getenv("USER"))
+		return fmt.Sprintf("dev, build %s", os.Getenv("USER"))
 	}
 
-	return fmt.Sprintf("%s, build %s", semanticVersion, version)
+	return fmt.Sprintf("%s, build %s", version, buildNum)
 }
 
 func AddversionCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {

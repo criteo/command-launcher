@@ -468,9 +468,9 @@ func secrets() []string {
 	return vars
 }
 
-func initContext(appName string, appVersion string) {
+func initContext(appName string, appVersion string, buildNum string) {
 	log.SetLevel(log.FatalLevel)
-	rootCtxt.appCtx = ctx.InitContext(appName, appVersion)
+	rootCtxt.appCtx = ctx.InitContext(appName, appVersion, buildNum)
 	config.LoadConfig(rootCtxt.appCtx)
 	config.InitLog(rootCtxt.appCtx.AppName())
 
@@ -504,9 +504,9 @@ Example:
 	}
 }
 
-func InitCommands(appName string, appLongName string, version string) {
+func InitCommands(appName string, appLongName string, version string, buildNum string) {
 	rootCmd = createRootCmd(appName, appLongName)
-	initContext(appName, version)
+	initContext(appName, version, buildNum)
 }
 
 // We have to add the ctrl+C
