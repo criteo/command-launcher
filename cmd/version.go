@@ -16,7 +16,7 @@ func printVersion() {
 
 func getVersion(version string, buildNum string) string {
 	if version == "" {
-		return fmt.Sprintf("%s, build dev-%s", version, os.Getenv("USER"))
+		return fmt.Sprintf("dev, build %s", os.Getenv("USER"))
 	}
 
 	return fmt.Sprintf("%s, build %s", version, buildNum)
