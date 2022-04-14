@@ -12,27 +12,12 @@ import (
 	"github.com/spf13/viper"
 )
 
-const (
-	LOG_ENABLED_KEY                      = "LOG_ENABLED"
-	LOG_LEVEL_KEY                        = "LOG_LEVEL"
-	SELF_UPDATE_ENABLED_KEY              = "SELF_UPDATE_ENABLED"
-	SELF_UPDATE_TIMEOUT_KEY              = "SELF_UPDATE_TIMEOUT"
-	SELF_UPDATE_LATEST_VERSION_URL_KEY   = "SELF_UPDATE_LATEST_VERSION_URL"
-	SELF_UPDATE_BASE_URL_KEY             = "SELF_UPDATE_BASE_URL"
-	COMMAND_REPOSITORY_BASE_URL_KEY      = "COMMAND_REPOSITORY_BASE_URL"
-	LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY = "LOCAL_COMMAND_REPOSITORY_DIRNAME"
-	USAGE_METRICS_ENABLED_KEY            = "USAGE_METRICS_ENABLED"
-	METRIC_GRAPHITE_HOST_KEY             = "METRIC_GRAPHITE_HOST"
-	DEBUG_FLAGS_KEY                      = "DEBUG_FLAGS"
-	DROPIN_FOLDER_KEY                    = "DROPIN_FOLDER"
-)
-
 func LoadConfig(appCtx context.LauncherContext) {
 	// NOTE: we don't put default value for the DEBUG_FLAGS configuration, it will not show in a newly created config file
 	// Please keep it as a hidden config, better not to let developer directly see this option
 	setDefaultConfig()
 
-	cfgFile := os.Getenv(appCtx.ConfigurationFileVarEnv())
+	cfgFile := os.Getenv(appCtx.ConfigurationFileEnvVar())
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
 	} else {
@@ -55,17 +40,20 @@ func LoadConfig(appCtx context.LauncherContext) {
 func setDefaultConfig() {
 	viper.SetDefault(LOG_ENABLED_KEY, false)
 	viper.SetDefault(LOG_LEVEL_KEY, "fatal") // trace, debug, info, warn, error, fatal, panic
-	viper.SetDefault(SELF_UPDATE_ENABLED_KEY, true)
-	viper.SetDefault(SELF_UPDATE_TIMEOUT_KEY, 2*time.Second) // In seconds
 
+	viper.SetDefault(SELF_UPDATE_ENABLED_KEY, false)
+	viper.SetDefault(SELF_UPDATE_TIMEOUT_KEY, 2*time.Second) // In seconds
 	viper.SetDefault(SELF_UPDATE_LATEST_VERSION_URL_KEY, "https://dummy/version")
 	viper.SetDefault(SELF_UPDATE_BASE_URL_KEY, "https://dummy/")
+
+	viper.SetDefault(COMMAND_UPDATE_ENABLED_KEY, false)
 	viper.SetDefault(COMMAND_REPOSITORY_BASE_URL_KEY, "https://dummy/repos")
 
 	viper.SetDefault(DROPIN_FOLDER_KEY, filepath.Join(AppDir(), "dropins"))
 	viper.SetDefault(LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY, filepath.Join(AppDir(), "current"))
 
-	viper.SetDefault(USAGE_METRICS_ENABLED_KEY, true)
+	viper.SetDefault(USAGE_METRICS_ENABLED_KEY, false)
+	viper.SetDefault(METRIC_GRAPHITE_HOST_KEY, "dummy")
 
 	viper.SetDefault(user.INTERNAL_COMMAND_ENABLED_KEY, false)
 	viper.SetDefault(user.EXPERIMENTAL_COMMAND_ENABLED_KEY, false)

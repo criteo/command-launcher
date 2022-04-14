@@ -41,12 +41,12 @@ You can specify the your password from:
 2. environment variable %s
 3. from command line input
 
-The credential will be stored in your system vault.`, appCtx.PasswordVarEnv()),
+The credential will be stored in your system vault.`, appCtx.PasswordEnvVar()),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			appCtx, _ := context.AppContext()
 			username := loginFlags.username
 			if username == "" {
-				username = os.Getenv(appCtx.UsernameVarEnv())
+				username = os.Getenv(appCtx.UsernameEnvVar())
 				if username == "" {
 					fmt.Printf("Please enter your user name: ")
 					nb, err := fmt.Scan(&username)
@@ -62,7 +62,7 @@ The credential will be stored in your system vault.`, appCtx.PasswordVarEnv()),
 
 			passwd := loginFlags.password
 			if passwd == "" {
-				passwd = os.Getenv(appCtx.PasswordVarEnv())
+				passwd = os.Getenv(appCtx.PasswordEnvVar())
 				if passwd == "" {
 					fmt.Printf("Please enter your password: ")
 					pass, err := terminal.ReadPassword(int(syscall.Stdin))
