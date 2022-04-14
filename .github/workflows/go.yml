@@ -3,7 +3,7 @@ name: Go
 on:
   push:
     branches: [ '*' ]
-    tags: [ '*.*.*', 'v*.*.*', 'test-release-*' ]
+    tags: [ '*.*.*', '*.*.*-*', 'test-release-*' ]
   pull_request:
     branches: [ main ]
 

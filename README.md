@@ -60,3 +60,19 @@ go build -o cdt -ldflags='-X main.version=dev -X main.binaryName=cdt' main.go
 go test -v ./...
 ```
 
+
+### Release
+
+Simply tag a commit with format 'x.y.z', and push it.
+
+```
+git tag x.y.z
+git push origin x.y.z
+```
+
+The supported release tag format:
+
+- *.*.*
+- *.*.*-*
+
+Example: `1.0.0`, `1.0.1-preview`
