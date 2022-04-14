@@ -81,7 +81,7 @@ func loadRemoteConfig(appCtx context.LauncherContext) bool {
 	if urlCfg := os.Getenv(appCtx.RemoteConfigurationUrlEnvVar()); urlCfg != "" {
 		_, hash, err := helper.HttpEtag(urlCfg)
 		if err != nil {
-			log.Error("Cannot find the remote Configuration %s: %v", urlCfg, err)
+			log.Errorf("Cannot find the remote Configuration %s: %v", urlCfg, err)
 		}
 
 		prev := viper.GetString(REMOTE_CONFIG_HASH_KEY)
