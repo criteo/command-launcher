@@ -3,6 +3,7 @@ name: Go
 on:
   push:
     branches: [ '*' ]
+    tags: [ '*.*.*', 'v*.*.*', 'test-*' ]
   pull_request:
     branches: [ main ]
 
@@ -33,7 +34,13 @@ jobs:
       env:
         GOARCH: ${{matrix.arch}}
         CGO_ENABLED: ${{matrix.cgo}}
-      run: go build -o cdt -ldflags='-X main.version=dev -X main.binaryName=cdt'
+      run: go build -o cdt-${{matrix.os}}-${{matrix.arch}}_${{github.ref_name}}-${{github.sha}} -ldflags='-X main.version=${{github.ref_name}}-${{github.sha}} -X main.binaryName=cdt'
 
     - name: Test
       run: go test -v ./...
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with: 
+        files: build/cdt-${{matrix.os}}-${{matrix.arch}}_${{github.ref_name}}-${{github.sha}}
