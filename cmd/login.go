@@ -5,6 +5,7 @@ import (
 	"os"
 	"syscall"
 
+	"github.com/criteo/command-launcher/internal/context"
 	"github.com/criteo/command-launcher/internal/helper"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
@@ -17,7 +18,19 @@ type LoginFlags struct {
 
 var (
 	loginFlags = LoginFlags{}
-	loginCmd   = &cobra.Command{
+)
+
+func defaultUsername() string {
+	user, present := os.LookupEnv("USER")
+	if !present {
+		user, _ = os.LookupEnv("USERNAME")
+	}
+
+	return user
+}
+
+func AddLoginCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
+	loginCmd := &cobra.Command{
 		Use:   "login",
 		Short: "Login to use services",
 		Long: fmt.Sprintf(`
@@ -28,11 +41,12 @@ You can specify the your password from:
 2. environment variable %s
 3. from command line input
 
-The credential will be stored in your system vault.`, rootCtxt.appCtx.PasswordVarEnv()),
+The credential will be stored in your system vault.`, appCtx.PasswordVarEnv()),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			appCtx, _ := context.AppContext()
 			username := loginFlags.username
 			if username == "" {
-				username = os.Getenv(rootCtxt.appCtx.UsernameVarEnv())
+				username = os.Getenv(appCtx.UsernameVarEnv())
 				if username == "" {
 					fmt.Printf("Please enter your user name: ")
 					nb, err := fmt.Scan(&username)
@@ -48,7 +62,7 @@ The credential will be stored in your system vault.`, rootCtxt.appCtx.PasswordVa
 
 			passwd := loginFlags.password
 			if passwd == "" {
-				passwd = os.Getenv(rootCtxt.appCtx.PasswordVarEnv())
+				passwd = os.Getenv(appCtx.PasswordVarEnv())
 				if passwd == "" {
 					fmt.Printf("Please enter your password: ")
 					pass, err := terminal.ReadPassword(int(syscall.Stdin))
@@ -66,19 +80,8 @@ The credential will be stored in your system vault.`, rootCtxt.appCtx.PasswordVa
 			return nil
 		},
 	}
-)
-
-func defaultUsername() string {
-	user, present := os.LookupEnv("USER")
-	if !present {
-		user, _ = os.LookupEnv("USERNAME")
-	}
-
-	return user
-}
-
-func init() {
 	loginCmd.Flags().StringVarP(&loginFlags.username, "user", "u", defaultUsername(), "User name")
 	loginCmd.Flags().StringVarP(&loginFlags.password, "password", "p", "", "User password")
+
 	rootCmd.AddCommand(loginCmd)
 }

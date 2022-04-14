@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/criteo/command-launcher/cmd/user"
+	"github.com/criteo/command-launcher/internal/context"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/viper"
@@ -26,12 +27,12 @@ const (
 	DROPIN_FOLDER_KEY                    = "DROPIN_FOLDER"
 )
 
-func LoadConfig() {
+func LoadConfig(appCtx context.LauncherContext) {
 	// NOTE: we don't put default value for the DEBUG_FLAGS configuration, it will not show in a newly created config file
 	// Please keep it as a hidden config, better not to let developer directly see this option
-	SetDefaultConfig()
+	setDefaultConfig()
 
-	cfgFile := os.Getenv("CDT_CONFIG_FILE")
+	cfgFile := os.Getenv(appCtx.ConfigurationFileVarEnv())
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
 	} else {
@@ -51,7 +52,7 @@ func LoadConfig() {
 	}
 }
 
-func SetDefaultConfig() {
+func setDefaultConfig() {
 	viper.SetDefault(LOG_ENABLED_KEY, false)
 	viper.SetDefault(LOG_LEVEL_KEY, "fatal") // trace, debug, info, warn, error, fatal, panic
 	viper.SetDefault(SELF_UPDATE_ENABLED_KEY, true)

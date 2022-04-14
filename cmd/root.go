@@ -38,51 +38,9 @@ type rootContext struct {
 }
 
 var (
-	BuildVersion string
-	AppName      string
-	LongAppName  string
-	rootCtxt     = rootContext{
-		appCtx: ctx.InitContext(defaultAppName()),
-	}
-
-	rootCmd = &cobra.Command{
-		Use:   AppName,
-		Short: fmt.Sprintf("%s - A command launcher 🚀 made with <3", LongAppName),
-		Long: fmt.Sprintf(`
-%s - A command launcher 🚀 made with <3
-
-Happy Coding!
-
-Example:
-  %s --help
-`, LongAppName, AppName),
-		PersistentPreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) == 0 {
-				cmd.Help()
-			}
-		},
-		PersistentPostRun: postRun,
-	}
+	rootCmd  *cobra.Command
+	rootCtxt = rootContext{}
 )
-
-// Use for the unit tests
-func defaultAppName() string {
-	if AppName != "" {
-		return AppName
-	}
-
-	return "test"
-}
-
-func init() {
-	log.SetLevel(log.FatalLevel)
-	config.LoadConfig()
-	initUser()
-	initApp()
-	addLocalCommands()
-	addDropinCommands()
-}
 
 func preRun(cmd *cobra.Command, args []string) {
 	if selfUpdateEnabled(cmd, args) {
@@ -123,7 +81,7 @@ func selfUpdateEnabled(cmd *cobra.Command, args []string) bool {
 	}
 
 	cmdPath := cmd.CommandPath()
-	cmdPath = strings.TrimSpace(strings.TrimPrefix(cmdPath, AppName))
+	cmdPath = strings.TrimSpace(strings.TrimPrefix(cmdPath, rootCtxt.appCtx.AppName()))
 	// exclude commands for update check
 	// for example version command, you don't want to check new update when requesting current version
 	for _, w := range []string{"version", "config", "completion", "help", "__complete"} {
@@ -136,7 +94,7 @@ func selfUpdateEnabled(cmd *cobra.Command, args []string) bool {
 
 func cmdUpdateEnabled(cmd *cobra.Command, args []string) bool {
 	cmdPath := cmd.CommandPath()
-	cmdPath = strings.TrimSpace(strings.TrimPrefix(cmdPath, AppName))
+	cmdPath = strings.TrimSpace(strings.TrimPrefix(cmdPath, rootCtxt.appCtx.AppName()))
 	for _, w := range []string{"version", "config", "completion", "help", "__complete"} {
 		if strings.HasPrefix(cmdPath, w) {
 			return false
@@ -150,7 +108,7 @@ func metricsEnabled(cmd *cobra.Command, args []string) bool {
 		return false
 	}
 	cmdPath := cmd.CommandPath()
-	cmdPath = strings.TrimSpace(strings.TrimPrefix(cmdPath, AppName))
+	cmdPath = strings.TrimSpace(strings.TrimPrefix(cmdPath, rootCtxt.appCtx.AppName()))
 	for _, w := range []string{"version", "config", "completion", "help", "__complete"} {
 		if strings.HasPrefix(cmdPath, w) {
 			return false
@@ -170,11 +128,11 @@ func initUser() {
 
 func initSelfUpdater() {
 	rootCtxt.selfUpdater = updater.SelfUpdater{
-		BinaryName:        AppName,
+		BinaryName:        rootCtxt.appCtx.AppName(),
 		LatestVersionUrl:  viper.GetString(config.SELF_UPDATE_LATEST_VERSION_URL_KEY),
 		SelfUpdateRootUrl: viper.GetString(config.SELF_UPDATE_BASE_URL_KEY),
 		User:              rootCtxt.user,
-		CurrentVersion:    BuildVersion,
+		CurrentVersion:    rootCtxt.appCtx.AppVersion(),
 		Timeout:           viper.GetDuration(config.SELF_UPDATE_TIMEOUT_KEY),
 	}
 }
@@ -189,8 +147,6 @@ func initCmdUpdater() {
 }
 
 func initApp() repository.PackageRepository {
-	config.InitLog("cdt")
-
 	repo, err := repository.CreateLocalRepository(viper.GetString(config.LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY))
 	if err != nil {
 		log.Fatal(err)
@@ -265,6 +221,12 @@ func installCommands(repo repository.PackageRepository) error {
 	}
 
 	return nil
+}
+
+func addBuiltinCommands() {
+	AddversionCmd(rootCmd, rootCtxt.appCtx)
+	AddConfigCmd(rootCmd, rootCtxt.appCtx)
+	AddLoginCmd(rootCmd, rootCtxt.appCtx)
 }
 
 func addLocalCommands() {
@@ -506,9 +468,49 @@ func secrets() []string {
 	return vars
 }
 
+func initContext(appName string, appVersion string) {
+	log.SetLevel(log.FatalLevel)
+	rootCtxt.appCtx = ctx.InitContext(appName, appVersion)
+	config.LoadConfig(rootCtxt.appCtx)
+	config.InitLog(rootCtxt.appCtx.AppName())
+
+	initUser()
+	initApp()
+	addBuiltinCommands()
+	addLocalCommands()
+	addDropinCommands()
+}
+
+func createRootCmd(appName string, appLongName string) *cobra.Command {
+	return &cobra.Command{
+		Use:   appName,
+		Short: fmt.Sprintf("%s - A command launcher 🚀 made with <3", appLongName),
+		Long: fmt.Sprintf(`
+%s - A command launcher 🚀 made with <3
+
+Happy Coding!
+
+Example:
+  %s --help
+`, appLongName, appName),
+		PersistentPreRun: preRun,
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) == 0 {
+				cmd.Help()
+			}
+		},
+		PersistentPostRun: postRun,
+		SilenceUsage:      true,
+	}
+}
+
+func InitCommands(appName string, appLongName string, version string) {
+	rootCmd = createRootCmd(appName, appLongName)
+	initContext(appName, version)
+}
+
 // We have to add the ctrl+C
 func Execute() {
-	rootCmd.SilenceUsage = true
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}

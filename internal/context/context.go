@@ -1,6 +1,8 @@
 package context
 
 type LauncherContext interface {
+	AppVersion() string
+
 	AppName() string
 
 	AppDirname() string
@@ -10,4 +12,6 @@ type LauncherContext interface {
 	PasswordVarEnv() string
 
 	DebugFlagsVarEnv() string
+
+	ConfigurationFileVarEnv() string
 }

@@ -9,10 +9,9 @@ import (
 )
 
 func Test_GetVersion(t *testing.T) {
-	v := getVersion()
+	v := getVersion("")
 	assert.Equal(t, fmt.Sprintf("1.0.0, build dev-%s", os.Getenv("USER")), v, "invalid version")
 
-	BuildVersion = "123" // should be initialized by the linker
-	v = getVersion()
+	v = getVersion("123")
 	assert.Equal(t, "1.0.0, build 123", v, "Invalid version")
 }

@@ -6,14 +6,17 @@ import (
 )
 
 type defaultContext struct {
-	appName string
+	appName    string
+	appVersion string
 }
 
 var context = defaultContext{}
 
-func InitContext(appName string) LauncherContext {
+func InitContext(appName string, appVersion string) LauncherContext {
 	// TODO check the appName value
 	context.appName = appName
+	context.appVersion = appVersion
+
 	return &context
 }
 
@@ -23,6 +26,10 @@ func AppContext() (LauncherContext, error) {
 	}
 
 	return nil, fmt.Errorf("uninitialized context, the root command has to init the context")
+}
+
+func (ctx *defaultContext) AppVersion() string {
+	return ctx.appVersion
 }
 
 func (ctx *defaultContext) AppName() string {
@@ -43,6 +50,10 @@ func (ctx *defaultContext) PasswordVarEnv() string {
 
 func (ctx *defaultContext) DebugFlagsVarEnv() string {
 	return fmt.Sprintf("%s_%s", ctx.prefix(), "DEBUG_FLAGS")
+}
+
+func (ctx *defaultContext) ConfigurationFileVarEnv() string {
+	return fmt.Sprintf("%s_%s", ctx.prefix(), "CONFIG_FILE")
 }
 
 func (ctx *defaultContext) prefix() string {

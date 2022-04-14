@@ -8,12 +8,7 @@ var version string = "dev"
 var appName string = "cdt"
 var appLongName string = "Criteo Dev Toolkit"
 
-func init() {
-	root.BuildVersion = version
-	root.AppName = appName
-	root.LongAppName = appLongName
-}
-
 func main() {
+	root.InitCommands(appName, appLongName, version)
 	root.Execute()
 }
