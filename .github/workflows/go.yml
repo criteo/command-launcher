@@ -3,7 +3,7 @@ name: Go
 on:
   push:
     branches: [ '*' ]
-    tags: [ '*.*.*', 'v*.*.*', 'test-*' ]
+    tags: [ '*.*.*', 'v*.*.*', 'test-release-*' ]
   pull_request:
     branches: [ main ]
 
@@ -47,4 +47,4 @@ jobs:
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with: 
-        files: build/cdt_${{matrix.os}}_${{matrix.arch}}_${{github.ref_name}}-${{steps.vars.outputs.sha_short}}}
+        files: build/cdt_${{matrix.os}}_${{matrix.arch}}_${{github.ref_name}}-${{steps.vars.outputs.sha_short}}
