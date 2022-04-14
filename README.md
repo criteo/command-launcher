@@ -72,7 +72,7 @@ git push origin x.y.z
 
 The supported release tag format:
 
-- *.*.*
-- *.*.*-*
+- \*.\*.\*
+- \*.\*.\*-\*
 
 Example: `1.0.0`, `1.0.1-preview`
