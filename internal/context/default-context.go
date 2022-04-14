@@ -8,14 +8,16 @@ import (
 type defaultContext struct {
 	appName    string
 	appVersion string
+	buildNum   string
 }
 
 var context = defaultContext{}
 
-func InitContext(appName string, appVersion string) LauncherContext {
+func InitContext(appName string, appVersion string, buildNum string) LauncherContext {
 	// TODO check the appName value
 	context.appName = appName
 	context.appVersion = appVersion
+	context.buildNum = buildNum
 
 	return &context
 }
@@ -30,6 +32,10 @@ func AppContext() (LauncherContext, error) {
 
 func (ctx *defaultContext) AppVersion() string {
 	return ctx.appVersion
+}
+
+func (ctx *defaultContext) AppBuildNum() string {
+	return ctx.buildNum
 }
 
 func (ctx *defaultContext) AppName() string {

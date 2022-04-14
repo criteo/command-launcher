@@ -38,7 +38,7 @@ jobs:
       env:
         GOARCH: ${{matrix.arch}}
         CGO_ENABLED: ${{matrix.cgo}}
-      run: go build -o build/cdt_${{matrix.os}}_${{matrix.arch}}_${{github.ref_name}}-${{steps.vars.outputs.sha_short}} -ldflags='-X main.version=${{github.ref_name}}-${{steps.vars.outputs.sha_short}} -X main.binaryName=cdt'
+      run: go build -o build/cdt_${{matrix.os}}_${{matrix.arch}}_${{github.ref_name}}-${{steps.vars.outputs.sha_short}} -ldflags='-X main.version=${{github.ref_name}} -X main.buildNum=${{github.run_attempt}} -X main.binaryName=cdt'
 
     - name: Test
       run: go test -v ./...
