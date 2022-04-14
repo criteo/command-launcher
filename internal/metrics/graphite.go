@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/criteo/command-launcher/internal/helper"
 	"github.com/marpaia/graphite-golang"
 )
 
@@ -42,9 +41,7 @@ func (metrics *defaultMetrics) Collect(uid uint8, cmd string, subCmd string) err
 
 func (metrics *defaultMetrics) Send(cmdError error) error {
 	duration := time.Now().UnixNano() - metrics.StartTimestamp.UnixNano()
-
-	resolvedHost, _ := helper.DarwinDnsResolve(metrics.graphiteHost)
-	graphiteClient, err := graphite.GraphiteFactory("udp", resolvedHost, graphitePort, metrics.prefix())
+	graphiteClient, err := graphite.GraphiteFactory("udp", metrics.graphiteHost, graphitePort, metrics.prefix())
 	if err != nil {
 		return fmt.Errorf("cannot create the graphite client: %v", err)
 	}

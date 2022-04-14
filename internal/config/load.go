@@ -1,16 +1,20 @@
 package config
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/criteo/command-launcher/cmd/user"
 	"github.com/criteo/command-launcher/internal/context"
+	"github.com/criteo/command-launcher/internal/helper"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/viper"
 )
+
+const REMOTE_CONFIG_HASH_KEY = "REMOTE_CONFIG_HASH"
 
 func LoadConfig(appCtx context.LauncherContext) {
 	// NOTE: we don't put default value for the DEBUG_FLAGS configuration, it will not show in a newly created config file
@@ -30,10 +34,15 @@ func LoadConfig(appCtx context.LauncherContext) {
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			initDefaultConfig()
+			initDefaultConfigFile()
 		} else {
 			log.Fatal("Cannot read configuration file: ", err)
 		}
+	}
+
+	if loadRemoteConfig(appCtx) {
+		log.Info("Remote Configuration loaded...")
+		viper.WriteConfig()
 	}
 }
 
@@ -57,12 +66,34 @@ func setDefaultConfig() {
 
 	viper.SetDefault(user.INTERNAL_COMMAND_ENABLED_KEY, false)
 	viper.SetDefault(user.EXPERIMENTAL_COMMAND_ENABLED_KEY, false)
+	viper.SetDefault(REMOTE_CONFIG_HASH_KEY, "")
 }
 
-func initDefaultConfig() {
+func initDefaultConfigFile() {
 	log.Info("Create default config file")
 	createAppDir()
 	if err := viper.SafeWriteConfig(); err != nil {
 		log.Error("cannot write the default configuration: ", err)
 	}
+}
+
+func loadRemoteConfig(appCtx context.LauncherContext) bool {
+	if urlCfg := os.Getenv(appCtx.RemoteConfigurationUrlEnvVar()); urlCfg != "" {
+		_, hash, err := helper.HttpEtag(urlCfg)
+		if err != nil {
+			log.Error("Cannot find the remote Configuration %s: %v", urlCfg, err)
+		}
+
+		prev := viper.GetString(REMOTE_CONFIG_HASH_KEY)
+		if prev != hash {
+			viper.Set(REMOTE_CONFIG_HASH_KEY, hash)
+			data, err := helper.LoadFile(urlCfg)
+			if err == nil {
+				err = viper.ReadConfig(bytes.NewReader(data))
+				return err == nil
+			}
+		}
+	}
+
+	return false
 }
