@@ -5,28 +5,33 @@ import (
 	"os"
 	"strings"
 
+	"github.com/criteo/command-launcher/internal/context"
 	"github.com/spf13/cobra"
 )
 
 const semanticVersion = "1.0.0"
 
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: fmt.Sprintf("Print the version number of %s command", strings.ToTitle(BINARY_NAME)),
-	Long:  fmt.Sprintf(`All software has versions. This is %s's`, strings.ToTitle(BINARY_NAME)),
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("%s version %s\n", BINARY_NAME, getVersion())
-	},
+func printVersion() {
+	ctx, _ := context.AppContext()
+	fmt.Printf("%s version %s\n", ctx.AppName(), getVersion(ctx.AppVersion()))
 }
 
-func init() {
-	rootCmd.AddCommand(versionCmd)
-}
-
-func getVersion() string {
-	if BuildNum == "" {
+func getVersion(version string) string {
+	if version == "" {
 		return fmt.Sprintf("%s, build dev-%s", semanticVersion, os.Getenv("USER"))
 	}
 
-	return fmt.Sprintf("%s, build %s", semanticVersion, BuildNum)
+	return fmt.Sprintf("%s, build %s", semanticVersion, version)
+}
+
+func AddversionCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
+	versionCmd := &cobra.Command{
+		Use:   "version",
+		Short: fmt.Sprintf("Print the version number of %s command", strings.ToTitle(appCtx.AppName())),
+		Long:  fmt.Sprintf(`All software has versions. This is %s's`, strings.ToTitle(appCtx.AppName())),
+		Run: func(cmd *cobra.Command, args []string) {
+			printVersion()
+		},
+	}
+	rootCmd.AddCommand(versionCmd)
 }

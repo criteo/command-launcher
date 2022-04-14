@@ -5,6 +5,7 @@ import (
 	"os"
 	"syscall"
 
+	"github.com/criteo/command-launcher/internal/context"
 	"github.com/criteo/command-launcher/internal/helper"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
@@ -15,7 +16,9 @@ type LoginFlags struct {
 	password string
 }
 
-var loginFlags = LoginFlags{}
+var (
+	loginFlags = LoginFlags{}
+)
 
 func defaultUsername() string {
 	user, present := os.LookupEnv("USER")
@@ -26,58 +29,59 @@ func defaultUsername() string {
 	return user
 }
 
-func init() {
-	loginCmd.Flags().StringVarP(&loginFlags.username, "user", "u", defaultUsername(), "Criteo user name")
-	loginCmd.Flags().StringVarP(&loginFlags.password, "password", "p", "", "Criteo user password")
-	rootCmd.AddCommand(loginCmd)
-}
+func AddLoginCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
+	loginCmd := &cobra.Command{
+		Use:   "login",
+		Short: "Login to use services",
+		Long: fmt.Sprintf(`
+Login to use services.
 
-var loginCmd = &cobra.Command{
-	Use:   "login",
-	Short: "Login to Criteo services",
-	Long: `
-Login to Criteo services.
-
-You can specify the your Criteo password from:
+You can specify the your password from:
 1. command option --password (-p)
-2. environment variable CDT_PASSWORD
+2. environment variable %s
 3. from command line input
 
-The credential will be stored in your system vault.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		username := loginFlags.username
-		if username == "" {
-			username = os.Getenv("CDT_USERNAME")
+The credential will be stored in your system vault.`, appCtx.PasswordVarEnv()),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			appCtx, _ := context.AppContext()
+			username := loginFlags.username
 			if username == "" {
-				fmt.Printf("Please enter your Criteo user name: ")
-				nb, err := fmt.Scan(&username)
-				if err != nil {
-					return err
-				}
+				username = os.Getenv(appCtx.UsernameVarEnv())
+				if username == "" {
+					fmt.Printf("Please enter your user name: ")
+					nb, err := fmt.Scan(&username)
+					if err != nil {
+						return err
+					}
 
-				if nb != 1 {
-					return fmt.Errorf("invalid entries (expected only one argument)")
+					if nb != 1 {
+						return fmt.Errorf("invalid entries (expected only one argument)")
+					}
 				}
 			}
-		}
 
-		passwd := loginFlags.password
-		if passwd == "" {
-			passwd = os.Getenv("CDT_PASSWORD")
+			passwd := loginFlags.password
 			if passwd == "" {
-				fmt.Printf("Please enter your Criteo IT password: ")
-				pass, err := terminal.ReadPassword(int(syscall.Stdin))
-				if err != nil {
-					return err
+				passwd = os.Getenv(appCtx.PasswordVarEnv())
+				if passwd == "" {
+					fmt.Printf("Please enter your password: ")
+					pass, err := terminal.ReadPassword(int(syscall.Stdin))
+					if err != nil {
+						return err
+					}
+					passwd = string(pass)
 				}
-				passwd = string(pass)
 			}
-		}
 
-		fmt.Println()
+			fmt.Println()
 
-		helper.SetSecret("cdt-username", username)
-		helper.SetSecret("cdt-password", passwd)
-		return nil
-	},
+			helper.SetUsername(username)
+			helper.SetPassword(passwd)
+			return nil
+		},
+	}
+	loginCmd.Flags().StringVarP(&loginFlags.username, "user", "u", defaultUsername(), "User name")
+	loginCmd.Flags().StringVarP(&loginFlags.password, "password", "p", "", "User password")
+
+	rootCmd.AddCommand(loginCmd)
 }

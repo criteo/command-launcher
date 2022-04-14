@@ -5,21 +5,27 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/criteo/command-launcher/internal/context"
 	log "github.com/sirupsen/logrus"
 )
 
-func LauncherDir() string {
+func AppDir() string {
+	ctx, err := context.AppContext()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	home, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Tracef("User home dir: %s", home)
 
-	return filepath.Join(home, ".cdt")
+	return filepath.Join(home, ctx.AppDirname())
 }
 
 func LogsDir() string {
-	return filepath.Join(LauncherDir(), "logs")
+	return filepath.Join(AppDir(), "logs")
 }
 
 func createLogsDir() error {
@@ -32,12 +38,12 @@ func createLogsDir() error {
 	return nil
 }
 
-func createLauncherDir() {
-	err := maybeCreateDir(LauncherDir())
+func createAppDir() {
+	err := maybeCreateDir(AppDir())
 	if err != nil {
-		log.Fatalf("cannot create the launcher folder %s, err=%v", LauncherDir(), err)
+		log.Fatalf("cannot create the App folder %s, err=%v", AppDir(), err)
 	}
-	log.Infof("Create Launcher folder: %s", LauncherDir())
+	log.Infof("App folder: %s", AppDir())
 }
 
 func maybeCreateDir(path string) error {
