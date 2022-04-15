@@ -9,11 +9,13 @@ type LauncherContext interface {
 
 	AppDirname() string
 
-	UsernameVarEnv() string
+	UsernameEnvVar() string
 
-	PasswordVarEnv() string
+	PasswordEnvVar() string
 
-	DebugFlagsVarEnv() string
+	DebugFlagsEnvVar() string
 
-	ConfigurationFileVarEnv() string
+	ConfigurationFileEnvVar() string
+
+	RemoteConfigurationUrlEnvVar() string
 }

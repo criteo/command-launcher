@@ -75,11 +75,7 @@ func postRun(cmd *cobra.Command, args []string) {
 	}
 }
 
-func selfUpdateEnabled(cmd *cobra.Command, args []string) bool {
-	if !viper.GetBool(config.SELF_UPDATE_ENABLED_KEY) {
-		return false
-	}
-
+func isUpdatePossible(cmd *cobra.Command) bool {
 	cmdPath := cmd.CommandPath()
 	cmdPath = strings.TrimSpace(strings.TrimPrefix(cmdPath, rootCtxt.appCtx.AppName()))
 	// exclude commands for update check
@@ -89,32 +85,20 @@ func selfUpdateEnabled(cmd *cobra.Command, args []string) bool {
 			return false
 		}
 	}
+
 	return true
+}
+
+func selfUpdateEnabled(cmd *cobra.Command, args []string) bool {
+	return viper.GetBool(config.SELF_UPDATE_ENABLED_KEY) && isUpdatePossible(cmd)
 }
 
 func cmdUpdateEnabled(cmd *cobra.Command, args []string) bool {
-	cmdPath := cmd.CommandPath()
-	cmdPath = strings.TrimSpace(strings.TrimPrefix(cmdPath, rootCtxt.appCtx.AppName()))
-	for _, w := range []string{"version", "config", "completion", "help", "__complete"} {
-		if strings.HasPrefix(cmdPath, w) {
-			return false
-		}
-	}
-	return true
+	return viper.GetBool(config.COMMAND_UPDATE_ENABLED_KEY) && isUpdatePossible(cmd)
 }
 
 func metricsEnabled(cmd *cobra.Command, args []string) bool {
-	if !viper.GetBool(config.USAGE_METRICS_ENABLED_KEY) {
-		return false
-	}
-	cmdPath := cmd.CommandPath()
-	cmdPath = strings.TrimSpace(strings.TrimPrefix(cmdPath, rootCtxt.appCtx.AppName()))
-	for _, w := range []string{"version", "config", "completion", "help", "__complete"} {
-		if strings.HasPrefix(cmdPath, w) {
-			return false
-		}
-	}
-	return true
+	return viper.GetBool(config.USAGE_METRICS_ENABLED_KEY) && isUpdatePossible(cmd)
 }
 
 func initUser() {
@@ -452,15 +436,15 @@ func secrets() []string {
 		password = ""
 	}
 	if username != "" {
-		vars = append(vars, fmt.Sprintf("%s=%s", rootCtxt.appCtx.UsernameVarEnv(), username))
+		vars = append(vars, fmt.Sprintf("%s=%s", rootCtxt.appCtx.UsernameEnvVar(), username))
 	}
 	if password != "" {
-		vars = append(vars, fmt.Sprintf("%s=%s", rootCtxt.appCtx.PasswordVarEnv(), password))
+		vars = append(vars, fmt.Sprintf("%s=%s", rootCtxt.appCtx.PasswordEnvVar(), password))
 	}
 	// append debug flags from configuration
-	debugFlags := os.Getenv(rootCtxt.appCtx.DebugFlagsVarEnv())
+	debugFlags := os.Getenv(rootCtxt.appCtx.DebugFlagsEnvVar())
 	vars = append(vars, fmt.Sprintf("%s=%s,%s",
-		rootCtxt.appCtx.DebugFlagsVarEnv(),
+		rootCtxt.appCtx.DebugFlagsEnvVar(),
 		debugFlags,
 		viper.GetString(config.DEBUG_FLAGS_KEY),
 	))
