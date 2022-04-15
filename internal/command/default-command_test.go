@@ -1,6 +1,8 @@
 package command
 
 import (
+	"fmt"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -131,4 +133,122 @@ func TestCloneCommand(t *testing.T) {
 	assert.Equal(t, 2, len(newCmd.Arguments()))
 	assert.Equal(t, "-l", newCmd.Arguments()[0])
 	assert.Equal(t, "-a", newCmd.Arguments()[1])
+}
+
+func TestLegacyVariableInterpolation(t *testing.T) {
+	cmd := DefaultCommand{
+		CmdName:             "test",
+		CmdCategory:         "",
+		CmdType:             "executable",
+		CmdGroup:            "",
+		CmdShortDescription: "test command",
+		CmdLongDescription:  "test command - long description",
+		CmdExecutable:       "#CACHE#/#OS#/test#EXT#",
+		CmdArguments:        []string{"-l", "-a"},
+		CmdDocFile:          "",
+		CmdDocLink:          "",
+		CmdValidArgs:        nil,
+		CmdValidArgsCmd:     nil,
+		CmdRequiredFlags:    nil,
+		CmdFlagValuesCmd:    nil,
+		PkgDir:              "/tmp/test/root",
+	}
+
+	assert.Equal(t, fmt.Sprintf("/tmp/test/root/%s/test", runtime.GOOS), cmd.interpolateCmd())
+}
+
+func TestVariableRender(t *testing.T) {
+	cmd := DefaultCommand{
+		CmdName:             "test",
+		CmdCategory:         "",
+		CmdType:             "executable",
+		CmdGroup:            "",
+		CmdShortDescription: "test command",
+		CmdLongDescription:  "test command - long description",
+		CmdExecutable:       "{{.Root}}/{{.Os}}/test",
+		CmdArguments:        []string{"-l", "-a"},
+		CmdDocFile:          "",
+		CmdDocLink:          "",
+		CmdValidArgs:        nil,
+		CmdValidArgsCmd:     nil,
+		CmdRequiredFlags:    nil,
+		CmdFlagValuesCmd:    nil,
+		PkgDir:              "/tmp/test/root",
+	}
+
+	assert.Equal(t, fmt.Sprintf("/tmp/test/root/%s/test", runtime.GOOS), cmd.interpolateCmd())
+}
+
+func TestConditionalVariableRender(t *testing.T) {
+	cmd := DefaultCommand{
+		CmdName:             "test",
+		CmdCategory:         "",
+		CmdType:             "executable",
+		CmdGroup:            "",
+		CmdShortDescription: "test command",
+		CmdLongDescription:  "test command - long description",
+		CmdExecutable:       "{{.Root}}/{{.Os}}/test{{if eq .Os \"windows\"}}.bat{{else}}.sh{{end}}",
+		CmdArguments:        []string{"-l", "-a"},
+		CmdDocFile:          "",
+		CmdDocLink:          "",
+		CmdValidArgs:        nil,
+		CmdValidArgsCmd:     nil,
+		CmdRequiredFlags:    nil,
+		CmdFlagValuesCmd:    nil,
+		PkgDir:              "/tmp/test/root",
+	}
+
+	if runtime.GOOS == "windows" {
+		assert.Equal(t, fmt.Sprintf("/tmp/test/root/%s/test.bat", runtime.GOOS), cmd.interpolateCmd())
+	} else {
+		assert.Equal(t, fmt.Sprintf("/tmp/test/root/%s/test.sh", runtime.GOOS), cmd.interpolateCmd())
+	}
+}
+
+func TestMixedRender(t *testing.T) {
+	cmd := DefaultCommand{
+		CmdName:             "test",
+		CmdCategory:         "",
+		CmdType:             "executable",
+		CmdGroup:            "",
+		CmdShortDescription: "test command",
+		CmdLongDescription:  "test command - long description",
+		CmdExecutable:       "#CACHE#/#OS#/test{{if eq .Os \"windows\"}}.bat{{else}}.sh{{end}}",
+		CmdArguments:        []string{"-l", "-a"},
+		CmdDocFile:          "",
+		CmdDocLink:          "",
+		CmdValidArgs:        nil,
+		CmdValidArgsCmd:     nil,
+		CmdRequiredFlags:    nil,
+		CmdFlagValuesCmd:    nil,
+		PkgDir:              "/tmp/test/root",
+	}
+
+	if runtime.GOOS == "windows" {
+		assert.Equal(t, fmt.Sprintf("/tmp/test/root/%s/test.bat", runtime.GOOS), cmd.interpolateCmd())
+	} else {
+		assert.Equal(t, fmt.Sprintf("/tmp/test/root/%s/test.sh", runtime.GOOS), cmd.interpolateCmd())
+	}
+}
+
+func TestVariableRenderError(t *testing.T) {
+	cmd := DefaultCommand{
+		CmdName:             "test",
+		CmdCategory:         "",
+		CmdType:             "executable",
+		CmdGroup:            "",
+		CmdShortDescription: "test command",
+		CmdLongDescription:  "test command - long description",
+		CmdExecutable:       "{{.Root}}/{{.Os}}/test{{.NonExistKey}}",
+		CmdArguments:        []string{"-l", "-a"},
+		CmdDocFile:          "",
+		CmdDocLink:          "",
+		CmdValidArgs:        nil,
+		CmdValidArgsCmd:     nil,
+		CmdRequiredFlags:    nil,
+		CmdFlagValuesCmd:    nil,
+		PkgDir:              "/tmp/test/root",
+	}
+
+	assert.Equal(t, "{{.Root}}/{{.Os}}/test{{.NonExistKey}}", cmd.interpolateCmd())
 }
