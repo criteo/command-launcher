@@ -2,7 +2,7 @@
   {
     "name": "command-launcher-demo",
     "version": "1.0.0",
-    "checksum": "95ce2fddae265fbf717c704baeeceef76d886244414715c8f687f94db24b3798",
+    "checksum": "db05875501ffd067f51d923a25a5af8b8992766eb546b309b07123995611796a",
     "startPartition": 0,
     "endPartition": 9
   }

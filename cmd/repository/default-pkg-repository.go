@@ -46,6 +46,10 @@ func (repo *defaultPackageRepository) Load() error {
 }
 
 func (repo *defaultPackageRepository) Install(pkg command.Package) error {
+	if pkg.Name() == "" {
+		return fmt.Errorf("invalid package manifest: empty package name, please make sure manifest.mf contains a 'pkgName'")
+	}
+
 	pkgDir := filepath.Join(repo.RepoDir, pkg.Name())
 	err := os.MkdirAll(pkgDir, 0755)
 	if err != nil {

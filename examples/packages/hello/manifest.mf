@@ -1,5 +1,5 @@
 {
-  "name": "command-launcher-demo",
+  "pkgName": "command-launcher-demo",
   "version": "1.0.0",
   "cmds": [
     {
