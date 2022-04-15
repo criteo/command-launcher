@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"html/template"
 	"os"
 	"os/exec"
 	"runtime"
@@ -226,6 +227,7 @@ func (cmd *DefaultCommand) interpolateArgs(values *[]string) {
 		(*values)[i] = strings.ReplaceAll((*values)[i], ARCH_PATTERN, runtime.GOARCH)
 		(*values)[i] = strings.ReplaceAll((*values)[i], BINARY_PATTERN, cmd.binary())
 		(*values)[i] = strings.ReplaceAll((*values)[i], EXT_PATTERN, cmd.extension())
+		(*values)[i] = cmd.render((*values)[i])
 	}
 }
 
@@ -253,5 +255,36 @@ func (cmd *DefaultCommand) interpolate(text string) string {
 	output = strings.ReplaceAll(output, ARCH_PATTERN, runtime.GOARCH)
 	output = strings.ReplaceAll(output, BINARY_PATTERN, cmd.binary())
 	output = strings.ReplaceAll(output, EXT_PATTERN, cmd.extension())
+	output = cmd.render(output)
 	return output
+}
+
+// Support golang built-in text/template engine
+type TemplateContext struct {
+	Os    string
+	Arch  string
+	Cache string
+	Root  string
+}
+
+func (cmd *DefaultCommand) render(text string) string {
+	ctx := TemplateContext{
+		Os:    runtime.GOOS,
+		Arch:  runtime.GOARCH,
+		Cache: cmd.PkgDir,
+		Root:  cmd.PkgDir,
+	}
+
+	t, err := template.New("command-template").Parse(text)
+	if err != nil {
+		return text
+	}
+
+	builder := strings.Builder{}
+	err = t.Execute(&builder, ctx)
+	if err != nil {
+		return text
+	}
+
+	return builder.String()
 }
