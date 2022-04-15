@@ -154,7 +154,11 @@ func TestLegacyVariableInterpolation(t *testing.T) {
 		PkgDir:              "/tmp/test/root",
 	}
 
-	assert.Equal(t, fmt.Sprintf("/tmp/test/root/%s/test", runtime.GOOS), cmd.interpolateCmd())
+	if runtime.GOOS == "windows" {
+		assert.Equal(t, fmt.Sprintf("/tmp/test/root/%s/test.exe", runtime.GOOS), cmd.interpolateCmd())
+	} else {
+		assert.Equal(t, fmt.Sprintf("/tmp/test/root/%s/test", runtime.GOOS), cmd.interpolateCmd())
+	}
 }
 
 func TestVariableRender(t *testing.T) {
