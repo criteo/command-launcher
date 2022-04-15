@@ -51,7 +51,7 @@ Requirements: golang >= 1.17
 
 You can build the command launcher with your prefered name (in the example: `Criteo Developer Toolkit`, a.k.a `cdt`).
 ```
-go build -o cdt -ldflags='-X main.version=dev -X main.binaryName=cdt' main.go
+go build -o cdt -ldflags='-X main.version=dev -X main.appName=cdt -X main.appLongName=Criteo_Dev_Toolkit' main.go
 ```
 
 ## Run tests
