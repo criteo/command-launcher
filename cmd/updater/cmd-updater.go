@@ -184,6 +184,9 @@ func (u *CmdUpdater) checkUpdateCommands() <-chan bool {
 
 // only fetch remote repository once in each updater instance
 func (u *CmdUpdater) getRemoteRepository() (remote.RemoteRepository, error) {
+	if u.CmdRepositoryBaseUrl == "" {
+		return nil, fmt.Errorf("invalid remote repository url")
+	}
 	u.initRemoteRepoOnce.Do(func() {
 		u.remoteRepo = remote.CreateRemoteRepository(u.CmdRepositoryBaseUrl)
 		u.initRemoteRepoErr = u.remoteRepo.Fetch()

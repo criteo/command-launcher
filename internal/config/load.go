@@ -52,11 +52,11 @@ func setDefaultConfig() {
 
 	viper.SetDefault(SELF_UPDATE_ENABLED_KEY, false)
 	viper.SetDefault(SELF_UPDATE_TIMEOUT_KEY, 2*time.Second) // In seconds
-	viper.SetDefault(SELF_UPDATE_LATEST_VERSION_URL_KEY, "https://dummy/version")
-	viper.SetDefault(SELF_UPDATE_BASE_URL_KEY, "https://dummy/")
+	viper.SetDefault(SELF_UPDATE_LATEST_VERSION_URL_KEY, "")
+	viper.SetDefault(SELF_UPDATE_BASE_URL_KEY, "")
 
 	viper.SetDefault(COMMAND_UPDATE_ENABLED_KEY, false)
-	viper.SetDefault(COMMAND_REPOSITORY_BASE_URL_KEY, "https://dummy/repos")
+	viper.SetDefault(COMMAND_REPOSITORY_BASE_URL_KEY, "")
 
 	viper.SetDefault(DROPIN_FOLDER_KEY, filepath.Join(AppDir(), "dropins"))
 	viper.SetDefault(LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY, filepath.Join(AppDir(), "current"))
