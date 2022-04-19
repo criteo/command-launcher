@@ -15,6 +15,12 @@ func AppDir() string {
 		log.Fatal(err)
 	}
 
+	appDir := os.Getenv(ctx.AppHomeEnvVar())
+	if appDir != "" {
+		log.Tracef("Use app home dir from environment variable, %s: %s", ctx.AppHomeEnvVar(), appDir)
+		return appDir
+	}
+
 	home, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal(err)

@@ -46,6 +46,10 @@ func (ctx *defaultContext) AppDirname() string {
 	return fmt.Sprintf(".%s", ctx.appName)
 }
 
+func (ctx *defaultContext) AppHomeEnvVar() string {
+	return fmt.Sprintf("%s_%s", ctx.prefix(), "HOME")
+}
+
 func (ctx *defaultContext) UsernameEnvVar() string {
 	return fmt.Sprintf("%s_%s", ctx.prefix(), "USERNAME")
 }

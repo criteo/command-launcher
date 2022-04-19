@@ -69,8 +69,8 @@ func (u *CmdUpdater) Update() {
 
 	// update existing pacakges
 	if u.toBeUpdated != nil && len(u.toBeUpdated) > 0 {
-		for pkg, remoteVersion := range u.toBeUpdated {
-			localPkg, err := u.LocalRepo.Package(pkg)
+		for pkgName, remoteVersion := range u.toBeUpdated {
+			localPkg, err := u.LocalRepo.Package(pkgName)
 			if err != nil {
 				continue
 			}
@@ -78,31 +78,31 @@ func (u *CmdUpdater) Update() {
 			if remote.IsVersionSmaller(remoteVersion, localPkg.Version()) {
 				op = "downgrade"
 			}
-			console.Highlight("- %s command '%s' from version %s to version %s ...\n", op, pkg, localPkg.Version(), remoteVersion)
-			pkg, err := remoteRepo.Package(pkg, remoteVersion)
+			console.Highlight("- %s command '%s' from version %s to version %s ...\n", op, pkgName, localPkg.Version(), remoteVersion)
+			pkg, err := remoteRepo.Package(pkgName, remoteVersion)
 			if err != nil {
-				fmt.Printf("Cannot get the package of the command %s: %v\n", pkg.Name(), err)
+				fmt.Printf("Cannot get the package of the command %s: %v\n", pkgName, err)
 				continue
 			}
 			if err = repo.Update(pkg); err != nil {
-				fmt.Printf("Cannot update the command %s: %v\n", pkg.Name(), err)
+				fmt.Printf("Cannot update the command %s: %v\n", pkgName, err)
 			}
 		}
 	}
 
 	// install new ones
 	if u.toBeInstalled != nil && len(u.toBeInstalled) > 0 {
-		for pkg, remoteVersion := range u.toBeInstalled {
-			_, err = repo.Package(pkg)
+		for pkgName, remoteVersion := range u.toBeInstalled {
+			_, err = repo.Package(pkgName)
 			if err != nil {
-				console.Highlight("- install new package '%s'\n", pkg)
-				pkg, err := remoteRepo.Package(pkg, remoteVersion)
+				console.Highlight("- install new package '%s'\n", pkgName)
+				pkg, err := remoteRepo.Package(pkgName, remoteVersion)
 				if err != nil {
-					fmt.Printf("Cannot get the package %s: %v\n", pkg.Name(), err)
+					fmt.Printf("Cannot get the package %s: %v\n", pkgName, err)
 					continue
 				}
 				if err = repo.Install(pkg); err != nil {
-					fmt.Printf("Cannot install the package %s: %v\n", pkg.Name(), err)
+					fmt.Printf("Cannot install the package %s: %v\n", pkgName, err)
 				}
 			}
 		}
@@ -184,6 +184,9 @@ func (u *CmdUpdater) checkUpdateCommands() <-chan bool {
 
 // only fetch remote repository once in each updater instance
 func (u *CmdUpdater) getRemoteRepository() (remote.RemoteRepository, error) {
+	if u.CmdRepositoryBaseUrl == "" {
+		return nil, fmt.Errorf("invalid remote repository url")
+	}
 	u.initRemoteRepoOnce.Do(func() {
 		u.remoteRepo = remote.CreateRemoteRepository(u.CmdRepositoryBaseUrl)
 		u.initRemoteRepoErr = u.remoteRepo.Fetch()

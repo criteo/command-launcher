@@ -9,6 +9,8 @@ type LauncherContext interface {
 
 	AppDirname() string
 
+	AppHomeEnvVar() string
+
 	UsernameEnvVar() string
 
 	PasswordEnvVar() string

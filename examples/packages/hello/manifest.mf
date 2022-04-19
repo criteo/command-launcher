@@ -1,11 +1,11 @@
 {
-  "name": "command-launcher-demo",
+  "pkgName": "command-launcher-demo",
   "version": "1.0.0",
   "cmds": [
     {
-      "name": "hello"
+      "name": "hello",
       "type": "executable",
-      "short": "print hello world from command launcher"
+      "short": "print hello world from command launcher",
       "executable": "#CACHE#/hello.sh",
       "args": []
     }
