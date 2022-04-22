@@ -50,7 +50,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: ${{matrix.os}}-${{matrix.arch}}
-        path: ${{github.workspace}}/command-launcher/build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{github.ref_name}}-${{steps.vars.outputs.sha_short}}
+        path: build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{github.ref_name}}-${{steps.vars.outputs.sha_short}}
 
     - name: Release
       uses: softprops/action-gh-release@v1
