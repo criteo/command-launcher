@@ -59,25 +59,26 @@ jobs:
         files: build/cdt_${{matrix.os}}_${{matrix.arch}}_${{github.ref_name}}-${{steps.vars.outputs.sha_short}}
 
   packaging:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: download linux amd64 artifact
-        uses: actions/download-artifact@V3
+        uses: actions/download-artifact@v3
         with:
           name: linux-amd64
           path: output/linux/amd64/
       - name: download windows amd64 artifact
-        uses: actions/download-artifact@V3
+        uses: actions/download-artifact@v3
         with:
           name: windows-amd64
           path: output/windows/amd64/
       - name: download darwin amd64 artifact
-        uses: actions/download-artifact@V3
+        uses: actions/download-artifact@v3
         with:
           name: darwin-amd64
           path: output/darwin/amd64/
       - name: download darwin-arm64 artifact
-        uses: actions/download-artifact@V3
+        uses: actions/download-artifact@v3
         with:
           name: darwin-arm64
           path: output/darwin/arm64/
