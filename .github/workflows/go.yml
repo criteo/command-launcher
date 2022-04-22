@@ -82,6 +82,12 @@ jobs:
         with:
           name: darwin-arm64
           path: output/darwin/arm64/
+      - name: rename binary name
+        run: |
+          mv output/darwin/arm64/cdt_darwin_arm64_${{github.ref_name}}-${{jobs.build.steps.vars.outputs.sha_short}} output/darwin/arm64/cdt
+          mv output/darwin/amd64/cdt_darwin_amd64_${{github.ref_name}}-${{jobs.build.steps.vars.outputs.sha_short}} output/darwin/amd64/cdt
+          mv output/linux/amd64/cdt_linux_amd64_${{github.ref_name}}-${{jobs.build.steps.vars.outputs.sha_short}} output/linux/amd64/cdt
+          mv output/windows/amd64/cdt_windows_amd64_${{github.ref_name}}-${{jobs.build.steps.vars.outputs.sha_short}} output/windows/amd64/cdt.exe
 
       - name: Display structure of downloaded files
         run: ls -R
