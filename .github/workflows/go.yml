@@ -75,7 +75,8 @@ jobs:
 
       - name: integration-test
         run: |
-          test/integration.sh
+          echo "${{github.workspace}}/test"
+          test/integration.sh ${{github.workspace}}/test
 
   packaging:
     needs: [ build, integration-test ]

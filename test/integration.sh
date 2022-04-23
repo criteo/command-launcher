@@ -1,6 +1,7 @@
 #!/bin/sh
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+SCRIPT_DIR=${1:-$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )}
+echo "integration test directory: $SCRIPT_DIR"
 
 # create output folder
 OUTPUT_DIR=$SCRIPT_DIR/output
