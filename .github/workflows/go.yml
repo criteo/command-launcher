@@ -45,7 +45,7 @@ jobs:
       env:
         GOARCH: ${{matrix.arch}}
         CGO_ENABLED: ${{matrix.cgo}}
-      run: go build -o build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{github.ref_name}}-${{steps.vars.outputs.sha_short}} -ldflags='-X main.version=${{github.ref_name}} -X main.buildNum=${{github.run_attempt}} -X main.appName=cdt -X "appLongName=Criteo Dev Toolkits"'
+      run: go build -o build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{github.ref_name}}-${{steps.vars.outputs.sha_short}} -ldflags='-X main.version=${{github.ref_name}} -X main.buildNum=${{github.run_attempt}} -X main.appName=cdt -X "main.appLongName=Criteo Dev Toolkits"'
 
     - name: Test
       run: go test -v ./...
