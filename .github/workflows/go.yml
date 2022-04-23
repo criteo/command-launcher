@@ -50,6 +50,11 @@ jobs:
     - name: Test
       run: go test -v ./...
 
+    - name: Integration-test
+      run: |
+        echo "${{github.workspace}}/test"
+        test/integration.sh ${{github.workspace}}/test
+
     - name: Upload
       uses: actions/upload-artifact@v3
       with:
@@ -62,24 +67,9 @@ jobs:
       with: 
         files: build/cdt_${{matrix.os}}_${{matrix.arch}}_${{github.ref_name}}-${{steps.vars.outputs.sha_short}}
 
-  integration-test:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: 1.17
-
-      - name: integration-test
-        run: |
-          echo "${{github.workspace}}/test"
-          test/integration.sh ${{github.workspace}}/test
-
+    
   packaging:
-    needs: [ build, integration-test ]
+    needs: [ build ]
     runs-on: ubuntu-latest
     steps:
       - name: download linux amd64 artifact
