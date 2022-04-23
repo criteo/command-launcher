@@ -91,7 +91,7 @@ fi
 
 echo "> test get single config"
 RESULT=$($OUTPUT_DIR/cl config log_level)
-if [ "$RESULT" == "debug" ]; then
+if [ "$RESULT" = "debug" ]; then
   echo "OK"
 else
   echo "KO - failed to get config: log_level"
@@ -115,7 +115,7 @@ fi
 
 echo "> test run remote command"
 RESULT=$($OUTPUT_DIR/cl hello)
-if [ "$RESULT" == "Hello World!" ]; then
+if [ "$RESULT" = "Hello World!" ]; then
   echo "OK"
 else
   echo "KO - wrong output of hello command: $RESULT"
