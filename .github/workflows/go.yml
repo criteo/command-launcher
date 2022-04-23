@@ -62,8 +62,16 @@ jobs:
       with: 
         files: build/cdt_${{matrix.os}}_${{matrix.arch}}_${{github.ref_name}}-${{steps.vars.outputs.sha_short}}
 
-  packaging:
+  integration-test:
     needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: integration-test
+        run: |
+          test/integration.sh
+
+  packaging:
+    needs: [ build, integration-test ]
     runs-on: ubuntu-latest
     steps:
       - name: download linux amd64 artifact
@@ -96,5 +104,4 @@ jobs:
       - name: Display structure of downloaded files
         run: ls -R
         working-directory: output
-
 
