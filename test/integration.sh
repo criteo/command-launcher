@@ -68,7 +68,7 @@ RESULT=$($OUTPUT_DIR/cl config)
 echo $RESULT
 echo "$OUTPUT_DIR"
 echo "$OUTPUT_DIR/home/current"
-echo $RESULT | grep 'local_command_repository_dirname' | grep '$OUTPUT_DIR' | grep 'home' | grep 'current'
+echo $RESULT | grep 'local_command_repository_dirname' | grep 'home/current'
 if [ $? -eq 0 ]; then
   # ok
   echo "OK"
