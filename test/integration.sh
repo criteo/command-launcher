@@ -118,6 +118,7 @@ fi
 
 echo "> test run remote command"
 RESULT=$($OUTPUT_DIR/cl hello)
+echo $RESULT
 if [ "$RESULT" = "Hello World!" ]; then
   echo "OK"
 else
