@@ -3,6 +3,8 @@
 SCRIPT_DIR=${1:-$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )}
 echo "integration test directory: $SCRIPT_DIR"
 
+BRANCH_NAME=$(git branch --show-current)
+
 # create output folder
 OUTPUT_DIR=$SCRIPT_DIR/output
 rm -rf $OUTPUT_DIR
@@ -65,9 +67,6 @@ fi
 ##
 echo "> test config"
 RESULT=$($OUTPUT_DIR/cl config)
-echo $RESULT
-echo "$OUTPUT_DIR"
-echo "$OUTPUT_DIR/home/current"
 echo $RESULT | grep 'local_command_repository_dirname' | grep 'home' | grep 'current'
 if [ $? -eq 0 ]; then
   # ok
@@ -105,7 +104,7 @@ fi
 # test remote command
 ##
 echo "> test download remote command"
-RESULT=$($OUTPUT_DIR/cl config command_repository_base_url https://raw.githubusercontent.com/criteo/command-launcher/main/examples/remote-repo)
+RESULT=$($OUTPUT_DIR/cl config command_repository_base_url https://raw.githubusercontent.com/criteo/command-launcher/${BRANCH_NAME}/examples/remote-repo)
 RESULT=$($OUTPUT_DIR/cl)
 echo $RESULT | grep -q "hello"
 if [ $? -eq 0 ]; then
@@ -119,7 +118,8 @@ fi
 echo "> test run remote command"
 RESULT=$($OUTPUT_DIR/cl hello)
 echo $RESULT
-if [ "$RESULT" = "Hello World!" ]; then
+echo $RESULT | grep -q "Hello World!"
+if [ $? -eq 0 ]; then
   echo "OK"
 else
   echo "KO - wrong output of hello command: $RESULT"
@@ -130,4 +130,4 @@ fi
 # remove the output folder
 ##
 echo "clean up"
-rm -rf $OUTPUT_DIR
+# rm -rf $OUTPUT_DIR
