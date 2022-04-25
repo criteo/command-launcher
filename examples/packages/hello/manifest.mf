@@ -6,7 +6,7 @@
       "name": "hello",
       "type": "executable",
       "short": "print hello world from command launcher",
-      "executable": "#CACHE#/hello.sh",
+      "executable": "#CACHE#/hello.{{if .Os eq \"windows\"}}bat{{else}}sh{{end}}",
       "args": []
     }
   ]
