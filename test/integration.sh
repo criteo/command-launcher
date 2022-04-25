@@ -67,7 +67,7 @@ fi
 ##
 echo "> test config"
 RESULT=$($OUTPUT_DIR/cl config)
-echo $RESULT | grep 'local_command_repository_dirname' | grep 'home' | grep 'current'
+echo $RESULT | grep 'local_command_repository_dirname' | grep 'home' | grep -q 'current'
 if [ $? -eq 0 ]; then
   # ok
   echo "OK"
@@ -117,7 +117,7 @@ fi
 
 echo "> test run remote command"
 RESULT=$($OUTPUT_DIR/cl hello)
-echo $RESULT
+#echo $RESULT
 echo $RESULT | grep -q "Hello World!"
 if [ $? -eq 0 ]; then
   echo "OK"
