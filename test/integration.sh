@@ -3,7 +3,8 @@
 SCRIPT_DIR=${1:-$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )}
 echo "integration test directory: $SCRIPT_DIR"
 
-BRANCH_NAME=$(git branch --show-current)
+#BRANCH_NAME=$(git branch --show-current)
+EXAMPLE_BRANCH_NAME=release-cdt-pkg
 
 # create output folder
 OUTPUT_DIR=$SCRIPT_DIR/output
@@ -104,7 +105,7 @@ fi
 # test remote command
 ##
 echo "> test download remote command"
-RESULT=$($OUTPUT_DIR/cl config command_repository_base_url https://raw.githubusercontent.com/criteo/command-launcher/${BRANCH_NAME}/examples/remote-repo)
+RESULT=$($OUTPUT_DIR/cl config command_repository_base_url https://raw.githubusercontent.com/criteo/command-launcher/${EXAMPLE_BRANCH_NAME}/examples/remote-repo)
 RESULT=$($OUTPUT_DIR/cl)
 echo $RESULT | grep -q "hello"
 if [ $? -eq 0 ]; then
@@ -130,4 +131,4 @@ fi
 # remove the output folder
 ##
 echo "clean up"
-# rm -rf $OUTPUT_DIR
+rm -rf $OUTPUT_DIR
