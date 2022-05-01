@@ -45,7 +45,7 @@ jobs:
       env:
         GOARCH: ${{matrix.arch}}
         CGO_ENABLED: ${{matrix.cgo}}
-      run: go build -o build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{github.ref_name}}-${{steps.vars.outputs.sha_short}} -ldflags='-X main.version=${{github.ref_name}} -X main.buildNum=${{github.run_attempt}} -X main.appName=cdt'
+      run: go build -o build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}} -ldflags='-X main.version=${{github.ref_name}} -X main.buildNum=${{github.run_attempt}} -X main.appName=cdt'
 
     - name: Test
       run: go test -v ./...
@@ -60,15 +60,14 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: ${{steps.vars.outputs.os}}-${{matrix.arch}}
-        path: build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{github.ref_name}}-${{steps.vars.outputs.sha_short}}
+        path: build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}}
 
     - name: Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with: 
-        files: build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{github.ref_name}}-${{steps.vars.outputs.sha_short}}
+        files: build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}}
 
-    
   packaging:
     needs: [ build ]
     runs-on: ubuntu-latest
@@ -96,10 +95,10 @@ jobs:
 
       - name: Rename binary name
         run: |
-          mv output/darwin/arm64/cdt_darwin_arm64_${{github.ref_name}}-${{needs.build.outputs.sha_short}} output/darwin/arm64/cdt
-          mv output/darwin/amd64/cdt_darwin_amd64_${{github.ref_name}}-${{needs.build.outputs.sha_short}} output/darwin/amd64/cdt
-          mv output/linux/amd64/cdt_linux_amd64_${{github.ref_name}}-${{needs.build.outputs.sha_short}} output/linux/amd64/cdt
-          mv output/windows/amd64/cdt_windows_amd64_${{github.ref_name}}-${{needs.build.outputs.sha_short}} output/windows/amd64/cdt.exe
+          mv output/darwin/arm64/cdt_darwin_arm64_${{needs.build.outputs.sha_short}} output/darwin/arm64/cdt
+          mv output/darwin/amd64/cdt_darwin_amd64_${{needs.build.outputs.sha_short}} output/darwin/amd64/cdt
+          mv output/linux/amd64/cdt_linux_amd64_${{needs.build.outputs.sha_short}} output/linux/amd64/cdt
+          mv output/windows/amd64/cdt_windows_amd64_${{needs.build.outputs.sha_short}} output/windows/amd64/cdt.exe
 
       - name: Zip the package
         uses: thedoctor0/zip-release@master
