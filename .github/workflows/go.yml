@@ -104,14 +104,14 @@ jobs:
         uses: thedoctor0/zip-release@master
         with:
           type: 'zip'
-          filename: cdt_${{steps.vars.outputs.sha_short}}.zip
+          filename: cdt_${{needs.vars.outputs.sha_short}}.zip
           directory: output
 
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
           name: all-in-one.zip
-          path: output/cdt_${{steps.vars.outputs.sha_short}}}.zip
+          path: output/cdt_${{needs.vars.outputs.sha_short}}.zip
 
       - name: Display structure of downloaded files
         run: ls -R
