@@ -13,6 +13,10 @@ env:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    outputs:
+      sha_short: ${{steps.vars.outputs.sha_short}}
+      arch: ${{steps.vars.outputs.arch}}
+      os: ${{steps.vars.outputs.os}}
     strategy:
       matrix:
         arch: [amd64]
@@ -32,19 +36,91 @@ jobs:
 
     - name: generate short sha1
       id: vars
-      run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+      run: |
+        echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+        echo "::set-output name=arch::${{matrix.arch}}"
+        echo "::set-output name=os::$(go run test/get-os.go)"
 
     - name: Build
       env:
         GOARCH: ${{matrix.arch}}
         CGO_ENABLED: ${{matrix.cgo}}
-      run: go build -o build/cdt_${{matrix.os}}_${{matrix.arch}}_${{github.ref_name}}-${{steps.vars.outputs.sha_short}} -ldflags='-X main.version=${{github.ref_name}} -X main.buildNum=${{github.run_attempt}} -X main.binaryName=cdt'
+      run: go build -o build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}} -ldflags='-X main.version=${{github.ref_name}} -X main.buildNum=${{github.run_attempt}} -X main.appName=cdt'
 
     - name: Test
       run: go test -v ./...
+
+    - name: Integration-test
+      run: |
+        echo "${{github.workspace}}/test"
+        test/integration.sh '${{github.workspace}}/test'
+      shell: bash
+
+    - name: Upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{steps.vars.outputs.os}}-${{matrix.arch}}
+        path: build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}}
 
     - name: Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with: 
-        files: build/cdt_${{matrix.os}}_${{matrix.arch}}_${{github.ref_name}}-${{steps.vars.outputs.sha_short}}
+        files: build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}}
+
+  packaging:
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download linux amd64 artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: linux-amd64
+          path: output/linux/amd64/
+      - name: Download windows amd64 artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: windows-amd64
+          path: output/windows/amd64/
+      - name: Download darwin amd64 artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: darwin-amd64
+          path: output/darwin/amd64/
+      - name: Download darwin-arm64 artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: darwin-arm64
+          path: output/darwin/arm64/
+
+      - name: Rename binary name
+        run: |
+          mv output/darwin/arm64/cdt_darwin_arm64_${{needs.build.outputs.sha_short}} output/darwin/arm64/cdt
+          mv output/darwin/amd64/cdt_darwin_amd64_${{needs.build.outputs.sha_short}} output/darwin/amd64/cdt
+          mv output/linux/amd64/cdt_linux_amd64_${{needs.build.outputs.sha_short}} output/linux/amd64/cdt
+          mv output/windows/amd64/cdt_windows_amd64_${{needs.build.outputs.sha_short}} output/windows/amd64/cdt.exe
+
+      - name: Zip the package
+        uses: thedoctor0/zip-release@master
+        with:
+          type: 'zip'
+          filename: cdt_${{needs.vars.outputs.sha_short}}.zip
+          directory: output
+
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: all-in-one.zip
+          path: output/cdt_${{needs.vars.outputs.sha_short}}.zip
+
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: output
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with: 
+          files: output/cdt_${{github.ref_name}}.zip
+
+
