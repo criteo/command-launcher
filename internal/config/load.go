@@ -67,6 +67,9 @@ func setDefaultConfig() {
 	viper.SetDefault(user.INTERNAL_COMMAND_ENABLED_KEY, false)
 	viper.SetDefault(user.EXPERIMENTAL_COMMAND_ENABLED_KEY, false)
 	viper.SetDefault(REMOTE_CONFIG_HASH_KEY, "")
+
+	viper.SetDefault(ENABLE_CI_KEY, false)
+	viper.SetDefault(PACKAGE_LOCK_FILE_KEY, filepath.Join(AppDir(), "lock.json"))
 }
 
 func initDefaultConfigFile() {

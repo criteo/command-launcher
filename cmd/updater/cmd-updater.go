@@ -1,6 +1,7 @@
 package updater
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -9,6 +10,9 @@ import (
 	"github.com/criteo/command-launcher/cmd/repository"
 	"github.com/criteo/command-launcher/cmd/user"
 	"github.com/criteo/command-launcher/internal/console"
+	"github.com/criteo/command-launcher/internal/helper"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type CmdUpdater struct {
@@ -26,6 +30,8 @@ type CmdUpdater struct {
 	LocalRepo            repository.PackageRepository
 	User                 user.User
 	Timeout              time.Duration
+	EnableCI             bool
+	PackageLockFile      string
 }
 
 func (u *CmdUpdater) CheckUpdateAsync() {
@@ -47,6 +53,8 @@ func (u *CmdUpdater) Update() {
 		return
 	}
 
+	hasError := false
+
 	remoteRepo, err := u.getRemoteRepository()
 	if err != nil {
 		// TODO: handle error here
@@ -62,6 +70,7 @@ func (u *CmdUpdater) Update() {
 		for pkg := range u.toBeDeleted {
 			console.Highlight("- remove deprecated package '%s', it will not be available from now on\n", pkg)
 			if err = repo.Uninstall(pkg); err != nil {
+				hasError = true
 				fmt.Printf("Cannot uninstall the package %s: %v\n", pkg, err)
 			}
 		}
@@ -72,6 +81,7 @@ func (u *CmdUpdater) Update() {
 		for pkgName, remoteVersion := range u.toBeUpdated {
 			localPkg, err := u.LocalRepo.Package(pkgName)
 			if err != nil {
+				hasError = true
 				continue
 			}
 			op := "upgrade"
@@ -81,10 +91,12 @@ func (u *CmdUpdater) Update() {
 			console.Highlight("- %s command '%s' from version %s to version %s ...\n", op, pkgName, localPkg.Version(), remoteVersion)
 			pkg, err := remoteRepo.Package(pkgName, remoteVersion)
 			if err != nil {
+				hasError = true
 				fmt.Printf("Cannot get the package of the command %s: %v\n", pkgName, err)
 				continue
 			}
 			if err = repo.Update(pkg); err != nil {
+				hasError = true
 				fmt.Printf("Cannot update the command %s: %v\n", pkgName, err)
 			}
 		}
@@ -95,20 +107,25 @@ func (u *CmdUpdater) Update() {
 		for pkgName, remoteVersion := range u.toBeInstalled {
 			_, err = repo.Package(pkgName)
 			if err != nil {
+				hasError = true
 				console.Highlight("- install new package '%s'\n", pkgName)
 				pkg, err := remoteRepo.Package(pkgName, remoteVersion)
 				if err != nil {
+					hasError = true
 					fmt.Printf("Cannot get the package %s: %v\n", pkgName, err)
 					continue
 				}
 				if err = repo.Install(pkg); err != nil {
+					hasError = true
 					fmt.Printf("Cannot install the package %s: %v\n", pkgName, err)
 				}
 			}
 		}
 	}
 
-	fmt.Println("Update done! Enjoy coding!")
+	if !hasError {
+		fmt.Println("Update done! Enjoy coding!")
+	}
 }
 
 func (u *CmdUpdater) checkUpdateCommands() <-chan bool {
@@ -137,6 +154,30 @@ func (u *CmdUpdater) checkUpdateCommands() <-chan bool {
 					continue
 				}
 				availablePkgs[latest.Name] = latest.Version
+			}
+		}
+
+		if u.EnableCI {
+			log.Infoln("CI mode enabled")
+			if lockedPkgs, err := u.loadLockedPackages(u.PackageLockFile); err == nil && len(lockedPkgs) > 0 {
+				log.Infoln("checking locked packages from %s ...", u.PackageLockFile)
+				// check if the locked packages are in the remote registry
+				for k, v := range lockedPkgs {
+					log.Infof("package %s is locked to version %s\n", k, v)
+					if _, ok := availablePkgs[k]; !ok {
+						log.Infoln(fmt.Errorf("package %s@%s is not available on the remote registry", k, v))
+						canBeUpdated = false
+						ch <- canBeUpdated
+						return
+					}
+					// TODO: check if the locked version exists
+				}
+				// now set available packages to the locked ones
+				availablePkgs = lockedPkgs
+			} else if err != nil {
+				log.Errorln(err)
+			} else {
+				log.Infoln("Empty lock file %s", u.PackageLockFile)
 			}
 		}
 
@@ -192,4 +233,18 @@ func (u *CmdUpdater) getRemoteRepository() (remote.RemoteRepository, error) {
 		u.initRemoteRepoErr = u.remoteRepo.Fetch()
 	})
 	return u.remoteRepo, u.initRemoteRepoErr
+}
+
+// load the package lock file
+func (u *CmdUpdater) loadLockedPackages(lockFile string) (map[string]string, error) {
+	lockedPkgs := map[string]string{}
+	content, err := helper.LoadFile(lockFile)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := json.Unmarshal(content, &lockedPkgs); err != nil {
+		return nil, err
+	}
+	return lockedPkgs, nil
 }
