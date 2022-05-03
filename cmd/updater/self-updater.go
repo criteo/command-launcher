@@ -49,10 +49,10 @@ func (u *SelfUpdater) CheckUpdateAsync() {
 	}()
 }
 
-func (u *SelfUpdater) Update() {
+func (u *SelfUpdater) Update() error {
 	canBeSelfUpdated := <-u.selfUpdateChan || helper.LoadDebugFlags().ForceSelfUpdate
 	if !canBeSelfUpdated {
-		return
+		return nil
 	}
 
 	fmt.Println("\n-----------------------------------")
@@ -64,18 +64,21 @@ func (u *SelfUpdater) Update() {
 	var resp int
 	if _, err := fmt.Scanf("%c", &resp); err != nil || (resp != 'y' && resp != 'Y') {
 		fmt.Println("aborted by user")
-		return
+		return fmt.Errorf("Aborted by user")
 	}
 
 	fmt.Printf("update and install the latest version of %s (%s)\n", u.BinaryName, u.latestVersion.Version)
 	downloadUrl, err := u.latestDownloadUrl()
 	if err != nil {
 		console.Error("update failed: %s\n", err)
-		return
+		return err
 	}
 	if err = u.doSelfUpdate(downloadUrl); err != nil {
 		console.Error("update failed: %s\n", err)
+		return err
 	}
+
+	return nil
 }
 
 func (u *SelfUpdater) checkSelfUpdate() <-chan bool {
