@@ -163,10 +163,10 @@ func (u *CmdUpdater) checkUpdateCommands() <-chan bool {
 		if u.EnableCI {
 			log.Infoln("CI mode enabled")
 			if lockedPkgs, err := u.loadLockedPackages(u.PackageLockFile); err == nil && len(lockedPkgs) > 0 {
-				log.Infof("checking locked packages from %s ...\n", u.PackageLockFile)
+				log.Infof("checking locked packages from %s ...", u.PackageLockFile)
 				// check if the locked packages are in the remote registry
 				for k, v := range lockedPkgs {
-					log.Infof("package %s is locked to version %s\n", k, v)
+					log.Infof("package %s is locked to version %s", k, v)
 					if _, ok := availablePkgs[k]; !ok {
 						log.Infoln(fmt.Errorf("package %s@%s is not available on the remote registry", k, v))
 						canBeUpdated = false
@@ -180,7 +180,7 @@ func (u *CmdUpdater) checkUpdateCommands() <-chan bool {
 			} else if err != nil {
 				log.Errorln(err)
 			} else {
-				log.Infof("Empty lock file %s\n", u.PackageLockFile)
+				log.Infof("Empty lock file %s", u.PackageLockFile)
 			}
 		}
 

@@ -41,7 +41,14 @@ func (repo *defaultPackageRepository) Load() error {
 
 	repo.registry = reg
 
-	log.Debug("Commands loaded: ", repo.registry.AllCommands())
+	log.Debugf("Commands loaded: %v", func() []string {
+		names := []string{}
+		for _, cmd := range repo.registry.AllCommands() {
+			name := fmt.Sprintf("%s.%s", cmd.Group(), cmd.Name())
+			names = append(names, name)
+		}
+		return names
+	}())
 	return nil
 }
 

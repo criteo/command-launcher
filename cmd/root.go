@@ -107,7 +107,7 @@ func initUser() {
 	if err != nil {
 		log.Errorln(err)
 	}
-	log.Infof("User ID: %s User Partition: %d\n", rootCtxt.user.UID, rootCtxt.user.Partition)
+	log.Infof("User ID: %s User Partition: %d", rootCtxt.user.UID, rootCtxt.user.Partition)
 }
 
 func initSelfUpdater() {

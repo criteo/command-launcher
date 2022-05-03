@@ -1,0 +1,9 @@
+[
+  {
+    "name": "command-launcher-demo",
+    "version": "2.0.0",
+    "checksum": "2864b366b4889619ba163cf9b097c8fbeae8ee32d5eef640c73d520967c928c7",
+    "startPartition": 0,
+    "endPartition": 9
+  }
+]

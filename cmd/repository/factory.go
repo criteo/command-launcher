@@ -10,7 +10,7 @@ func CreateLocalRepository(repoDirname string) (PackageRepository, error) {
 		return nil, err
 	}
 
-	log.Debug("Repository created: ", repo)
+	log.Debug("Repository created: ", repo.RepoDir)
 
 	return repo, nil
 }

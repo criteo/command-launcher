@@ -127,6 +127,17 @@ else
   exit 1
 fi
 
+echo "> test remote config"
+export CL_REMOTE_CONFIG_URL=https://raw.githubusercontent.com/criteo/command-launcher/${EXAMPLE_BRANCH_NAME}/examples/remote-config/remote_config.json
+RESULT=$($OUTPUT_DIR/cl config)
+echo $RESULT
+echo $RESULT | grep "test/remote-repo"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - remote config didn't set correctly"
+fi
+
 ##
 # remove the output folder
 ##
