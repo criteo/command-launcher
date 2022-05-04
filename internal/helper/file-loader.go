@@ -17,14 +17,10 @@ import (
 // Use http:// https:// as prefix for remote file
 // Use file:// or no prefix for local file
 func LoadFile(fileUrlOrPath string) ([]byte, error) {
-	if !strings.HasPrefix(fileUrlOrPath, "http") && !strings.HasPrefix(fileUrlOrPath, "file") {
-		return nil, fmt.Errorf("invalid file path, must starts with http(s):// or file://")
-	}
 	location := fileUrlOrPath
 	if strings.HasPrefix(location, "http") {
 		return LoadFileFromUrl(location)
 	}
-
 	location = strings.TrimPrefix(location, "file://")
 	return ioutil.ReadFile(location)
 }
