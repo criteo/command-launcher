@@ -4,7 +4,7 @@ SCRIPT_DIR=${1:-$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && p
 echo "integration test directory: $SCRIPT_DIR"
 
 #BRANCH_NAME=$(git branch --show-current)
-EXAMPLE_BRANCH_NAME=release-cdt-pkg
+EXAMPLE_BRANCH_NAME=update-command
 
 # create output folder
 OUTPUT_DIR=$SCRIPT_DIR/output
@@ -118,7 +118,6 @@ fi
 
 echo "> test run remote command"
 RESULT=$($OUTPUT_DIR/cl hello)
-#echo $RESULT
 echo $RESULT | grep -q "Hello World!"
 if [ $? -eq 0 ]; then
   echo "OK"
@@ -126,6 +125,38 @@ else
   echo "KO - wrong output of hello command: $RESULT"
   exit 1
 fi
+
+echo "> test remote config"
+export CL_REMOTE_CONFIG_URL=https://raw.githubusercontent.com/criteo/command-launcher/${EXAMPLE_BRANCH_NAME}/examples/remote-config/remote_config.json
+RESULT=$($OUTPUT_DIR/cl config)
+echo $RESULT | grep -q "test/remote-repo"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - remote config didn't set correctly"
+  exit 1
+fi
+
+echo "> test update command"
+RESULT=$($OUTPUT_DIR/cl update --package)
+echo $RESULT | grep "upgrade command 'command-launcher-demo' from version 1.0.0 to version 2.0.0"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - failed to run update command"
+  exit 1
+fi
+
+echo "> test downloaded package specified from a remote config"
+RESULT=$($OUTPUT_DIR/cl hello)
+echo $RESULT | grep -q "Hello World v2!"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - wrong output of hello command: $RESULT"
+  exit 1
+fi
+
 
 ##
 # remove the output folder

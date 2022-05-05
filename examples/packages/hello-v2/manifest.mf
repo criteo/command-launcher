@@ -1,0 +1,13 @@
+{
+  "pkgName": "command-launcher-demo",
+  "version": "2.0.0",
+  "cmds": [
+    {
+      "name": "hello",
+      "type": "executable",
+      "short": "print hello world from command launcher",
+      "executable": "#CACHE#/hello.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}",
+      "args": []
+    }
+  ]
+}

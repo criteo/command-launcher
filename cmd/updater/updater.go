@@ -2,5 +2,5 @@ package updater
 
 type Updater interface {
 	CheckUpdateAsync()
-	Update()
+	Update() error
 }

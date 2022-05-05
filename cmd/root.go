@@ -80,7 +80,7 @@ func isUpdatePossible(cmd *cobra.Command) bool {
 	cmdPath = strings.TrimSpace(strings.TrimPrefix(cmdPath, rootCtxt.appCtx.AppName()))
 	// exclude commands for update check
 	// for example version command, you don't want to check new update when requesting current version
-	for _, w := range []string{"version", "config", "completion", "help", "__complete"} {
+	for _, w := range []string{"version", "config", "completion", "help", "update", "__complete"} {
 		if strings.HasPrefix(cmdPath, w) {
 			return false
 		}
@@ -107,7 +107,7 @@ func initUser() {
 	if err != nil {
 		log.Errorln(err)
 	}
-	log.Infof("User ID: %s User Partition: %d\n", rootCtxt.user.UID, rootCtxt.user.Partition)
+	log.Infof("User ID: %s User Partition: %d", rootCtxt.user.UID, rootCtxt.user.Partition)
 }
 
 func initSelfUpdater() {
@@ -213,6 +213,7 @@ func addBuiltinCommands() {
 	AddversionCmd(rootCmd, rootCtxt.appCtx)
 	AddConfigCmd(rootCmd, rootCtxt.appCtx)
 	AddLoginCmd(rootCmd, rootCtxt.appCtx)
+	AddUpdateCmd(rootCmd, rootCtxt.appCtx, rootCtxt.localRepo)
 }
 
 func addLocalCommands() {

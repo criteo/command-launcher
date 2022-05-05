@@ -1,0 +1,4 @@
+{
+  "command_repository_base_url": "https://raw.githubusercontent.com/criteo/command-launcher/update-command/test/remote-repo",
+  "enable_ci": true
+}
