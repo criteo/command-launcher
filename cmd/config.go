@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/criteo/command-launcher/internal/config"
@@ -28,8 +29,9 @@ func AddConfigCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 			// list all configs
 			if len(args) == 0 {
 				settings := viper.AllSettings()
-				for k, v := range settings {
-					fmt.Printf("%-40v: %v\n", k, v)
+				printableSettings := printableSettingsInOrder(settings)
+				for _, line := range printableSettings {
+					fmt.Println(line)
 				}
 			}
 
@@ -67,4 +69,20 @@ func AddConfigCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 		},
 	}
 	rootCmd.AddCommand(configCmd)
+}
+
+// get printable settings in alphabet order
+func printableSettingsInOrder(settings map[string]interface{}) []string {
+	sorted := []string{}
+	keys := []string{}
+	for k := range settings {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+	for _, k := range keys {
+		sorted = append(sorted, fmt.Sprintf("%-40v: %v", k, settings[k]))
+	}
+
+	return sorted
 }
