@@ -256,3 +256,29 @@ func TestVariableRenderError(t *testing.T) {
 
 	assert.Equal(t, "{{.Root}}/{{.Os}}/test{{.NonExistKey}}", cmd.interpolateCmd())
 }
+
+func TestInterpolate(t *testing.T) {
+	cmd := DefaultCommand{
+		CmdName:             "test",
+		CmdCategory:         "",
+		CmdType:             "executable",
+		CmdGroup:            "",
+		CmdShortDescription: "test command",
+		CmdLongDescription:  "test command - long description",
+		CmdExecutable:       "#CACHE#/#OS#/#ARCH#/test#EXT#",
+		CmdArguments:        []string{"-l", "-a", "#SCRIPT#"},
+		CmdDocFile:          "",
+		CmdDocLink:          "",
+		CmdValidArgs:        nil,
+		CmdValidArgsCmd:     nil,
+		CmdRequiredFlags:    nil,
+		CmdFlagValuesCmd:    nil,
+		PkgDir:              "/tmp/test/root",
+	}
+
+	assert.Equal(t, ".bat", cmd.doInterpolate("windows", "x64", "#SCRIPT_EXT#"))
+	assert.Equal(t, "", cmd.doInterpolate("linux", "x64", "#SCRIPT_EXT#"))
+	assert.Equal(t, "test.bat", cmd.doInterpolate("windows", "x64", "#SCRIPT#"))
+	assert.Equal(t, "test", cmd.doInterpolate("linux", "x64", "#SCRIPT#"))
+	assert.Equal(t, "/tmp/test/root/windows/x64/test.exe", cmd.doInterpolate("windows", "x64", "#CACHE#/#OS#/#ARCH#/test#EXT#"))
+}

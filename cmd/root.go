@@ -127,7 +127,7 @@ func initCmdUpdater() {
 		CmdRepositoryBaseUrl: viper.GetString(config.COMMAND_REPOSITORY_BASE_URL_KEY),
 		User:                 rootCtxt.user,
 		Timeout:              viper.GetDuration(config.SELF_UPDATE_TIMEOUT_KEY),
-		EnableCI:             viper.GetBool(config.ENABLE_CI_KEY),
+		EnableCI:             viper.GetBool(config.CI_ENABLED_KEY),
 		PackageLockFile:      viper.GetString(config.PACKAGE_LOCK_FILE_KEY),
 	}
 }

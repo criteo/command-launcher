@@ -23,7 +23,7 @@ const (
 	METRIC_GRAPHITE_HOST_KEY             = "METRIC_GRAPHITE_HOST"
 	DEBUG_FLAGS_KEY                      = "DEBUG_FLAGS"
 	DROPIN_FOLDER_KEY                    = "DROPIN_FOLDER"
-	ENABLE_CI_KEY                        = "ENABLE_CI"
+	CI_ENABLED_KEY                       = "CI_ENABLED"
 	PACKAGE_LOCK_FILE_KEY                = "PACKAGE_LOCK_FILE"
 )
 
@@ -43,7 +43,7 @@ func init() {
 		METRIC_GRAPHITE_HOST_KEY,
 		DEBUG_FLAGS_KEY,
 		DROPIN_FOLDER_KEY,
-		ENABLE_CI_KEY,
+		CI_ENABLED_KEY,
 		PACKAGE_LOCK_FILE_KEY,
 	)
 }
@@ -77,7 +77,7 @@ func SetSettingValue(key string, value string) error {
 		return setStringConfig(upperKey, value)
 	case DROPIN_FOLDER_KEY:
 		return setStringConfig(upperKey, value)
-	case ENABLE_CI_KEY:
+	case CI_ENABLED_KEY:
 		return setBooleanConfig(upperKey, value)
 	case PACKAGE_LOCK_FILE_KEY:
 		return setStringConfig(upperKey, value)
