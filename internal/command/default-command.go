@@ -13,11 +13,13 @@ import (
 )
 
 const (
-	CACHE_DIR_PATTERN = "#CACHE#"
-	OS_PATTERN        = "#OS#"
-	ARCH_PATTERN      = "#ARCH#"
-	BINARY_PATTERN    = "#BINARY#"
-	EXT_PATTERN       = "#EXT#"
+	CACHE_DIR_PATTERN  = "#CACHE#"
+	OS_PATTERN         = "#OS#"
+	ARCH_PATTERN       = "#ARCH#"
+	BINARY_PATTERN     = "#BINARY#"
+	SCRIPT_PATTERN     = "#SCRIPT#"
+	EXT_PATTERN        = "#EXT#"
+	SCRIPT_EXT_PATTERN = "#SCRIPT_EXT#"
 )
 
 /*
@@ -222,12 +224,7 @@ func (cmd *DefaultCommand) copyArray(src []string) []string {
 
 func (cmd *DefaultCommand) interpolateArgs(values *[]string) {
 	for i := range *values {
-		(*values)[i] = strings.ReplaceAll((*values)[i], CACHE_DIR_PATTERN, cmd.PkgDir)
-		(*values)[i] = strings.ReplaceAll((*values)[i], OS_PATTERN, runtime.GOOS)
-		(*values)[i] = strings.ReplaceAll((*values)[i], ARCH_PATTERN, runtime.GOARCH)
-		(*values)[i] = strings.ReplaceAll((*values)[i], BINARY_PATTERN, cmd.binary())
-		(*values)[i] = strings.ReplaceAll((*values)[i], EXT_PATTERN, cmd.extension())
-		(*values)[i] = cmd.render((*values)[i])
+		(*values)[i] = cmd.interpolate((*values)[i])
 	}
 }
 
@@ -235,26 +232,43 @@ func (cmd *DefaultCommand) interpolateCmd() string {
 	return cmd.interpolate(cmd.CmdExecutable)
 }
 
-func (cmd *DefaultCommand) binary() string {
-	if runtime.GOOS == "windows" {
+func (cmd *DefaultCommand) binary(os string) string {
+	if os == "windows" {
 		return fmt.Sprintf("%s.exe", cmd.CmdName)
 	}
 	return cmd.CmdName
 }
 
-func (cmd *DefaultCommand) extension() string {
-	if runtime.GOOS == "windows" {
+func (cmd *DefaultCommand) extension(os string) string {
+	if os == "windows" {
 		return ".exe"
 	}
 	return ""
 }
 
+func (cmd *DefaultCommand) script(os string) string {
+	return fmt.Sprintf("%s%s", cmd.CmdName, cmd.script_ext(os))
+}
+
+func (cmd *DefaultCommand) script_ext(os string) string {
+	if os == "windows" {
+		return ".bat"
+	}
+	return ""
+}
+
 func (cmd *DefaultCommand) interpolate(text string) string {
+	return cmd.doInterpolate(runtime.GOOS, runtime.GOARCH, text)
+}
+
+func (cmd *DefaultCommand) doInterpolate(os string, arch string, text string) string {
 	output := strings.ReplaceAll(text, CACHE_DIR_PATTERN, cmd.PkgDir)
-	output = strings.ReplaceAll(output, OS_PATTERN, runtime.GOOS)
-	output = strings.ReplaceAll(output, ARCH_PATTERN, runtime.GOARCH)
-	output = strings.ReplaceAll(output, BINARY_PATTERN, cmd.binary())
-	output = strings.ReplaceAll(output, EXT_PATTERN, cmd.extension())
+	output = strings.ReplaceAll(output, OS_PATTERN, os)
+	output = strings.ReplaceAll(output, ARCH_PATTERN, arch)
+	output = strings.ReplaceAll(output, BINARY_PATTERN, cmd.binary(os))
+	output = strings.ReplaceAll(output, EXT_PATTERN, cmd.extension(os))
+	output = strings.ReplaceAll(output, SCRIPT_PATTERN, cmd.script(os))
+	output = strings.ReplaceAll(output, SCRIPT_EXT_PATTERN, cmd.script_ext(os))
 	output = cmd.render(output)
 	return output
 }
