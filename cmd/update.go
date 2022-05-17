@@ -62,7 +62,7 @@ Check the update of %s and its commands.
 
 			if updateFlags.Package {
 				console.Highlight("checking available package updates ...")
-				enableCI := viper.GetBool(config.ENABLE_CI_KEY)
+				enableCI := viper.GetBool(config.CI_ENABLED_KEY)
 				packageLockFile := viper.GetString(config.PACKAGE_LOCK_FILE_KEY)
 				if enableCI {
 					fmt.Printf("CI mode enabled, load package lock file: %s\n", packageLockFile)

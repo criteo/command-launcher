@@ -14,7 +14,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-const REMOTE_CONFIG_HASH_KEY = "REMOTE_CONFIG_HASH"
+const REMOTE_CONFIG_CHECK_TIME_KEY = "REMOTE_CONFIG_CHECK_TIME"
+const REMOTE_CONFIG_CHECK_CYCLE_KEY = "REMOTE_CONFIG_CHECK_CYCLE"
 
 func LoadConfig(appCtx context.LauncherContext) {
 	// NOTE: we don't put default value for the DEBUG_FLAGS configuration, it will not show in a newly created config file
@@ -66,9 +67,12 @@ func setDefaultConfig() {
 
 	viper.SetDefault(user.INTERNAL_COMMAND_ENABLED_KEY, false)
 	viper.SetDefault(user.EXPERIMENTAL_COMMAND_ENABLED_KEY, false)
-	viper.SetDefault(REMOTE_CONFIG_HASH_KEY, "")
+	// set default remote config time to now, so that the first run it will always check
+	viper.SetDefault(REMOTE_CONFIG_CHECK_TIME_KEY, time.Now())
+	// set default remote config check cycle to 24 hours
+	viper.SetDefault(REMOTE_CONFIG_CHECK_CYCLE_KEY, 24)
 
-	viper.SetDefault(ENABLE_CI_KEY, false)
+	viper.SetDefault(CI_ENABLED_KEY, false)
 	viper.SetDefault(PACKAGE_LOCK_FILE_KEY, filepath.Join(AppDir(), "lock.json"))
 }
 
@@ -82,19 +86,23 @@ func initDefaultConfigFile() {
 
 func loadRemoteConfig(appCtx context.LauncherContext) bool {
 	if urlCfg := os.Getenv(appCtx.RemoteConfigurationUrlEnvVar()); urlCfg != "" {
-		_, hash, err := helper.HttpEtag(urlCfg)
-		if err != nil {
-			log.Errorf("Cannot find the remote Configuration %s: %v", urlCfg, err)
+		remoteCheckTime := viper.GetTime(REMOTE_CONFIG_CHECK_TIME_KEY)
+		checkCycle := viper.GetInt(REMOTE_CONFIG_CHECK_CYCLE_KEY)
+		if checkCycle == 0 {
+			checkCycle = 24
 		}
 
-		prev := viper.GetString(REMOTE_CONFIG_HASH_KEY)
-		if prev != hash {
-			viper.Set(REMOTE_CONFIG_HASH_KEY, hash)
-			data, err := helper.LoadFile(urlCfg)
-			if err == nil {
-				err = viper.ReadConfig(bytes.NewReader(data))
-				return err == nil
-			}
+		// check if we have passed the remote check time
+		if time.Now().Before(remoteCheckTime) {
+			return false
+		}
+
+		viper.Set(REMOTE_CONFIG_CHECK_TIME_KEY, time.Now().Add(time.Duration(checkCycle)*time.Hour))
+		viper.Set(REMOTE_CONFIG_CHECK_CYCLE_KEY, checkCycle)
+		data, err := helper.LoadFile(urlCfg)
+		if err == nil {
+			err = viper.ReadConfig(bytes.NewReader(data))
+			return err == nil
 		}
 	}
 
