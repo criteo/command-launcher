@@ -117,8 +117,8 @@ func (cmd *DefaultCommand) executeArrayCmd(envVars []string, cmdArray []string, 
 	if validCmd == "" {
 		return 0, "", nil
 	}
+	cmd.interpolateArgs(&validArgs)
 	// Should we interpolate the argumments too???
-	//cmd.interpolateArgs(&validArgs)
 	//cmd.interpolateArgs(&args)
 	return helper.CallExternalWithOutput(envVars, wd, cmd.interpolate(validCmd), append(validArgs, args...)...)
 }

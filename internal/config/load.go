@@ -40,11 +40,14 @@ func LoadConfig(appCtx context.LauncherContext) {
 			log.Fatal("Cannot read configuration file: ", err)
 		}
 	}
+	// load remote config first
+	remoteConfigLoaded := loadRemoteConfig(appCtx)
 
-	if loadRemoteConfig(appCtx) {
+	if remoteConfigLoaded {
 		log.Info("Remote Configuration loaded...")
 		viper.WriteConfig()
 	}
+
 }
 
 func setDefaultConfig() {
@@ -100,10 +103,12 @@ func loadRemoteConfig(appCtx context.LauncherContext) bool {
 		viper.Set(REMOTE_CONFIG_CHECK_TIME_KEY, time.Now().Add(time.Duration(checkCycle)*time.Hour))
 		viper.Set(REMOTE_CONFIG_CHECK_CYCLE_KEY, checkCycle)
 		data, err := helper.LoadFile(urlCfg)
-		if err == nil {
-			err = viper.ReadConfig(bytes.NewReader(data))
-			return err == nil
+		if err != nil {
+			return false
 		}
+
+		err = viper.MergeConfig(bytes.NewReader(data))
+		return err == nil
 	}
 
 	return false
