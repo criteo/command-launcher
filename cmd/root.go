@@ -323,7 +323,17 @@ func addCommands(groups []command.Command, executables []command.Command) {
 				parts := strings.Split(output, "\n")
 				if len(parts) > 0 {
 					if strings.HasPrefix(parts[0], "#") { // skip the first control line, for further controls
-						return parts[1:], cobra.ShellCompDirectiveNoFileComp
+						// the first line starting with # is the control line, it controls the completion behavior when the return body is empty
+						shellDirective := cobra.ShellCompDirectiveNoFileComp
+						switch strings.TrimSpace(strings.TrimLeft(parts[0], "#")) {
+						case "dir-completion-only":
+							shellDirective = cobra.ShellCompDirectiveFilterDirs
+						case "default":
+							shellDirective = cobra.ShellCompDirectiveDefault
+						case "no-file-completion":
+							shellDirective = cobra.ShellCompDirectiveNoFileComp
+						}
+						return parts[1:], shellDirective
 					}
 					return parts, cobra.ShellCompDirectiveNoFileComp
 				}
@@ -331,7 +341,7 @@ func addCommands(groups []command.Command, executables []command.Command) {
 			if len(validArgs) > 0 {
 				return validArgs, cobra.ShellCompDirectiveNoFileComp
 			}
-			return []string{}, cobra.ShellCompDirectiveNoFileComp
+			return []string{}, cobra.ShellCompDirectiveDefault
 		}
 
 		if v.Group() == "" {
