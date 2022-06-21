@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCommandValidArgs(t *testing.T) {
-	cmd := DefaultCommand{
+func getDefaultCommand() DefaultCommand {
+	return DefaultCommand{
 		CmdName:             "test",
 		CmdCategory:         "",
 		CmdType:             "executable",
@@ -20,12 +20,20 @@ func TestCommandValidArgs(t *testing.T) {
 		CmdArguments:        []string{"-l", "-a"},
 		CmdDocFile:          "",
 		CmdDocLink:          "",
-		CmdValidArgs:        []string{"args1", "args2"},
-		CmdValidArgsCmd:     []string{},
-		CmdRequiredFlags:    []string{"moab", "moab-id"},
-		CmdFlagValuesCmd:    []string{},
+		CmdValidArgs:        nil,
+		CmdValidArgsCmd:     nil,
+		CmdRequiredFlags:    nil,
+		CmdFlagValuesCmd:    nil,
 		PkgDir:              "/tmp/test/root",
 	}
+}
+
+func TestCommandValidArgs(t *testing.T) {
+	cmd := getDefaultCommand()
+	cmd.CmdValidArgs = []string{"args1", "args2"}
+	cmd.CmdValidArgsCmd = []string{}
+	cmd.CmdRequiredFlags = []string{"moab", "moab-id"}
+	cmd.CmdFlagValuesCmd = []string{}
 
 	validArgs := cmd.ValidArgs()
 
@@ -41,23 +49,11 @@ func TestCommandValidArgs(t *testing.T) {
 }
 
 func TestCommandValidArgsCmd(t *testing.T) {
-	cmd := DefaultCommand{
-		CmdName:             "test",
-		CmdCategory:         "",
-		CmdType:             "executable",
-		CmdGroup:            "",
-		CmdShortDescription: "test command",
-		CmdLongDescription:  "test command - long description",
-		CmdExecutable:       "ls",
-		CmdArguments:        []string{"-l", "-a"},
-		CmdDocFile:          "",
-		CmdDocLink:          "",
-		CmdValidArgs:        []string{"args1", "args2"},
-		CmdValidArgsCmd:     []string{"#CACHE#/test", "arg1", "arg2"},
-		CmdRequiredFlags:    []string{"moab", "moab-id"},
-		CmdFlagValuesCmd:    []string{"#CACHE#/test", "arg1", "arg2"},
-		PkgDir:              "/tmp/test/root",
-	}
+	cmd := getDefaultCommand()
+	cmd.CmdValidArgs = []string{"args1", "args2"}
+	cmd.CmdValidArgsCmd = []string{"#CACHE#/test", "arg1", "arg2"}
+	cmd.CmdRequiredFlags = []string{"moab", "moab-id"}
+	cmd.CmdFlagValuesCmd = []string{"#CACHE#/test", "arg1", "arg2"}
 
 	validArgsCmd := cmd.ValidArgsCmd()
 	assert.Equal(t, 3, len(validArgsCmd))
@@ -78,23 +74,7 @@ func TestCommandValidArgsCmd(t *testing.T) {
 }
 
 func TestNullFields(t *testing.T) {
-	cmd := DefaultCommand{
-		CmdName:             "test",
-		CmdCategory:         "",
-		CmdType:             "executable",
-		CmdGroup:            "",
-		CmdShortDescription: "test command",
-		CmdLongDescription:  "test command - long description",
-		CmdExecutable:       "#CACHE#/#OS#/#ARCH#/test#EXT#",
-		CmdArguments:        []string{"-l", "-a"},
-		CmdDocFile:          "",
-		CmdDocLink:          "",
-		CmdValidArgs:        nil,
-		CmdValidArgsCmd:     nil,
-		CmdRequiredFlags:    nil,
-		CmdFlagValuesCmd:    nil,
-		PkgDir:              "/tmp/test/root",
-	}
+	cmd := getDefaultCommand()
 
 	assert.NotNil(t, cmd.ValidArgs())
 	assert.NotNil(t, cmd.RequiredFlags())
@@ -104,23 +84,8 @@ func TestNullFields(t *testing.T) {
 }
 
 func TestCloneCommand(t *testing.T) {
-	cmd := DefaultCommand{
-		CmdName:             "test",
-		CmdCategory:         "",
-		CmdType:             "executable",
-		CmdGroup:            "",
-		CmdShortDescription: "test command",
-		CmdLongDescription:  "test command - long description",
-		CmdExecutable:       "#CACHE#/#OS#/#ARCH#/test#EXT#",
-		CmdArguments:        []string{"-l", "-a"},
-		CmdDocFile:          "",
-		CmdDocLink:          "",
-		CmdValidArgs:        nil,
-		CmdValidArgsCmd:     nil,
-		CmdRequiredFlags:    nil,
-		CmdFlagValuesCmd:    nil,
-		PkgDir:              "/tmp/test/root",
-	}
+	cmd := getDefaultCommand()
+	cmd.CmdExecutable = "#CACHE#/#OS#/#ARCH#/test#EXT#"
 
 	newCmd := cmd.Clone()
 	assert.NotNil(t, newCmd.CmdValidArgs)
@@ -136,23 +101,8 @@ func TestCloneCommand(t *testing.T) {
 }
 
 func TestLegacyVariableInterpolation(t *testing.T) {
-	cmd := DefaultCommand{
-		CmdName:             "test",
-		CmdCategory:         "",
-		CmdType:             "executable",
-		CmdGroup:            "",
-		CmdShortDescription: "test command",
-		CmdLongDescription:  "test command - long description",
-		CmdExecutable:       "#CACHE#/#OS#/test#EXT#",
-		CmdArguments:        []string{"-l", "-a"},
-		CmdDocFile:          "",
-		CmdDocLink:          "",
-		CmdValidArgs:        nil,
-		CmdValidArgsCmd:     nil,
-		CmdRequiredFlags:    nil,
-		CmdFlagValuesCmd:    nil,
-		PkgDir:              "/tmp/test/root",
-	}
+	cmd := getDefaultCommand()
+	cmd.CmdExecutable = "#CACHE#/#OS#/test#EXT#"
 
 	if runtime.GOOS == "windows" {
 		assert.Equal(t, fmt.Sprintf("/tmp/test/root/%s/test.exe", runtime.GOOS), cmd.interpolateCmd())
@@ -162,71 +112,72 @@ func TestLegacyVariableInterpolation(t *testing.T) {
 }
 
 func TestVariableRender(t *testing.T) {
-	cmd := DefaultCommand{
-		CmdName:             "test",
-		CmdCategory:         "",
-		CmdType:             "executable",
-		CmdGroup:            "",
-		CmdShortDescription: "test command",
-		CmdLongDescription:  "test command - long description",
-		CmdExecutable:       "{{.Root}}/{{.Os}}/test",
-		CmdArguments:        []string{"-l", "-a"},
-		CmdDocFile:          "",
-		CmdDocLink:          "",
-		CmdValidArgs:        nil,
-		CmdValidArgsCmd:     nil,
-		CmdRequiredFlags:    nil,
-		CmdFlagValuesCmd:    nil,
-		PkgDir:              "/tmp/test/root",
-	}
+	cmd := getDefaultCommand()
+	cmd.CmdExecutable = "{{.Root}}/{{.Os}}/test"
 
 	assert.Equal(t, fmt.Sprintf("/tmp/test/root/%s/test", runtime.GOOS), cmd.interpolateCmd())
 }
 
 func TestConditionalVariableRender(t *testing.T) {
-	cmd := DefaultCommand{
-		CmdName:             "test",
-		CmdCategory:         "",
-		CmdType:             "executable",
-		CmdGroup:            "",
-		CmdShortDescription: "test command",
-		CmdLongDescription:  "test command - long description",
-		CmdExecutable:       "{{.Root}}/{{.Os}}/test{{if eq .Os \"windows\"}}.bat{{else}}.sh{{end}}",
-		CmdArguments:        []string{"-l", "-a"},
-		CmdDocFile:          "",
-		CmdDocLink:          "",
-		CmdValidArgs:        nil,
-		CmdValidArgsCmd:     nil,
-		CmdRequiredFlags:    nil,
-		CmdFlagValuesCmd:    nil,
-		PkgDir:              "/tmp/test/root",
-	}
+	cmd := getDefaultCommand()
+	cmd.CmdExecutable = "{{.Root}}/{{.Os}}/test{{if eq .Os \"windows\"}}.bat{{else}}.sh{{end}}"
 
 	if runtime.GOOS == "windows" {
+		cmd.PkgDir = "\\tmp\\test\\root"
 		assert.Equal(t, fmt.Sprintf("/tmp/test/root/%s/test.bat", runtime.GOOS), cmd.interpolateCmd())
 	} else {
+		cmd.PkgDir = "/tmp/test/root"
 		assert.Equal(t, fmt.Sprintf("/tmp/test/root/%s/test.sh", runtime.GOOS), cmd.interpolateCmd())
 	}
 }
 
-func TestMixedRender(t *testing.T) {
-	cmd := DefaultCommand{
-		CmdName:             "test",
-		CmdCategory:         "",
-		CmdType:             "executable",
-		CmdGroup:            "",
-		CmdShortDescription: "test command",
-		CmdLongDescription:  "test command - long description",
-		CmdExecutable:       "#CACHE#/#OS#/test{{if eq .Os \"windows\"}}.bat{{else}}.sh{{end}}",
-		CmdArguments:        []string{"-l", "-a"},
-		CmdDocFile:          "",
-		CmdDocLink:          "",
-		CmdValidArgs:        nil,
-		CmdValidArgsCmd:     nil,
-		CmdRequiredFlags:    nil,
-		CmdFlagValuesCmd:    nil,
-		PkgDir:              "/tmp/test/root",
+func TestConditionalBinaryRender(t *testing.T) {
+	cmd := getDefaultCommand()
+	cmd.CmdExecutable = "{{.Binary}}"
+
+	if runtime.GOOS == "windows" {
+		assert.Equal(t, "test.exe", cmd.interpolateCmd())
+	} else {
+		assert.Equal(t, "test", cmd.interpolateCmd())
 	}
+}
+
+func TestConditionalScriptRender(t *testing.T) {
+	cmd := getDefaultCommand()
+	cmd.CmdExecutable = "{{.Script}}"
+
+	if runtime.GOOS == "windows" {
+		assert.Equal(t, "test.bat", cmd.interpolateCmd())
+	} else {
+		assert.Equal(t, "test", cmd.interpolateCmd())
+	}
+}
+
+func TestConditionalExtensionRender(t *testing.T) {
+	cmd := getDefaultCommand()
+	cmd.CmdExecutable = "test{{.Extension}}"
+
+	if runtime.GOOS == "windows" {
+		assert.Equal(t, "test.exe", cmd.interpolateCmd())
+	} else {
+		assert.Equal(t, "test", cmd.interpolateCmd())
+	}
+}
+
+func TestConditionalScriptExtensionRender(t *testing.T) {
+	cmd := getDefaultCommand()
+	cmd.CmdExecutable = "test{{.ScriptExtension}}"
+
+	if runtime.GOOS == "windows" {
+		assert.Equal(t, "test.bat", cmd.interpolateCmd())
+	} else {
+		assert.Equal(t, "test", cmd.interpolateCmd())
+	}
+}
+
+func TestMixedRender(t *testing.T) {
+	cmd := getDefaultCommand()
+	cmd.CmdExecutable = "#CACHE#/#OS#/test{{if eq .Os \"windows\"}}.bat{{else}}.sh{{end}}"
 
 	if runtime.GOOS == "windows" {
 		assert.Equal(t, fmt.Sprintf("/tmp/test/root/%s/test.bat", runtime.GOOS), cmd.interpolateCmd())
@@ -236,45 +187,16 @@ func TestMixedRender(t *testing.T) {
 }
 
 func TestVariableRenderError(t *testing.T) {
-	cmd := DefaultCommand{
-		CmdName:             "test",
-		CmdCategory:         "",
-		CmdType:             "executable",
-		CmdGroup:            "",
-		CmdShortDescription: "test command",
-		CmdLongDescription:  "test command - long description",
-		CmdExecutable:       "{{.Root}}/{{.Os}}/test{{.NonExistKey}}",
-		CmdArguments:        []string{"-l", "-a"},
-		CmdDocFile:          "",
-		CmdDocLink:          "",
-		CmdValidArgs:        nil,
-		CmdValidArgsCmd:     nil,
-		CmdRequiredFlags:    nil,
-		CmdFlagValuesCmd:    nil,
-		PkgDir:              "/tmp/test/root",
-	}
+	cmd := getDefaultCommand()
+	cmd.CmdExecutable = "{{.Root}}/{{.Os}}/test{{.NonExistKey}}"
 
 	assert.Equal(t, "{{.Root}}/{{.Os}}/test{{.NonExistKey}}", cmd.interpolateCmd())
 }
 
 func TestInterpolate(t *testing.T) {
-	cmd := DefaultCommand{
-		CmdName:             "test",
-		CmdCategory:         "",
-		CmdType:             "executable",
-		CmdGroup:            "",
-		CmdShortDescription: "test command",
-		CmdLongDescription:  "test command - long description",
-		CmdExecutable:       "#CACHE#/#OS#/#ARCH#/test#EXT#",
-		CmdArguments:        []string{"-l", "-a", "#SCRIPT#"},
-		CmdDocFile:          "",
-		CmdDocLink:          "",
-		CmdValidArgs:        nil,
-		CmdValidArgsCmd:     nil,
-		CmdRequiredFlags:    nil,
-		CmdFlagValuesCmd:    nil,
-		PkgDir:              "/tmp/test/root",
-	}
+	cmd := getDefaultCommand()
+	cmd.CmdExecutable = "#CACHE#/#OS#/#ARCH#/test#EXT#"
+	cmd.CmdArguments = []string{"-l", "-a", "#SCRIPT#"}
 
 	assert.Equal(t, ".bat", cmd.doInterpolate("windows", "x64", "#SCRIPT_EXT#"))
 	assert.Equal(t, "", cmd.doInterpolate("linux", "x64", "#SCRIPT_EXT#"))
