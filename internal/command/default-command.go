@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -262,7 +263,7 @@ func (cmd *DefaultCommand) interpolate(text string) string {
 }
 
 func (cmd *DefaultCommand) doInterpolate(os string, arch string, text string) string {
-	output := strings.ReplaceAll(text, CACHE_DIR_PATTERN, cmd.PkgDir)
+	output := strings.ReplaceAll(text, CACHE_DIR_PATTERN, filepath.ToSlash(cmd.PkgDir))
 	output = strings.ReplaceAll(output, OS_PATTERN, os)
 	output = strings.ReplaceAll(output, ARCH_PATTERN, arch)
 	output = strings.ReplaceAll(output, BINARY_PATTERN, cmd.binary(os))
@@ -275,18 +276,26 @@ func (cmd *DefaultCommand) doInterpolate(os string, arch string, text string) st
 
 // Support golang built-in text/template engine
 type TemplateContext struct {
-	Os    string
-	Arch  string
-	Cache string
-	Root  string
+	Os              string
+	Arch            string
+	Cache           string
+	Root            string
+	Binary          string
+	Script          string
+	Extension       string
+	ScriptExtension string
 }
 
 func (cmd *DefaultCommand) render(text string) string {
 	ctx := TemplateContext{
-		Os:    runtime.GOOS,
-		Arch:  runtime.GOARCH,
-		Cache: cmd.PkgDir,
-		Root:  cmd.PkgDir,
+		Os:              runtime.GOOS,
+		Arch:            runtime.GOARCH,
+		Cache:           filepath.ToSlash(cmd.PkgDir),
+		Root:            filepath.ToSlash(cmd.PkgDir),
+		Binary:          cmd.binary(runtime.GOOS),
+		Script:          cmd.script(runtime.GOOS),
+		Extension:       cmd.extension(runtime.GOOS),
+		ScriptExtension: cmd.script_ext(runtime.GOOS),
 	}
 
 	t, err := template.New("command-template").Parse(text)
