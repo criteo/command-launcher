@@ -209,7 +209,7 @@ A command to execute to get the dynamic list of arguments.
 
 When you type `[cl] city poplution [TAB]`, command launcher will run the command specified in this field, and append all existing flags/arguments to the `validArgsCmd`.
 
-More details see: [Auto-Complete](./AUTO-COMPLETE.md)
+More details see: [Auto-Complete](./AUTO_COMPLETE.md)
 
 
 #### requiredFlags
