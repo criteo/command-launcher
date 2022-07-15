@@ -114,7 +114,7 @@ The executable to call when your command is trigger from command launcher. You c
 
 **Example**
 
-```
+```json
 {
   ...
   "cmds": [
@@ -130,7 +130,7 @@ The executable to call when your command is trigger from command launcher. You c
 The arguments that to be appended to the executable when the command is triggered. The other arguments passed from command launcher will be appeneded after these arguments that are defined in `args` field.
 
 **Example**
-```
+```json
 {
   ...
   "cmds": [
@@ -161,7 +161,7 @@ A static list of the arguments for auto-complete.
 
 **Example**
 
-```
+```json
 {
   "cmds": [
     {
@@ -189,7 +189,7 @@ When you type: `[cl] city population [TAB]`, your shell will prompt options: `pa
 A command to execute to get the dynamic list of arguments.
 
 **Example**
-```
+```json
 {
   "cmds": [
     {
@@ -218,7 +218,7 @@ The static list of flags for your command
 
 **Example**
 
-```
+```json
 {
   "cmds": [
     {
