@@ -154,7 +154,6 @@ func (remote *defaultRemoteRepository) findPackage(name string, version string) 
 	if err := remote.load(); err != nil {
 		return nil, err
 	}
-	// now search for the registry to see if there is a URL defined in the selected package
 	pkgInfos, err := remote.PackageInfosByCmdName(name)
 	if len(pkgInfos) == 0 {
 		return nil, fmt.Errorf("No package named %s found from remote registry", name)
