@@ -9,7 +9,7 @@
   {
     "name": "bonjour",
     "version": "1.0.0",
-    "url": "https://raw.githubusercontent.com/criteo/command-launcher/distributed-pkg/test/package-src/bonjour/bonjour-v1.pkg",
+    "url": "https://github.com/criteo/command-launcher/raw/distributed-pkg/test/packages-src/bonjour/bonjour-v1.pkg",
     "checksum": "7244e66cc7084f883cb924020fd5a6e000dc6613d19ef07bc33a1d317412d4ff",
     "startPartition": 0,
     "endPartition": 9
