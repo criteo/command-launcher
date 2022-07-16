@@ -1,0 +1,13 @@
+{
+  "pkgName": "bonjour",
+  "version": "1.0.0",
+  "cmds": [
+    {
+      "name": "bonjour",
+      "type": "executable",
+      "short": "print bonjour from command launcher",
+      "executable": "{{.Root}}/bonjour.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}",
+      "args": []
+    }
+  ]
+}
