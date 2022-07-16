@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -21,11 +22,17 @@ func LoadConfig(appCtx context.LauncherContext) {
 	// NOTE: we don't put default value for the DEBUG_FLAGS configuration, it will not show in a newly created config file
 	// Please keep it as a hidden config, better not to let developer directly see this option
 	setDefaultConfig()
-
+	wd, _ := os.Getwd()
 	cfgFile := os.Getenv(appCtx.ConfigurationFileEnvVar())
+	localCftFileName := fmt.Sprintf("%s.json", appCtx.AppName())
 	if cfgFile != "" {
+		log.Infof("Use environment specified config file: %s", cfgFile)
 		viper.SetConfigFile(cfgFile)
+	} else if localCfgPath, found := findLocalConfig(wd, localCftFileName); found {
+		log.Infof("Use local config file: %s", localCfgPath)
+		viper.SetConfigFile(localCfgPath)
 	} else {
+		log.Infof("Use default config file from path: %s/config.json", AppDir())
 		viper.AddConfigPath(AppDir())
 		viper.SetConfigType("json")
 		viper.SetConfigName("config")
@@ -85,6 +92,34 @@ func initDefaultConfigFile() {
 	if err := viper.SafeWriteConfig(); err != nil {
 		log.Error("cannot write the default configuration: ", err)
 	}
+}
+
+func findLocalConfig(startPath string, configFileName string) (string, bool) {
+	wd := startPath
+	checked := ""
+	found := hasConfigFile(wd, configFileName)
+	for !found && wd != checked {
+		checked = wd
+		wd = filepath.Dir(wd)
+		found = hasConfigFile(wd, configFileName)
+	}
+
+	if found {
+		return wd, true
+	} else {
+		return "", false
+	}
+}
+
+func hasConfigFile(configRootPath string, configFileName string) bool {
+	_, err := os.Stat(filepath.Join(configRootPath, configFileName))
+	if err == nil {
+		return true
+	}
+	if os.IsNotExist(err) {
+		return false
+	}
+	return false
 }
 
 func loadRemoteConfig(appCtx context.LauncherContext) bool {
