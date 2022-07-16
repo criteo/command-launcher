@@ -4,7 +4,7 @@ SCRIPT_DIR=${1:-$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && p
 echo "integration test directory: $SCRIPT_DIR"
 
 #BRANCH_NAME=$(git branch --show-current)
-EXAMPLE_BRANCH_NAME=main
+EXAMPLE_BRANCH_NAME=distributed-pkg
 
 # create output folder
 OUTPUT_DIR=$SCRIPT_DIR/output
@@ -158,12 +158,34 @@ else
 fi
 
 echo "> test update command"
+# $OUTPUT_DIR/cl update --package
 RESULT=$($OUTPUT_DIR/cl update --package)
 echo $RESULT | grep "upgrade command 'command-launcher-demo' from version 1.0.0 to version 2.0.0"
 if [ $? -eq 0 ]; then
   echo "OK"
 else
   echo "KO - failed to run update command"
+  exit 1
+fi
+
+echo "> test update command updates bonjour package"
+RESULT=$($OUTPUT_DIR/cl)
+echo $RESULT | grep -q "bonjour"
+if [ $? -eq 0 ]; then
+  # ok
+  echo "OK"
+else
+  echo "KO - bonjour command should exist"
+  exit 1
+fi
+
+echo "> test bonjour command from remote config"
+RESULT=$($OUTPUT_DIR/cl bonjour)
+echo $RESULT | grep -q "bonjour!"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - wrong output of bonjour command: $RESULT"
   exit 1
 fi
 
