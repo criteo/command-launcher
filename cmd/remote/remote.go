@@ -9,6 +9,7 @@ import (
 type PackageInfo struct {
 	Name           string `json:"name"`
 	Version        string `json:"version"`
+	Url            string `json:"url"`
 	Checksum       string `json:"checksum"`
 	StartPartition uint8  `json:"startPartition"`
 	EndPartition   uint8  `json:"endPartition"`

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -12,16 +13,24 @@ import (
 	"github.com/spf13/viper"
 )
 
+type ConfigFlags struct {
+	Json bool
+}
+
+var (
+	configFlags = ConfigFlags{}
+)
+
 func AddConfigCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 	configCmd := &cobra.Command{
 		Use:   "config",
 		Short: "Manage configurations",
 		Long: fmt.Sprintf(`Manage the command launcher configurations
-	
+
 	Example:
 	  get configuration
 		%s config [key]
-	
+
 	  set configuration
 		%s config [key] [value]
 	`, appCtx.AppName(), appCtx.AppName()),
@@ -29,10 +38,7 @@ func AddConfigCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 			// list all configs
 			if len(args) == 0 {
 				settings := viper.AllSettings()
-				printableSettings := printableSettingsInOrder(settings)
-				for _, line := range printableSettings {
-					fmt.Println(line)
-				}
+				printSettings(settings, configFlags.Json)
 			}
 
 			// get configuration with key
@@ -40,7 +46,14 @@ func AddConfigCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 				if viper.Get(args[0]) == nil {
 					return
 				}
-				fmt.Println(viper.Get(args[0]))
+				if configFlags.Json {
+					printSettings(map[string]interface{}{
+						args[0]: viper.Get(args[0]),
+					}, true)
+				} else {
+					fmt.Println(viper.Get(args[0]))
+				}
+
 			}
 
 			// set configuration with key
@@ -68,6 +81,8 @@ func AddConfigCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 			return lowerKeys, cobra.ShellCompDirectiveNoFileComp
 		},
 	}
+
+	configCmd.Flags().BoolVarP(&configFlags.Json, "json", "", false, "output in JSON format")
 	rootCmd.AddCommand(configCmd)
 }
 
@@ -85,4 +100,28 @@ func printableSettingsInOrder(settings map[string]interface{}) []string {
 	}
 
 	return sorted
+}
+
+func printSettings(settings map[string]interface{}, jsonFormat bool) {
+	if jsonFormat {
+		printInJson(settings)
+	} else {
+		printInPlainText(settings)
+	}
+}
+
+func printInJson(settings map[string]interface{}) {
+	val, err := json.MarshalIndent(settings, "", "    ")
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(string(val))
+	}
+}
+
+func printInPlainText(settings map[string]interface{}) {
+	printableSettings := printableSettingsInOrder(settings)
+	for _, line := range printableSettings {
+		fmt.Println(line)
+	}
 }

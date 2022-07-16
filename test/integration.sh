@@ -73,7 +73,27 @@ if [ $? -eq 0 ]; then
   # ok
   echo "OK"
 else
-  echo "KO - wrong config: local_command_respository_dirname"
+  echo "KO - wrong config: local_command_repository_dirname"
+  exit 1
+fi
+
+echo "> test get all config in json"
+RESULT=$($OUTPUT_DIR/cl config --json)
+VALUE=$(echo $RESULT | jq -r '.log_enabled')
+if [ $VALUE == "false" ]; then
+  echo "OK"
+else
+  echo "KO - incorrect config value"
+  exit 1
+fi
+
+echo "> test get one config in json"
+RESULT=$($OUTPUT_DIR/cl config log_enabled --json)
+VALUE=$(echo $RESULT | jq -r '.log_enabled')
+if [ $VALUE == "false" ]; then
+  echo "OK"
+else
+  echo "KO - incorrect config value"
   exit 1
 fi
 
