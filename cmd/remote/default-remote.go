@@ -162,7 +162,7 @@ func (remote *defaultRemoteRepository) load() error {
 	if !remote.isLoaded() {
 		body, err := helper.LoadFile(fmt.Sprintf("%s/index.json", remote.repoBaseUrl))
 		if err != nil {
-			log.Error("Cannot read packages index")
+			log.Error("Cannot read remote packages index")
 			return err
 		}
 
