@@ -38,8 +38,9 @@ type rootContext struct {
 }
 
 var (
-	rootCmd  *cobra.Command
-	rootCtxt = rootContext{}
+	rootCmd      *cobra.Command
+	rootCtxt     = rootContext{}
+	rootExitCode = 0
 )
 
 func preRun(cmd *cobra.Command, args []string) {
@@ -240,9 +241,8 @@ func addCommands(groups []command.Command, executables []command.Command) {
 				exitCode, err := executeCommand(group, name, args)
 				if err != nil && err.Error() == EXECUTABLE_NOT_DEFINED {
 					cmd.Help()
-					os.Exit(exitCode)
 				}
-				os.Exit(exitCode)
+				rootExitCode = exitCode
 			},
 		}
 		for _, flag := range requiredFlags {
@@ -273,7 +273,7 @@ func addCommands(groups []command.Command, executables []command.Command) {
 				// we need to restore the flags into args here
 				// considering the complexity here, we will cover it later
 				if exitCode, err := executeCommand(group, name, args); err != nil {
-					os.Exit(exitCode)
+					rootExitCode = exitCode
 				}
 			},
 		}
@@ -374,10 +374,10 @@ func getExecutableCommand(group, name string) (command.Command, error) {
 func executeCommand(group, name string, args []string) (int, error) {
 	iCmd, err := getExecutableCommand(group, name)
 	if err != nil {
-		return 404, err
+		return 1, err
 	}
 	if iCmd.Executable() == "" {
-		return 404, errors.New(EXECUTABLE_NOT_DEFINED)
+		return 1, errors.New(EXECUTABLE_NOT_DEFINED)
 	}
 
 	secrets := secrets()
@@ -513,4 +513,5 @@ func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
+	os.Exit(rootExitCode)
 }
