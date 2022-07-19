@@ -158,7 +158,6 @@ else
 fi
 
 echo "> test update command"
-# $OUTPUT_DIR/cl update --package
 RESULT=$($OUTPUT_DIR/cl update --package)
 echo $RESULT | grep "upgrade command 'command-launcher-demo' from version 1.0.0 to version 2.0.0"
 if [ $? -eq 0 ]; then
@@ -172,7 +171,6 @@ echo "> test update command updates bonjour package"
 RESULT=$($OUTPUT_DIR/cl)
 echo $RESULT | grep -q "bonjour"
 if [ $? -eq 0 ]; then
-  # ok
   echo "OK"
 else
   echo "KO - bonjour command should exist"
