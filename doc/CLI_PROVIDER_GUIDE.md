@@ -110,7 +110,7 @@ See [manifest.mf specification](MANIFEST.md)
 
 ## Upload your package, and update package registry
 
-Once you have your command package ready, you need to upload it to the remote command repository. Depends on how you implement the remote command repository http server, you need to make it availeble from the download endpoint. 
+Once you have your command package ready, you need to upload it to the remote command repository. Depends on how you implement the remote command repository http server, you need to make it availeble from the download endpoint.
 
 To make all command launcher aware about your package, you need to update the index.json endpoint to include your package in it.
 
@@ -132,3 +132,5 @@ You will have different monitoring vectors for each partition, which will help y
 
 ## Monitoring
 
+
+## Credential Management
