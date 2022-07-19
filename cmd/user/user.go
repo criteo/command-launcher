@@ -1,6 +1,7 @@
 package user
 
 import (
+	"github.com/criteo/command-launcher/internal/config"
 	"github.com/criteo/command-launcher/internal/helper"
 	"github.com/denisbrodbeck/machineid"
 	"github.com/spf13/viper"
@@ -10,10 +11,6 @@ const (
 	INTERNAL_START_PARTITION     = 10 // exclusive
 	EXPERIMENTAL_START_PARTITION = 20 // exclusive
 	NB_OF_USER_PARTITIONS        = 10
-	// internal commands are the commands with start partition number > INTERNAL_START_PARTITION
-	INTERNAL_COMMAND_ENABLED_KEY = "INTERNAL_COMMAND_ENABLED"
-	// experimental commands are the commands with start partition number > EXPERIMENTAL_START_PARTITION
-	EXPERIMENTAL_COMMAND_ENABLED_KEY = "EXPERIMENTAL_COMMAND_ENABLED"
 )
 
 type User struct {
@@ -32,8 +29,8 @@ func GetUser() (User, error) {
 	return User{
 		UID:                    uid,
 		Partition:              uint8(helper.Hash(uid) % NB_OF_USER_PARTITIONS),
-		InternalCmdEnabled:     viper.GetBool(INTERNAL_COMMAND_ENABLED_KEY),
-		ExperimentalCmdEnabled: viper.GetBool(EXPERIMENTAL_COMMAND_ENABLED_KEY),
+		InternalCmdEnabled:     viper.GetBool(config.INTERNAL_COMMAND_ENABLED_KEY),
+		ExperimentalCmdEnabled: viper.GetBool(config.EXPERIMENTAL_COMMAND_ENABLED_KEY),
 	}, nil
 
 }
