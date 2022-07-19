@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/criteo/command-launcher/cmd/user"
 	"github.com/criteo/command-launcher/internal/context"
 	"github.com/criteo/command-launcher/internal/helper"
 	log "github.com/sirupsen/logrus"
@@ -68,8 +67,8 @@ func setDefaultConfig() {
 	viper.SetDefault(USAGE_METRICS_ENABLED_KEY, false)
 	viper.SetDefault(METRIC_GRAPHITE_HOST_KEY, "dummy")
 
-	viper.SetDefault(user.INTERNAL_COMMAND_ENABLED_KEY, false)
-	viper.SetDefault(user.EXPERIMENTAL_COMMAND_ENABLED_KEY, false)
+	viper.SetDefault(INTERNAL_COMMAND_ENABLED_KEY, false)
+	viper.SetDefault(EXPERIMENTAL_COMMAND_ENABLED_KEY, false)
 	// set default remote config time to now, so that the first run it will always check
 	viper.SetDefault(REMOTE_CONFIG_CHECK_TIME_KEY, time.Now())
 	// set default remote config check cycle to 24 hours
