@@ -18,7 +18,6 @@ const REMOTE_CONFIG_CHECK_TIME_KEY = "REMOTE_CONFIG_CHECK_TIME"
 const REMOTE_CONFIG_CHECK_CYCLE_KEY = "REMOTE_CONFIG_CHECK_CYCLE"
 
 // store some metadata about the configuration settings
-//
 type ConfigMetadata struct {
 	File   string
 	Reason string
@@ -35,6 +34,7 @@ func LoadConfig(appCtx context.LauncherContext) {
 	wd, _ := os.Getwd()
 	cfgFile := os.Getenv(appCtx.ConfigurationFileEnvVar())
 	localCftFileName := fmt.Sprintf("%s.json", appCtx.AppName())
+	appDir := AppDir()
 	if cfgFile != "" {
 		configMetadata.Reason = fmt.Sprintf("from environment variable: %s", appCtx.ConfigurationFileEnvVar())
 		configMetadata.File = cfgFile
@@ -46,10 +46,10 @@ func LoadConfig(appCtx context.LauncherContext) {
 
 		viper.SetConfigFile(localCfgPath)
 	} else {
-		configMetadata.Reason = fmt.Sprintf("use default config file from app home %s", AppDir())
-		configMetadata.File = fmt.Sprintf("%s/config.json", AppDir())
+		configMetadata.Reason = fmt.Sprintf("use default config file from app home %s", appDir)
+		configMetadata.File = fmt.Sprintf("%s/config.json", appDir)
 
-		viper.AddConfigPath(AppDir())
+		viper.AddConfigPath(appDir)
 		viper.SetConfigType("json")
 		viper.SetConfigName("config")
 	}
@@ -74,6 +74,7 @@ func LoadConfig(appCtx context.LauncherContext) {
 }
 
 func setDefaultConfig() {
+	appDir := AppDir()
 	viper.SetDefault(LOG_ENABLED_KEY, false)
 	viper.SetDefault(LOG_LEVEL_KEY, "fatal") // trace, debug, info, warn, error, fatal, panic
 
@@ -85,8 +86,8 @@ func setDefaultConfig() {
 	viper.SetDefault(COMMAND_UPDATE_ENABLED_KEY, false)
 	viper.SetDefault(COMMAND_REPOSITORY_BASE_URL_KEY, "")
 
-	viper.SetDefault(DROPIN_FOLDER_KEY, filepath.Join(AppDir(), "dropins"))
-	viper.SetDefault(LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY, filepath.Join(AppDir(), "current"))
+	viper.SetDefault(DROPIN_FOLDER_KEY, filepath.Join(appDir, "dropins"))
+	viper.SetDefault(LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY, filepath.Join(appDir, "current"))
 
 	viper.SetDefault(USAGE_METRICS_ENABLED_KEY, false)
 	viper.SetDefault(METRIC_GRAPHITE_HOST_KEY, "dummy")
@@ -99,7 +100,7 @@ func setDefaultConfig() {
 	viper.SetDefault(REMOTE_CONFIG_CHECK_CYCLE_KEY, 24)
 
 	viper.SetDefault(CI_ENABLED_KEY, false)
-	viper.SetDefault(PACKAGE_LOCK_FILE_KEY, filepath.Join(AppDir(), "lock.json"))
+	viper.SetDefault(PACKAGE_LOCK_FILE_KEY, filepath.Join(appDir, "lock.json"))
 }
 
 func initDefaultConfigFile() {
@@ -131,9 +132,6 @@ func hasConfigFile(configRootPath string, configFileName string) bool {
 	_, err := os.Stat(filepath.Join(configRootPath, configFileName))
 	if err == nil {
 		return true
-	}
-	if os.IsNotExist(err) {
-		return false
 	}
 	return false
 }
