@@ -41,7 +41,7 @@ func LoadConfig(appCtx context.LauncherContext) {
 
 		viper.SetConfigFile(cfgFile)
 	} else if localCfgPath, found := findLocalConfig(wd, localCftFileName); found {
-		configMetadata.Reason = "found config file from working dir or its ancestors"
+		configMetadata.Reason = "found config file from working dir or its parents"
 		configMetadata.File = localCfgPath
 
 		viper.SetConfigFile(localCfgPath)
