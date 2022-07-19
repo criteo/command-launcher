@@ -25,6 +25,11 @@ const (
 	DROPIN_FOLDER_KEY                    = "DROPIN_FOLDER"
 	CI_ENABLED_KEY                       = "CI_ENABLED"
 	PACKAGE_LOCK_FILE_KEY                = "PACKAGE_LOCK_FILE"
+
+	// internal commands are the commands with start partition number > INTERNAL_START_PARTITION
+	INTERNAL_COMMAND_ENABLED_KEY = "INTERNAL_COMMAND_ENABLED"
+	// experimental commands are the commands with start partition number > EXPERIMENTAL_START_PARTITION
+	EXPERIMENTAL_COMMAND_ENABLED_KEY = "EXPERIMENTAL_COMMAND_ENABLED"
 )
 
 var SettingKeys []string
@@ -45,6 +50,8 @@ func init() {
 		DROPIN_FOLDER_KEY,
 		CI_ENABLED_KEY,
 		PACKAGE_LOCK_FILE_KEY,
+		INTERNAL_COMMAND_ENABLED_KEY,
+		EXPERIMENTAL_COMMAND_ENABLED_KEY,
 	)
 }
 
@@ -81,6 +88,10 @@ func SetSettingValue(key string, value string) error {
 		return setBooleanConfig(upperKey, value)
 	case PACKAGE_LOCK_FILE_KEY:
 		return setStringConfig(upperKey, value)
+	case EXPERIMENTAL_COMMAND_ENABLED_KEY:
+		return setBooleanConfig(upperKey, value)
+	case INTERNAL_COMMAND_ENABLED_KEY:
+		return setBooleanConfig(upperKey, value)
 	}
 
 	return fmt.Errorf("unsupported config %s", key)
