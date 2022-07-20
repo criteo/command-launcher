@@ -106,8 +106,7 @@ func (u *CmdUpdater) Update() error {
 	if u.toBeInstalled != nil && len(u.toBeInstalled) > 0 {
 		for pkgName, remoteVersion := range u.toBeInstalled {
 			_, err = repo.Package(pkgName)
-			if err != nil {
-				errPool = append(errPool, err)
+			if err != nil { // only install package that doesn't exist locally
 				console.Highlight("- install new package '%s'\n", pkgName)
 				pkg, err := remoteRepo.Package(pkgName, remoteVersion)
 				if err != nil {
@@ -119,6 +118,9 @@ func (u *CmdUpdater) Update() error {
 					errPool = append(errPool, err)
 					fmt.Printf("Cannot install the package %s: %v\n", pkgName, err)
 				}
+			} else {
+				errPool = append(errPool,
+					fmt.Errorf("Package %s already exists in your local registry, you probably have a corrupted local registry", pkgName))
 			}
 		}
 	}
