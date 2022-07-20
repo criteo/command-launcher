@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -16,16 +17,39 @@ import (
 const REMOTE_CONFIG_CHECK_TIME_KEY = "REMOTE_CONFIG_CHECK_TIME"
 const REMOTE_CONFIG_CHECK_CYCLE_KEY = "REMOTE_CONFIG_CHECK_CYCLE"
 
+// store some metadata about the configuration settings
+type ConfigMetadata struct {
+	File   string
+	Reason string
+}
+
+var (
+	configMetadata = ConfigMetadata{}
+)
+
 func LoadConfig(appCtx context.LauncherContext) {
 	// NOTE: we don't put default value for the DEBUG_FLAGS configuration, it will not show in a newly created config file
 	// Please keep it as a hidden config, better not to let developer directly see this option
 	setDefaultConfig()
-
+	wd, _ := os.Getwd()
 	cfgFile := os.Getenv(appCtx.ConfigurationFileEnvVar())
+	localCftFileName := fmt.Sprintf("%s.json", appCtx.AppName())
+	appDir := AppDir()
 	if cfgFile != "" {
+		configMetadata.Reason = fmt.Sprintf("from environment variable: %s", appCtx.ConfigurationFileEnvVar())
+		configMetadata.File = cfgFile
+
 		viper.SetConfigFile(cfgFile)
+	} else if localCfgPath, found := findLocalConfig(wd, localCftFileName); found {
+		configMetadata.Reason = "found config file from working dir or its parents"
+		configMetadata.File = localCfgPath
+
+		viper.SetConfigFile(localCfgPath)
 	} else {
-		viper.AddConfigPath(AppDir())
+		configMetadata.Reason = fmt.Sprintf("use default config file from app home %s", appDir)
+		configMetadata.File = fmt.Sprintf("%s/config.json", appDir)
+
+		viper.AddConfigPath(appDir)
 		viper.SetConfigType("json")
 		viper.SetConfigName("config")
 	}
@@ -50,6 +74,7 @@ func LoadConfig(appCtx context.LauncherContext) {
 }
 
 func setDefaultConfig() {
+	appDir := AppDir()
 	viper.SetDefault(LOG_ENABLED_KEY, false)
 	viper.SetDefault(LOG_LEVEL_KEY, "fatal") // trace, debug, info, warn, error, fatal, panic
 
@@ -61,8 +86,8 @@ func setDefaultConfig() {
 	viper.SetDefault(COMMAND_UPDATE_ENABLED_KEY, false)
 	viper.SetDefault(COMMAND_REPOSITORY_BASE_URL_KEY, "")
 
-	viper.SetDefault(DROPIN_FOLDER_KEY, filepath.Join(AppDir(), "dropins"))
-	viper.SetDefault(LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY, filepath.Join(AppDir(), "current"))
+	viper.SetDefault(DROPIN_FOLDER_KEY, filepath.Join(appDir, "dropins"))
+	viper.SetDefault(LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY, filepath.Join(appDir, "current"))
 
 	viper.SetDefault(USAGE_METRICS_ENABLED_KEY, false)
 	viper.SetDefault(METRIC_GRAPHITE_HOST_KEY, "dummy")
@@ -75,7 +100,7 @@ func setDefaultConfig() {
 	viper.SetDefault(REMOTE_CONFIG_CHECK_CYCLE_KEY, 24)
 
 	viper.SetDefault(CI_ENABLED_KEY, false)
-	viper.SetDefault(PACKAGE_LOCK_FILE_KEY, filepath.Join(AppDir(), "lock.json"))
+	viper.SetDefault(PACKAGE_LOCK_FILE_KEY, filepath.Join(appDir, "lock.json"))
 }
 
 func initDefaultConfigFile() {
@@ -84,6 +109,31 @@ func initDefaultConfigFile() {
 	if err := viper.SafeWriteConfig(); err != nil {
 		log.Error("cannot write the default configuration: ", err)
 	}
+}
+
+func findLocalConfig(startPath string, configFileName string) (string, bool) {
+	wd := startPath
+	checked := ""
+	found := hasConfigFile(wd, configFileName)
+	for !found && wd != checked {
+		checked = wd
+		wd = filepath.Dir(wd)
+		found = hasConfigFile(wd, configFileName)
+	}
+
+	if found {
+		return wd, true
+	} else {
+		return "", false
+	}
+}
+
+func hasConfigFile(configRootPath string, configFileName string) bool {
+	_, err := os.Stat(filepath.Join(configRootPath, configFileName))
+	if err == nil {
+		return true
+	}
+	return false
 }
 
 func loadRemoteConfig(appCtx context.LauncherContext) bool {

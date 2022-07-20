@@ -15,6 +15,9 @@ import (
 //
 // The log level is defined in the configuration settings
 func InitLog(prefix string) {
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp: true,
+	})
 	if viper.GetBool(LOG_ENABLED_KEY) {
 		lvl, err := log.ParseLevel(viper.GetString(LOG_LEVEL_KEY))
 		if err != nil {
@@ -37,6 +40,7 @@ func InitLog(prefix string) {
 			console.Warn("Cannot create log file")
 		}
 	}
+	log.Debugf("Config file is loaded from %s, reason: %s", configMetadata.File, configMetadata.Reason)
 }
 
 func logFilename(prefix string) string {
