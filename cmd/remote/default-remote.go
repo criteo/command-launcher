@@ -150,8 +150,39 @@ func (remote *defaultRemoteRepository) Package(pkgName string, pkgVersion string
 	return pkg, nil
 }
 
+func (remote *defaultRemoteRepository) findPackage(name string, version string) (*PackageInfo, error) {
+	if err := remote.load(); err != nil {
+		return nil, err
+	}
+	pkgInfos, err := remote.PackageInfosByCmdName(name)
+	if len(pkgInfos) == 0 {
+		return nil, fmt.Errorf("No package named %s found from remote registry", name)
+	}
+	if err != nil {
+		return nil, err
+	}
+	for _, info := range pkgInfos {
+		if info.Version == version {
+			return &info, nil
+		}
+	}
+	return nil, fmt.Errorf("No package named %s with version %s found from remote registry", name, version)
+}
+
 func (remote *defaultRemoteRepository) url(name string, version string) string {
-	return fmt.Sprintf("%s/%s", remote.repoBaseUrl, remote.pkgFilename(name, version))
+	// first get the default url using the remote base following the convention
+	pkgUrl := fmt.Sprintf("%s/%s", remote.repoBaseUrl, remote.pkgFilename(name, version))
+
+	// now try to find the package info
+	pkgInfo, err := remote.findPackage(name, version)
+	if err != nil || pkgInfo == nil {
+		return pkgUrl
+	}
+	if pkgInfo.Url != "" {
+		pkgUrl = pkgInfo.Url
+	}
+
+	return pkgUrl
 }
 
 func (remote *defaultRemoteRepository) pkgFilename(name string, version string) string {
