@@ -1,6 +1,8 @@
 package main
 
-import root "github.com/criteo/command-launcher/cmd"
+import (
+	root "github.com/criteo/command-launcher/cmd"
+)
 
 // Initialized by the linker option (-X main.version=xxxx), this is the build number
 // to change the semantic version, see version.go
