@@ -98,6 +98,31 @@ else
 fi
 
 ##
+# test exit code
+##
+# First copy the dropin packages for test
+mkdir -p $CL_HOME/dropins
+cp -R $SCRIPT_DIR/packages-src/exit-code $CL_HOME/dropins
+
+echo "> test exit code - success case"
+RESULT=$($OUTPUT_DIR/cl exit0)
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should return 0 when command succeeds"
+  exit 1
+fi
+
+echo "> test exit code - failure case"
+RESULT=$($OUTPUT_DIR/cl exit1)
+if [ $? -eq 1 ]; then
+  echo "OK"
+else
+  echo "KO - should return non-0 when command fails"
+  exit 1
+fi
+
+##
 # test set config
 ##
 echo "> test set config"

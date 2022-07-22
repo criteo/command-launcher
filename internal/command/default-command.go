@@ -84,10 +84,13 @@ func (cmd *DefaultCommand) Execute(envVars []string, args ...string) (int, error
 	ctx.Stdin = os.Stdin
 
 	if err := ctx.Run(); err != nil {
+		log.Debug("Command execution err: ", err)
 		if exitError, ok := err.(*exec.ExitError); ok {
+			log.Debug("Exit code: ", exitError.ExitCode())
 			return exitError.ExitCode(), err
 		}
 	}
+	log.Debug("Command executed successfully")
 	return 0, nil
 }
 

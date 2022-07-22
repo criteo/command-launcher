@@ -38,8 +38,9 @@ type rootContext struct {
 }
 
 var (
-	rootCmd  *cobra.Command
-	rootCtxt = rootContext{}
+	rootCmd      *cobra.Command
+	rootCtxt     = rootContext{}
+	rootExitCode = 0
 )
 
 func preRun(cmd *cobra.Command, args []string) {
@@ -236,13 +237,12 @@ func addCommands(groups []command.Command, executables []command.Command) {
 			Use:                v.Name(),
 			Short:              v.ShortDescription(),
 			Long:               v.LongDescription(),
-			RunE: func(cmd *cobra.Command, args []string) error {
-				err := executeCommand(group, name, args)
+			Run: func(cmd *cobra.Command, args []string) {
+				exitCode, err := executeCommand(group, name, args)
 				if err != nil && err.Error() == EXECUTABLE_NOT_DEFINED {
 					cmd.Help()
-					return nil
 				}
-				return err
+				rootExitCode = exitCode
 			},
 		}
 		for _, flag := range requiredFlags {
@@ -266,13 +266,15 @@ func addCommands(groups []command.Command, executables []command.Command) {
 			Use:                v.Name(),
 			Short:              v.ShortDescription(),
 			Long:               v.LongDescription(),
-			RunE: func(c *cobra.Command, args []string) error {
+			Run: func(c *cobra.Command, args []string) {
 				// TODO: in order to support flag value auto completion, we need to set DisableFlagParsing: false
 				// when setting disable flagParsing to false, the parent command will parse the flags
 				// so the args pass to the subcommand will not include the flags
 				// we need to restore the flags into args here
 				// considering the complexity here, we will cover it later
-				return executeCommand(group, name, args)
+				if exitCode, err := executeCommand(group, name, args); err != nil {
+					rootExitCode = exitCode
+				}
 			},
 		}
 
@@ -369,22 +371,22 @@ func getExecutableCommand(group, name string) (command.Command, error) {
 }
 
 // execute a cdt command
-func executeCommand(group, name string, args []string) error {
+func executeCommand(group, name string, args []string) (int, error) {
 	iCmd, err := getExecutableCommand(group, name)
 	if err != nil {
-		return err
+		return 1, err
 	}
 	if iCmd.Executable() == "" {
-		return errors.New(EXECUTABLE_NOT_DEFINED)
+		return 1, errors.New(EXECUTABLE_NOT_DEFINED)
 	}
 
 	secrets := secrets()
-	_, err = iCmd.Execute(secrets, args...)
+	exitCode, err := iCmd.Execute(secrets, args...)
 	if err != nil {
-		return err
+		return exitCode, err
 	}
 
-	return nil
+	return 0, nil
 }
 
 // execute the valid args command of the cdt command
@@ -511,4 +513,5 @@ func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
+	os.Exit(rootExitCode)
 }
