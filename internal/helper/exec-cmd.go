@@ -53,6 +53,7 @@ func callExternal(additionalEnv []string, cwd string, mute bool, withOutput bool
 					}
 					return exitError.ExitCode(), outtext, err
 				}
+				return 1, "Error when launching the command", err
 			}
 			return 0, string(output), nil
 		} else {
