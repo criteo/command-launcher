@@ -4,7 +4,7 @@ SCRIPT_DIR=${1:-$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && p
 echo "integration test directory: $SCRIPT_DIR"
 
 #BRANCH_NAME=$(git branch --show-current)
-EXAMPLE_BRANCH_NAME=distributed-pkg
+EXAMPLE_BRANCH_NAME=main
 
 # create output folder
 OUTPUT_DIR=$SCRIPT_DIR/output
