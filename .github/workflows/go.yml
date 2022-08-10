@@ -40,6 +40,7 @@ jobs:
         echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
         echo "::set-output name=arch::${{matrix.arch}}"
         echo "::set-output name=os::$(go run test/get-os.go)"
+        echo "::set-output name=ext::$(go run test/get-os.go extension)"
 
     - name: Build
       env:
@@ -62,11 +63,16 @@ jobs:
         name: ${{steps.vars.outputs.os}}-${{matrix.arch}}
         path: build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}}
 
+    - name: Rename binary name for release
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        mv build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}} build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{github.ref_name}}${{steps.vars.outputs.ext}}
+
     - name: Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
-      with: 
-        files: build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}}
+      with:
+        files: build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{github.ref_name}}${{steps.vars.outputs.ext}}
 
   packaging:
     needs: [ build ]
@@ -104,14 +110,14 @@ jobs:
         uses: thedoctor0/zip-release@master
         with:
           type: 'zip'
-          filename: cdt_${{needs.vars.outputs.sha_short}}.zip
+          filename: cdt_${{github.ref_name}}.zip
           directory: output
 
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
           name: all-in-one.zip
-          path: output/cdt_${{needs.vars.outputs.sha_short}}.zip
+          path: output/cdt_${{github.ref_name}}.zip
 
       - name: Display structure of downloaded files
         run: ls -R
@@ -120,7 +126,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
-        with: 
+        with:
           files: output/cdt_${{github.ref_name}}.zip
 
 
