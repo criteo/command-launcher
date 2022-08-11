@@ -122,6 +122,23 @@ else
   exit 1
 fi
 
+rm -rf $CL_HOME/dropins
+mkdir -p $CL_HOME/dropins
+cp -R $SCRIPT_DIR/packages-src/bonjour $CL_HOME/dropins
+
+echo "> test the LOG_LEVEL command"
+RESULT=$($OUTPUT_DIR/cl bonjour)
+echo $RESULT
+
+echo $RESULT | grep -q "bonjour!"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - wrong output of hello command: $RESULT"
+  exit 1
+fi
+
+
 ##
 # test set config
 ##
@@ -134,6 +151,16 @@ if [ $? -eq 0 ]; then
   echo "OK"
 else
   echo "KO - failed to set config: log_level"
+  exit 1
+fi
+
+echo "> test the LOG_LEVEL command"
+RESULT=$($OUTPUT_DIR/cl bonjour)
+echo $RESULT | grep -q "bonjour! debug"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - wrong output of hello command: $RESULT"
   exit 1
 fi
 
@@ -221,7 +248,6 @@ else
   echo "KO - wrong output of hello command: $RESULT"
   exit 1
 fi
-
 
 ##
 # remove the output folder
