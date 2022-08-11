@@ -222,6 +222,17 @@ else
   exit 1
 fi
 
+echo "> test the LOG_LEVEL command"
+export CL_LOG_LEVEL=Debug
+RESULT=$($OUTPUT_DIR/cl hello)
+echo $RESULT | grep -q "Debug"
+if [ $? -eq 1 ]; then
+  echo "OK"
+else
+  echo "KO - wrong output of hello command: $RESULT"
+  exit 1
+fi
+UNSET CL_LOG_LEVEL
 
 ##
 # remove the output folder

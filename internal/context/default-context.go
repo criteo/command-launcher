@@ -58,6 +58,10 @@ func (ctx *defaultContext) PasswordEnvVar() string {
 	return fmt.Sprintf("%s_%s", ctx.prefix(), "PASSWORD")
 }
 
+func (ctx *defaultContext) LogLevelEnvVar() string {
+	return fmt.Sprintf("%s_%s", ctx.prefix(), "LOG_LEVEL")
+}
+
 func (ctx *defaultContext) DebugFlagsEnvVar() string {
 	return fmt.Sprintf("%s_%s", ctx.prefix(), "DEBUG_FLAGS")
 }

@@ -463,6 +463,12 @@ func secrets() []string {
 		debugFlags,
 		viper.GetString(config.DEBUG_FLAGS_KEY),
 	))
+	// append log level from configuration
+	logLevel := os.Getenv(rootCtxt.appCtx.LogLevelEnvVar())
+	vars = append(vars, fmt.Sprintf("%s=%s",
+		rootCtxt.appCtx.LogLevelEnvVar(),
+		logLevel,
+	))
 
 	return vars
 }
