@@ -1,2 +1,1 @@
-ECHO bonjour!
-ECHO %CL_LOG_LEVEL%
+ECHO bonjour! %CL_LOG_LEVEL%
