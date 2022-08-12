@@ -122,11 +122,14 @@ else
   exit 1
 fi
 
+##
+# test command context
+##
 rm -rf $CL_HOME/dropins
 mkdir -p $CL_HOME/dropins
 cp -R $SCRIPT_DIR/packages-src/bonjour $CL_HOME/dropins
 
-echo "> test the LOG_LEVEL command"
+echo "> test the command without LOG_LEVEL"
 RESULT=$($OUTPUT_DIR/cl bonjour)
 echo $RESULT
 
@@ -138,10 +141,6 @@ else
   exit 1
 fi
 
-
-##
-# test set config
-##
 echo "> test set config"
 RESULT=$($OUTPUT_DIR/cl config log_level debug)
 RESULT=$($OUTPUT_DIR/cl config)
@@ -154,22 +153,22 @@ else
   exit 1
 fi
 
-echo "> test the LOG_LEVEL command"
-RESULT=$($OUTPUT_DIR/cl bonjour)
-echo $RESULT | grep -q "bonjour! debug"
-if [ $? -eq 0 ]; then
-  echo "OK"
-else
-  echo "KO - wrong output of hello command: $RESULT"
-  exit 1
-fi
-
 echo "> test get single config"
 RESULT=$($OUTPUT_DIR/cl config log_level)
 if [ "$RESULT" = "debug" ]; then
   echo "OK"
 else
   echo "KO - failed to get config: log_level"
+  exit 1
+fi
+
+echo "> test the command with LOG_LEVEL"
+RESULT=$($OUTPUT_DIR/cl bonjour)
+echo $RESULT | grep -q "bonjour! debug"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - wrong output of hello command: $RESULT"
   exit 1
 fi
 
