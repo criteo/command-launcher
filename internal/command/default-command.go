@@ -49,20 +49,20 @@ An additional "category" field is reserved in case we have too much first level 
 we can use it to category them in the cdt help output.
 */
 type DefaultCommand struct {
-	CmdName             string   `json:"name"`
-	CmdCategory         string   `json:"category"`
-	CmdType             string   `json:"type"`
-	CmdGroup            string   `json:"group"`
-	CmdShortDescription string   `json:"short"`
-	CmdLongDescription  string   `json:"long"`
-	CmdExecutable       string   `json:"executable"`
-	CmdArguments        []string `json:"args"`
-	CmdDocFile          string   `json:"docFile"`
-	CmdDocLink          string   `json:"docLink"`
-	CmdValidArgs        []string `json:"validArgs"`     // the valid argument options
-	CmdValidArgsCmd     []string `json:"validArgsCmd"`  // the command to call to get the args for autocompletion
-	CmdRequiredFlags    []string `json:"requiredFlags"` // the required flags
-	CmdFlagValuesCmd    []string `json:"flagValuesCmd"` // the command to call flag values for autocompletion
+	CmdName             string   `json:"name" yaml:"name"`
+	CmdCategory         string   `json:"category" yaml:"category"`
+	CmdType             string   `json:"type" yaml:"type"`
+	CmdGroup            string   `json:"group" yaml:"group"`
+	CmdShortDescription string   `json:"short" yaml:"short"`
+	CmdLongDescription  string   `json:"long" yaml:"long"`
+	CmdExecutable       string   `json:"executable" yaml:"executable"`
+	CmdArguments        []string `json:"args" yaml:"args"`
+	CmdDocFile          string   `json:"docFile" yaml:"docFile"`
+	CmdDocLink          string   `json:"docLink" yaml:"docLink"`
+	CmdValidArgs        []string `json:"validArgs" yaml:"validArgs"`         // the valid argument options
+	CmdValidArgsCmd     []string `json:"validArgsCmd" yaml:"validArgsCmd"`   // the command to call to get the args for autocompletion
+	CmdRequiredFlags    []string `json:"requiredFlags" yaml:"requiredFlags"` // the required flags
+	CmdFlagValuesCmd    []string `json:"flagValuesCmd" yaml:"flagValuesCmd"` // the command to call flag values for autocompletion
 
 	PkgDir string `json:"pkgDir"`
 }

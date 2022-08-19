@@ -1,0 +1,28 @@
+pkgName: yaml-manifest
+version: 1.0.0
+cmds:
+  - name: bonjour1
+    type: executable
+    short: a test command for yaml yaml-manifest
+    long: |
+      Example command for yaml
+
+      This is another line
+
+      Examples:
+        bonjour1 world
+    executable: "{{.Root}}/bonjour.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}"
+  - name: bonjour2
+    type: executable
+    short: a test command for yaml yaml-manifest
+    long: |
+      Example command for yaml
+
+      This is another line
+
+      Examples:
+        bonjour2
+    executable: "{{.Root}}/bonjour.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}"
+    args:
+      - monde
+

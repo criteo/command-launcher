@@ -98,6 +98,44 @@ else
 fi
 
 ##
+# test yaml format manifest
+##
+rm -rf $CL_HOME/dropins
+mkdir -p $CL_HOME/dropins
+cp -R $SCRIPT_DIR/packages-src/yaml-manifest $CL_HOME/dropins
+
+echo "> test YAML manifest without arguments in manifest"
+RESULT=$($OUTPUT_DIR/cl bonjour1 world)
+echo $RESULT | grep -q "bonjour! world"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - wrong output of bonjour command: $RESULT"
+  exit 1
+fi
+
+echo "> test YAML manifest with arguments in manifest"
+RESULT=$($OUTPUT_DIR/cl bonjour2)
+echo $RESULT | grep -q "bonjour! monde"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - wrong output of bonjour command: $RESULT"
+  exit 1
+fi
+
+echo "> test YAML manifest with long description"
+RESULT=$($OUTPUT_DIR/cl help bonjour1)
+echo $RESULT
+echo $RESULT | grep -q "This is another line"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - wrong format of the long description"
+  exit 1
+fi
+
+##
 # test exit code
 ##
 # First copy the dropin packages for test
@@ -171,6 +209,7 @@ else
   echo "KO - wrong output of hello command: $RESULT"
   exit 1
 fi
+
 
 ##
 # test remote command
