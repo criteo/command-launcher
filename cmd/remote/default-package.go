@@ -11,12 +11,13 @@ import (
 
 	"github.com/criteo/command-launcher/internal/command"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v3"
 )
 
 type defaultPackageManifest struct {
-	PkgName     string                    `json:"pkgName"`
-	PkgVersion  string                    `json:"version"`
-	PkgCommands []*command.DefaultCommand `json:"cmds"`
+	PkgName     string                    `json:"pkgName" yaml:"pkgName"`
+	PkgVersion  string                    `json:"version" yaml:"version"`
+	PkgCommands []*command.DefaultCommand `json:"cmds" yaml:"cmds"`
 }
 
 func (mf *defaultPackageManifest) Name() string {
@@ -138,9 +139,14 @@ func ReadManifest(file fs.File) (command.PackageManifest, error) {
 	}
 
 	var mf = defaultPackageManifest{}
+	// TODO: deperacate the JSON format
 	err = json.Unmarshal(payload, &mf)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read the json content (%s)", err)
+		// try YAML format
+		yamlErr := yaml.Unmarshal(payload, &mf)
+		if yamlErr != nil {
+			return nil, fmt.Errorf("cannot read the manifest content, it is neither a valid JSON (%s) nor YAML (%s)", err, yamlErr)
+		}
 	}
 
 	return &mf, nil

@@ -1,0 +1,11 @@
+pkgName: fake_test
+version: 1.0.0
+cmds:
+  - name: fake_test
+    short: Fake manifest
+    long: |
+      Fake manifest long description
+
+      You can have multiple line descriptions
+    executable: fake
+    args: [ "A", "B" ]
