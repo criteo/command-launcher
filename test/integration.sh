@@ -116,7 +116,7 @@ fi
 
 echo "> test YAML manifest with arguments in manifest"
 RESULT=$($OUTPUT_DIR/cl bonjour2)
-echo $RESULT | grep -q "bonjour! le monde"
+echo $RESULT | grep -q "bonjour! monde"
 if [ $? -eq 0 ]; then
   echo "OK"
 else

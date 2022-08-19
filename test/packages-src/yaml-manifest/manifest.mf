@@ -24,5 +24,5 @@ cmds:
         bonjour2
     executable: "{{.Root}}/bonjour.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}"
     args:
-      - "le monde"
+      - monde
 
