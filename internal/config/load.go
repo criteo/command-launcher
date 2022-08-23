@@ -40,11 +40,11 @@ func LoadConfig(appCtx context.LauncherContext) {
 		configMetadata.File = cfgFile
 
 		viper.SetConfigFile(cfgFile)
-	} else if localCfgPath, found := findLocalConfig(wd, localCftFileName); found {
-		configMetadata.Reason = "found config file from working dir or its parents"
-		configMetadata.File = localCfgPath
+	} else if localCfgFile, found := findLocalConfig(wd, localCftFileName); found {
+		configMetadata.Reason = fmt.Sprintf("found config file from working dir or its parents: %s", localCfgFile)
+		configMetadata.File = localCfgFile
 
-		viper.SetConfigFile(localCfgPath)
+		viper.SetConfigFile(localCfgFile)
 	} else {
 		configMetadata.Reason = fmt.Sprintf("use default config file from app home %s", appDir)
 		configMetadata.File = fmt.Sprintf("%s/config.json", appDir)
@@ -122,7 +122,7 @@ func findLocalConfig(startPath string, configFileName string) (string, bool) {
 	}
 
 	if found {
-		return wd, true
+		return filepath.Join(wd, configFileName), true
 	} else {
 		return "", false
 	}

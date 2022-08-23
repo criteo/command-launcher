@@ -175,27 +175,44 @@ func cmdAndSubCmd(cmd *cobra.Command) (string, string) {
 func installCommands(repo repository.PackageRepository) error {
 	remote := remote.CreateRemoteRepository(viper.GetString(config.COMMAND_REPOSITORY_BASE_URL_KEY))
 	errors := make([]string, 0)
+
+	// check locked packages if ci is enabled
+	lockedPackages := map[string]string{}
+	if viper.GetBool(config.CI_ENABLED_KEY) {
+		pkgs, err := rootCtxt.cmdUpdater.LoadLockedPackages(viper.GetString(config.PACKAGE_LOCK_FILE_KEY))
+		if err == nil {
+			lockedPackages = pkgs
+		}
+	}
+
 	if pkgs, err := remote.PackageNames(); err == nil {
 		for _, pkgName := range pkgs {
-			latest, err := remote.LatestPackageInfo(pkgName)
+			pkgVersion := "unspecified"
+			if lockedVersion, ok := lockedPackages[pkgName]; ok {
+				pkgVersion = lockedVersion
+			} else {
+				latest, err := remote.LatestPackageInfo(pkgName)
+				if err != nil {
+					log.Error(err)
+					errors = append(errors, fmt.Sprintf("cannot get the latest version of the package %s: %v", latest.Name, err))
+					continue
+				}
+				if !rootCtxt.user.InPartition(latest.StartPartition, latest.EndPartition) {
+					log.Infof("Skip installing package %s, user not in partition (%d %d)\n", latest.Name, latest.StartPartition, latest.EndPartition)
+					continue
+				}
+				pkgVersion = latest.Version
+			}
+
+			pkg, err := remote.Package(pkgName, pkgVersion)
 			if err != nil {
 				log.Error(err)
-				errors = append(errors, fmt.Sprintf("cannot get the latest version of the package %s: %v", latest.Name, err))
-				continue
-			}
-			if !rootCtxt.user.InPartition(latest.StartPartition, latest.EndPartition) {
-				log.Infof("Skip installing package %s, user not in partition (%d %d)\n", latest.Name, latest.StartPartition, latest.EndPartition)
-				continue
-			}
-			pkg, err := remote.Package(latest.Name, latest.Version)
-			if err != nil {
-				log.Error(err)
-				errors = append(errors, fmt.Sprintf("cannot get the package %s: %v", latest.Name, err))
+				errors = append(errors, fmt.Sprintf("cannot get the package %s: %v", pkgName, err))
 				continue
 			}
 			err = repo.Install(pkg)
 			if err != nil {
-				errors = append(errors, fmt.Sprintf("cannot install the package %s: %v", latest.Name, err))
+				errors = append(errors, fmt.Sprintf("cannot install the package %s: %v", pkgName, err))
 				continue
 			}
 		}
