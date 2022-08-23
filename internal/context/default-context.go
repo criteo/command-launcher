@@ -47,31 +47,35 @@ func (ctx *defaultContext) AppDirname() string {
 }
 
 func (ctx *defaultContext) AppHomeEnvVar() string {
-	return fmt.Sprintf("%s_%s", ctx.prefix(), "HOME")
+	return ctx.envVarName("HOME")
 }
 
 func (ctx *defaultContext) UsernameEnvVar() string {
-	return fmt.Sprintf("%s_%s", ctx.prefix(), "USERNAME")
+	return ctx.envVarName("USERNAME")
 }
 
 func (ctx *defaultContext) PasswordEnvVar() string {
-	return fmt.Sprintf("%s_%s", ctx.prefix(), "PASSWORD")
+	return ctx.envVarName("PASSWORD")
 }
 
 func (ctx *defaultContext) LogLevelEnvVar() string {
-	return fmt.Sprintf("%s_%s", ctx.prefix(), "LOG_LEVEL")
+	return ctx.envVarName("LOG_LEVEL")
 }
 
 func (ctx *defaultContext) DebugFlagsEnvVar() string {
-	return fmt.Sprintf("%s_%s", ctx.prefix(), "DEBUG_FLAGS")
+	return ctx.envVarName("DEBUG_FLAGS")
 }
 
 func (ctx *defaultContext) ConfigurationFileEnvVar() string {
-	return fmt.Sprintf("%s_%s", ctx.prefix(), "CONFIG_FILE")
+	return ctx.envVarName("CONFIG_FILE")
 }
 
 func (ctx *defaultContext) RemoteConfigurationUrlEnvVar() string {
-	return fmt.Sprintf("%s_%s", ctx.prefix(), "REMOTE_CONFIG_URL")
+	return ctx.envVarName("REMOTE_CONFIG_URL")
+}
+
+func (ctx *defaultContext) envVarName(name string) string {
+	return fmt.Sprintf("%s_%s", ctx.prefix(), name)
 }
 
 func (ctx *defaultContext) prefix() string {

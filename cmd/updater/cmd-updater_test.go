@@ -15,7 +15,7 @@ func TestLoadLockedPackages(t *testing.T) {
 	cmdUpdater := CmdUpdater{}
 
 	fullPath, _ := filepath.Abs("assets/lock.json")
-	lockedPkgs, err := cmdUpdater.loadLockedPackages(fullPath)
+	lockedPkgs, err := cmdUpdater.LoadLockedPackages(fullPath)
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(lockedPkgs))
 	assert.Equal(t, "1.0.0", lockedPkgs["hello"])

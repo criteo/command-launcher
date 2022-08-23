@@ -6,3 +6,6 @@ build/
 command-launcher
 go.sum
 .idea/
+.cdt/
+cdt.json
+cdt_*.json
