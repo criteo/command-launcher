@@ -220,7 +220,7 @@ __%[1]s_handle_completion_types() {
 }
 
 __%[1]s_handle_standard_completion_case() {
-		COMPREPLY=( $(compgen -W "$(echo ${out[*]} | tr "\n" " ")" -- ${cur}) )
+    COMPREPLY=( $(compgen -W "$(echo ${out[*]} | tr "\n" " ")" -- ${cur}) )
 }
 
 __%[1]s_handle_special_char()
