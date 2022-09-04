@@ -13,28 +13,35 @@ import (
 Internal data structure to represent the local registry
 You can find an example of the file in the path specified by
 config "local_command_repository_dirname"
+
+Current implementation of the registry is to store each package as
+an entry (into a single json file), and load commands into memory
+during startup
+
+Further improvements could store registry as indexes, and laze load
+further information when necessary to reduce the startup time
 */
 type defaultRegistry struct {
-	packages       map[string]defaultPackage
+	packages       map[string]defaultRegistryEntry
 	groupCmds      map[string]*command.DefaultCommand // key is in form of [group]_[cmd name] ex. "_hotfix"
 	executableCmds map[string]*command.DefaultCommand // key is in form of [group]_[cmd name] ex. "hotfix_create"
 }
 
-type defaultPackage struct {
+type defaultRegistryEntry struct {
 	PkgName     string                    `json:"pkgName"`
 	PkgVersion  string                    `json:"version"`
 	PkgCommands []*command.DefaultCommand `json:"cmds"`
 }
 
-func (pkg *defaultPackage) Name() string {
+func (pkg *defaultRegistryEntry) Name() string {
 	return pkg.PkgName
 }
 
-func (pkg *defaultPackage) Version() string {
+func (pkg *defaultRegistryEntry) Version() string {
 	return pkg.PkgVersion
 }
 
-func (pkg *defaultPackage) Commands() []command.Command {
+func (pkg *defaultRegistryEntry) Commands() []command.Command {
 	cmds := []command.Command{}
 	for _, c := range pkg.PkgCommands {
 		cmds = append(cmds, c)
@@ -42,8 +49,8 @@ func (pkg *defaultPackage) Commands() []command.Command {
 	return cmds
 }
 
-func NewPackage(pkg command.Package, pkgDir string) defaultPackage {
-	defPkg := defaultPackage{
+func NewRegistryEntry(pkg command.Package, pkgDir string) defaultRegistryEntry {
+	defPkg := defaultRegistryEntry{
 		PkgName:     pkg.Name(),
 		PkgVersion:  pkg.Version(),
 		PkgCommands: []*command.DefaultCommand{},
@@ -75,7 +82,7 @@ func NewPackage(pkg command.Package, pkgDir string) defaultPackage {
 
 func LoadRegistry(pathname string) (*defaultRegistry, error) {
 	registry := defaultRegistry{
-		packages:       make(map[string]defaultPackage),
+		packages:       make(map[string]defaultRegistryEntry),
 		groupCmds:      make(map[string]*command.DefaultCommand),
 		executableCmds: make(map[string]*command.DefaultCommand),
 	}
@@ -112,7 +119,7 @@ func (reg *defaultRegistry) Store(pathname string) error {
 	return nil
 }
 
-func (reg *defaultRegistry) Add(pkg defaultPackage) error {
+func (reg *defaultRegistry) Add(pkg defaultRegistryEntry) error {
 	reg.packages[pkg.PkgName] = pkg
 	reg.extractCmds()
 	return nil
@@ -124,7 +131,7 @@ func (reg *defaultRegistry) Remove(pkgName string) error {
 	return nil
 }
 
-func (reg *defaultRegistry) Update(pkg defaultPackage) error {
+func (reg *defaultRegistry) Update(pkg defaultRegistryEntry) error {
 	reg.packages[pkg.PkgName] = pkg
 	reg.extractCmds()
 	return nil

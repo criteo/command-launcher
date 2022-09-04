@@ -18,7 +18,7 @@ func generateTestRegistryFile(path string, numOfPkgs int, numOfCmds int) (*defau
 	}
 
 	for i := 0; i < numOfPkgs; i++ {
-		pkg := defaultPackage{
+		pkg := defaultRegistryEntry{
 			PkgName:     fmt.Sprintf("test-%d", i),
 			PkgVersion:  "1.0.0",
 			PkgCommands: []*command.DefaultCommand{},
