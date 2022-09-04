@@ -128,5 +128,7 @@ func BenchmarkLoadLargeRegistry(t *testing.B) {
 	loadedExeCmds := loadedReg.ExecutableCommands()
 	assert.Equal(t, len(exeCmds), len(loadedExeCmds), "should have same number of executable cmd")
 
-	//assert.Fail(t, "")
+	// assert.Fail(t, "")
+	// registry load time must less than 0.1 second (100 ms)
+	assert.True(t, elapsed.Seconds() < 0.1)
 }
