@@ -18,7 +18,7 @@ func generateTestRegistryFile(path string, numOfPkgs int, numOfCmds int) (*defau
 	}
 
 	for i := 0; i < numOfPkgs; i++ {
-		pkg := defaultPackage{
+		pkg := defaultRegistryEntry{
 			PkgName:     fmt.Sprintf("test-%d", i),
 			PkgVersion:  "1.0.0",
 			PkgCommands: []*command.DefaultCommand{},
@@ -127,6 +127,4 @@ func BenchmarkLoadLargeRegistry(t *testing.B) {
 	assert.Nil(t, err)
 	loadedExeCmds := loadedReg.ExecutableCommands()
 	assert.Equal(t, len(exeCmds), len(loadedExeCmds), "should have same number of executable cmd")
-
-	//assert.Fail(t, "")
 }

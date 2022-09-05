@@ -27,12 +27,12 @@ func AddConfigCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 		Short: "Manage configurations",
 		Long: fmt.Sprintf(`Manage the command launcher configurations
 
-	Example:
-	  get configuration
-		%s config [key]
+  Example:
+    get configuration
+    %s config [key]
 
-	  set configuration
-		%s config [key] [value]
+    set configuration
+    %s config [key] [value]
 	`, appCtx.AppName(), appCtx.AppName()),
 		Run: func(cmd *cobra.Command, args []string) {
 			// list all configs

@@ -232,6 +232,7 @@ func addBuiltinCommands() {
 	AddConfigCmd(rootCmd, rootCtxt.appCtx)
 	AddLoginCmd(rootCmd, rootCtxt.appCtx)
 	AddUpdateCmd(rootCmd, rootCtxt.appCtx, rootCtxt.localRepo)
+	AddCompletionCmd(rootCmd, rootCtxt.appCtx)
 }
 
 func addLocalCommands() {
