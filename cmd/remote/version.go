@@ -51,15 +51,16 @@ func (version defaultVersion) String() string {
 }
 
 func Less(l defaultVersion, r defaultVersion) bool {
-	if l.Major < r.Major {
-		return true
-	} else if l.Minor < r.Minor {
-		return true
-	} else if l.Patch < r.Patch {
-		return true
+	lseg := [3]int{l.Major, l.Minor, l.Patch}
+	rseg := [3]int{r.Major, r.Minor, r.Patch}
+	for i := 0; i < 3; i++ {
+		if lseg[i] != rseg[i] {
+			return lseg[i] < rseg[i]
+		}
 	}
 
-	return false
+	// If segments are equal, then compare the prerelease info
+	return l.Tag < r.Tag
 }
 
 func IsVersionSmaller(v1 string, v2 string) bool {
