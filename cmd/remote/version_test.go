@@ -1,8 +1,11 @@
 package remote
 
 import (
+	"fmt"
 	"sort"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestToString(t *testing.T) {
@@ -63,10 +66,13 @@ func TestParseVersions(t *testing.T) {
 
 func TestSorter(t *testing.T) {
 	values := []string{
+		"2.0.2",
+		"2.0.1",
 		"2",
 		"1.2",
 		"1",
 		"1.2.3",
+		"1.0.9",
 	}
 
 	var versions []defaultVersion
@@ -77,19 +83,36 @@ func TestSorter(t *testing.T) {
 	}
 
 	sort.Sort(defaultVersionList(versions))
-	if versions[0].Major != 1 {
-		t.Log(versions)
+
+	expected_versions := []defaultVersion{
+		{1, 0, 0, ""},
+		{1, 0, 9, ""},
+		{1, 2, 0, ""},
+		{1, 2, 3, ""},
+		{2, 0, 0, ""},
+		{2, 0, 1, ""},
+		{2, 0, 2, ""},
 	}
 
-	if versions[1].Minor != 2 {
-		t.Log(versions)
+	for i := 0; i < len(expected_versions); i++ {
+		assert.Equal(t, expected_versions[i], versions[i], fmt.Sprintf("versions[%d] should be %v", i, expected_versions[i]))
 	}
+}
 
-	if versions[2].Patch != 3 {
-		t.Log(versions)
+func TestLess(t *testing.T) {
+	test_cases := []struct {
+		l, r    defaultVersion
+		compare int
+	}{
+		{defaultVersion{1, 0, 0, ""}, defaultVersion{1, 0, 1, ""}, -1},
+		{defaultVersion{1, 0, 0, ""}, defaultVersion{1, 0, 0, ""}, 0},
+		{defaultVersion{1, 0, 2, ""}, defaultVersion{1, 1, 0, ""}, -1},
+		{defaultVersion{1, 1, 0, ""}, defaultVersion{1, 0, 1, ""}, 1},
+		{defaultVersion{1, 0, 0, "rc1"}, defaultVersion{1, 0, 0, "rc2"}, -1},
+		{defaultVersion{1, 0, 0, "rc2"}, defaultVersion{1, 0, 0, "rc2"}, 0},
 	}
-
-	if versions[3].Major != 2 {
-		t.Log(versions)
+	for _, tc := range test_cases {
+		assert.Equal(t, tc.compare < 0, Less(tc.l, tc.r), fmt.Sprintf("Less(%v, %v) should be %v", tc.l, tc.r, tc.compare < 0))
+		assert.Equal(t, tc.compare > 0, Less(tc.r, tc.l), fmt.Sprintf("Less(%v, %v) should be %v", tc.r, tc.l, tc.compare > 0))
 	}
 }
