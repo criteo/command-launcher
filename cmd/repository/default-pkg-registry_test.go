@@ -127,6 +127,4 @@ func BenchmarkLoadLargeRegistry(t *testing.B) {
 	assert.Nil(t, err)
 	loadedExeCmds := loadedReg.ExecutableCommands()
 	assert.Equal(t, len(exeCmds), len(loadedExeCmds), "should have same number of executable cmd")
-
-	// assert.Fail(t, "")
 }
