@@ -264,8 +264,7 @@ func addCommands(groups []command.Command, executables []command.Command) {
 			},
 		}
 		for _, flag := range requiredFlags {
-			flagName, flagShort, flagDesc := parseFlagDefinition(flag)
-			cmd.Flags().StringP(flagName, flagShort, "", flagDesc)
+			addFlagToCmd(cmd, flag)
 		}
 		groupCmds[v.Name()] = cmd
 		rootCmd.AddCommand(cmd)
@@ -307,8 +306,7 @@ func addCommands(groups []command.Command, executables []command.Command) {
 		*/
 
 		for _, flag := range requiredFlags {
-			flagName, flagShort, flagDesc := parseFlagDefinition(flag)
-			cmd.Flags().StringP(flagName, flagShort, "", flagDesc)
+			addFlagToCmd(cmd, flag)
 			// TODO: enable flag parsing in cdt command to enable the flag value auto-completion.
 			// for now comment out this code as it will impact the flag parsing for the subcommand
 			// need to work it later
@@ -441,20 +439,39 @@ func executeFlagValuesOfCommand(group, name string, args []string) (string, erro
 	return output, nil
 }
 
-func parseFlagDefinition(line string) (string, string, string) {
+func addFlagToCmd(cmd *cobra.Command, flag string) {
+	flagName, flagShort, flagDesc, flagType, defaultValue := parseFlagDefinition(flag)
+	switch flagType {
+	case "bool":
+		// always use false as the default for the bool type
+		cmd.Flags().BoolP(flagName, flagShort, false, flagDesc)
+	default:
+		cmd.Flags().StringP(flagName, flagShort, defaultValue, flagDesc)
+	}
+}
+
+func parseFlagDefinition(line string) (string, string, string, string, string) {
 	flagParts := strings.Split(line, "\t")
 	name := strings.TrimSpace(flagParts[0])
 	short := ""
 	description := ""
+	flagType := "string"
+	defaultValue := ""
 	if len(flagParts) == 2 {
 		description = strings.TrimSpace(flagParts[1])
 	}
-	if len(flagParts) >= 3 {
+	if len(flagParts) > 2 {
 		short = strings.TrimSpace(flagParts[1])
 		description = strings.TrimSpace(flagParts[2])
 	}
+	if len(flagParts) > 3 {
+		flagType = strings.TrimSpace(flagParts[3])
+	}
+	if len(flagParts) > 4 {
+		defaultValue = strings.TrimSpace(flagParts[4])
+	}
 
-	return name, short, description
+	return name, short, description, flagType, defaultValue
 }
 
 func secrets() []string {
