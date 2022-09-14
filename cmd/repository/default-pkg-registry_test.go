@@ -38,6 +38,7 @@ func generateTestRegistryFile(path string, numOfPkgs int, numOfCmds int) (*defau
 				CmdDocLink:          "https://dummy/doc/",
 				CmdValidArgs:        []string{"arg1", "arg2", "arg3"},
 				CmdRequiredFlags:    []string{"moab", "moab-id"},
+				CmdCheckFlags:       false,
 				PkgDir:              "",
 			}
 			pkg.PkgCommands = append(pkg.PkgCommands, &cmd)

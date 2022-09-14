@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/criteo/command-launcher/cmd/dropin"
@@ -13,6 +14,7 @@ import (
 	"github.com/criteo/command-launcher/cmd/user"
 	"github.com/criteo/command-launcher/internal/command"
 	"github.com/criteo/command-launcher/internal/config"
+	"github.com/criteo/command-launcher/internal/console"
 	ctx "github.com/criteo/command-launcher/internal/context"
 	"github.com/criteo/command-launcher/internal/helper"
 	"github.com/criteo/command-launcher/internal/metrics"
@@ -20,6 +22,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
@@ -256,7 +259,7 @@ func addCommands(groups []command.Command, executables []command.Command) {
 			Short:              v.ShortDescription(),
 			Long:               v.LongDescription(),
 			Run: func(cmd *cobra.Command, args []string) {
-				exitCode, err := executeCommand(group, name, args)
+				exitCode, err := executeCommand(group, name, args, []string{})
 				if err != nil && err.Error() == EXECUTABLE_NOT_DEFINED {
 					cmd.Help()
 				}
@@ -285,12 +288,24 @@ func addCommands(groups []command.Command, executables []command.Command) {
 			Short:              v.ShortDescription(),
 			Long:               v.LongDescription(),
 			Run: func(c *cobra.Command, args []string) {
+				var envVars []string = []string{}
+
+				if v.CheckFlags() {
+					var err error = nil
+					envVarPrefix := strings.ToUpper(rootCtxt.appCtx.AppName())
+					envVars, err = parseCmdArgsToEnv(c, args, envVarPrefix)
+					if err != nil {
+						console.Error("Failed to parse arguments: %v", err)
+						rootExitCode = 1
+					}
+				}
+
 				// TODO: in order to support flag value auto completion, we need to set DisableFlagParsing: false
 				// when setting disable flagParsing to false, the parent command will parse the flags
 				// so the args pass to the subcommand will not include the flags
 				// we need to restore the flags into args here
 				// considering the complexity here, we will cover it later
-				if exitCode, err := executeCommand(group, name, args); err != nil {
+				if exitCode, err := executeCommand(group, name, args, envVars); err != nil {
 					rootExitCode = exitCode
 				}
 			},
@@ -389,7 +404,7 @@ func getExecutableCommand(group, name string) (command.Command, error) {
 }
 
 // execute a cdt command
-func executeCommand(group, name string, args []string) (int, error) {
+func executeCommand(group, name string, args []string, initialEnvCtx []string) (int, error) {
 	iCmd, err := getExecutableCommand(group, name)
 	if err != nil {
 		return 1, err
@@ -398,8 +413,8 @@ func executeCommand(group, name string, args []string) (int, error) {
 		return 1, errors.New(EXECUTABLE_NOT_DEFINED)
 	}
 
-	secrets := secrets()
-	exitCode, err := iCmd.Execute(secrets, args...)
+	envCtx := getCmdEnvContext(initialEnvCtx)
+	exitCode, err := iCmd.Execute(envCtx, args...)
 	if err != nil {
 		return exitCode, err
 	}
@@ -414,9 +429,9 @@ func executeValidArgsOfCommand(group, name string, args []string) (string, error
 		return "", err
 	}
 
-	secrets := secrets()
+	envCtx := getCmdEnvContext([]string{})
 
-	_, output, err := iCmd.ExecuteValidArgsCmd(secrets, args...)
+	_, output, err := iCmd.ExecuteValidArgsCmd(envCtx, args...)
 	if err != nil {
 		return "", err
 	}
@@ -431,9 +446,9 @@ func executeFlagValuesOfCommand(group, name string, args []string) (string, erro
 		return "", err
 	}
 
-	secrets := secrets()
+	envCtx := getCmdEnvContext([]string{})
 
-	_, output, err := iCmd.ExecuteFlagValuesCmd(secrets, args...)
+	_, output, err := iCmd.ExecuteFlagValuesCmd(envCtx, args...)
 	if err != nil {
 		return "", err
 	}
@@ -457,8 +472,8 @@ func parseFlagDefinition(line string) (string, string, string) {
 	return name, short, description
 }
 
-func secrets() []string {
-	vars := []string{}
+func getCmdEnvContext(envVars []string) []string {
+	vars := append([]string{}, envVars...)
 	// user credential
 	username, err := helper.GetUsername()
 	if err != nil {
@@ -489,6 +504,21 @@ func secrets() []string {
 	))
 
 	return vars
+}
+
+func parseCmdArgsToEnv(c *cobra.Command, args []string, envVarPrefix string) ([]string, error) {
+	envVars := []string{}
+	if err := c.LocalFlags().Parse(args); err != nil {
+		// rootExitCode = 1
+		return envVars, err
+	}
+	c.LocalFlags().VisitAll(func(flag *pflag.Flag) {
+		envVars = append(envVars, fmt.Sprintf("%s_FLAG_%s=%s", envVarPrefix, strings.ToUpper(flag.Name), flag.Value.String()))
+	})
+	for idx, arg := range c.LocalFlags().Args() {
+		envVars = append(envVars, fmt.Sprintf("%s_ARG_%s=%s", envVarPrefix, strconv.Itoa(idx+1), arg))
+	}
+	return envVars, nil
 }
 
 func initContext(appName string, appVersion string, buildNum string) {

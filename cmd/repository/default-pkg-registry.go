@@ -72,6 +72,7 @@ func NewRegistryEntry(pkg command.Package, pkgDir string) defaultRegistryEntry {
 			CmdValidArgsCmd:     cmd.ValidArgsCmd(),
 			CmdRequiredFlags:    cmd.RequiredFlags(),
 			CmdFlagValuesCmd:    cmd.FlagValuesCmd(),
+			CmdCheckFlags:       cmd.CheckFlags(),
 			PkgDir:              pkgDir,
 		}
 		defPkg.PkgCommands = append(defPkg.PkgCommands, &newCmd)
