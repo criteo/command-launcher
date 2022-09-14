@@ -513,7 +513,13 @@ func parseCmdArgsToEnv(c *cobra.Command, args []string, envVarPrefix string) ([]
 		return envVars, err
 	}
 	c.LocalFlags().VisitAll(func(flag *pflag.Flag) {
-		envVars = append(envVars, fmt.Sprintf("%s_FLAG_%s=%s", envVarPrefix, strings.ToUpper(flag.Name), flag.Value.String()))
+		envVars = append(envVars,
+			fmt.Sprintf(
+				"%s_FLAG_%s=%s",
+				envVarPrefix,
+				strings.ReplaceAll(strings.ToUpper(flag.Name), "-", "_"), flag.Value.String(),
+			),
+		)
 	})
 	for idx, arg := range c.LocalFlags().Args() {
 		envVars = append(envVars, fmt.Sprintf("%s_ARG_%s=%s", envVarPrefix, strconv.Itoa(idx+1), arg))
