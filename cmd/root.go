@@ -281,6 +281,7 @@ func addCommands(groups []command.Command, executables []command.Command) {
 		requiredFlags := v.RequiredFlags()
 		validArgs := v.ValidArgs()
 		validArgsCmd := v.ValidArgsCmd()
+		checkFlags := v.CheckFlags()
 		// flagValuesCmd := v.FlagValuesCmd()
 		cmd := &cobra.Command{
 			DisableFlagParsing: true,
@@ -290,15 +291,18 @@ func addCommands(groups []command.Command, executables []command.Command) {
 			Run: func(c *cobra.Command, args []string) {
 				var envVars []string = []string{}
 
-				if v.CheckFlags() {
+				log.Debugf("checkFlags=%t", checkFlags)
+				if checkFlags {
 					var err error = nil
 					envVarPrefix := strings.ToUpper(rootCtxt.appCtx.AppName())
 					envVars, err = parseCmdArgsToEnv(c, args, envVarPrefix)
 					if err != nil {
 						console.Error("Failed to parse arguments: %v", err)
 						rootExitCode = 1
+						return
 					}
 				}
+				log.Debugf("flag & args environments: %v", envVars)
 
 				// TODO: in order to support flag value auto completion, we need to set DisableFlagParsing: false
 				// when setting disable flagParsing to false, the parent command will parse the flags
