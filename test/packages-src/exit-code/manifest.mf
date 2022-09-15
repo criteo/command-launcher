@@ -6,14 +6,14 @@
       "name": "exit0",
       "type": "executable",
       "short": "a command exits with code 0",
-      "executable": "#CACHE#/exit-0.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}",
+      "executable": "{{.PackageDir}}/exit-0.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}",
       "args": []
     },
     {
       "name": "exit1",
       "type": "executable",
       "short": "a command exits with code 1",
-      "executable": "#CACHE#/exit-1.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}",
+      "executable": "{{.PackageDir}}/exit-1.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}",
       "args": []
     }
 

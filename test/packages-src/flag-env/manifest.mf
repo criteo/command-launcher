@@ -6,7 +6,7 @@
       "name": "bonjour",
       "type": "executable",
       "short": "print bonjour from command launcher",
-      "executable": "{{.Root}}/bonjour.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}",
+      "executable": "{{.PackageDir}}/bonjour.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}",
       "args": [],
       "requiredFlags": [
         "name\t n\t greeting name",

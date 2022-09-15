@@ -289,6 +289,7 @@ type TemplateContext struct {
 	Arch            string
 	Cache           string
 	Root            string
+	PackageDir      string
 	Binary          string
 	Script          string
 	Extension       string
@@ -301,6 +302,7 @@ func (cmd *DefaultCommand) render(text string) string {
 		Arch:            runtime.GOARCH,
 		Cache:           filepath.ToSlash(cmd.PkgDir),
 		Root:            filepath.ToSlash(cmd.PkgDir),
+		PackageDir:      filepath.ToSlash(cmd.PkgDir),
 		Binary:          cmd.binary(runtime.GOOS),
 		Script:          cmd.script(runtime.GOOS),
 		Extension:       cmd.extension(runtime.GOOS),
