@@ -32,6 +32,8 @@ type CommandManifest interface {
 	RequiredFlags() []string
 
 	FlagValuesCmd() []string
+
+	CheckFlags() bool
 }
 
 type Command interface {

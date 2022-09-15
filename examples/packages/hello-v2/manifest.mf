@@ -6,7 +6,7 @@
       "name": "hello",
       "type": "executable",
       "short": "print hello world from command launcher",
-      "executable": "{{.Root}}/hello.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}",
+      "executable": "{{.PackageDir}}/hello.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}",
       "args": []
     }
   ]
