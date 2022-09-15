@@ -11,7 +11,7 @@ cmds:
 
       Examples:
         bonjour1 world
-    executable: "{{.Root}}/bonjour.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}"
+    executable: "{{.PackageDir}}/bonjour.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}"
   - name: bonjour2
     type: executable
     short: a test command for yaml yaml-manifest
@@ -22,7 +22,7 @@ cmds:
 
       Examples:
         bonjour2
-    executable: "{{.Root}}/bonjour.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}"
+    executable: "{{.PackageDir}}/bonjour.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}"
     args:
       - monde
 

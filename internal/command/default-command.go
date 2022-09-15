@@ -63,6 +63,7 @@ type DefaultCommand struct {
 	CmdValidArgsCmd     []string `json:"validArgsCmd" yaml:"validArgsCmd"`   // the command to call to get the args for autocompletion
 	CmdRequiredFlags    []string `json:"requiredFlags" yaml:"requiredFlags"` // the required flags
 	CmdFlagValuesCmd    []string `json:"flagValuesCmd" yaml:"flagValuesCmd"` // the command to call flag values for autocompletion
+	CmdCheckFlags       bool     `json:"checkFlags" yaml:"checkFlags"`       // whether parse the flags and check them before execution
 
 	PkgDir string `json:"pkgDir"`
 }
@@ -199,6 +200,10 @@ func (cmd *DefaultCommand) FlagValuesCmd() []string {
 	return []string{}
 }
 
+func (cmd *DefaultCommand) CheckFlags() bool {
+	return cmd.CmdCheckFlags
+}
+
 func (cmd *DefaultCommand) Clone() *DefaultCommand {
 	return &DefaultCommand{
 		CmdName:             cmd.CmdName,
@@ -215,6 +220,7 @@ func (cmd *DefaultCommand) Clone() *DefaultCommand {
 		CmdValidArgsCmd:     cmd.copyArray(cmd.CmdValidArgsCmd),
 		CmdRequiredFlags:    cmd.copyArray(cmd.CmdRequiredFlags),
 		CmdFlagValuesCmd:    cmd.copyArray(cmd.CmdFlagValuesCmd),
+		CmdCheckFlags:       cmd.CmdCheckFlags,
 		PkgDir:              cmd.PkgDir,
 	}
 }
@@ -283,6 +289,7 @@ type TemplateContext struct {
 	Arch            string
 	Cache           string
 	Root            string
+	PackageDir      string
 	Binary          string
 	Script          string
 	Extension       string
@@ -295,6 +302,7 @@ func (cmd *DefaultCommand) render(text string) string {
 		Arch:            runtime.GOARCH,
 		Cache:           filepath.ToSlash(cmd.PkgDir),
 		Root:            filepath.ToSlash(cmd.PkgDir),
+		PackageDir:      filepath.ToSlash(cmd.PkgDir),
 		Binary:          cmd.binary(runtime.GOOS),
 		Script:          cmd.script(runtime.GOOS),
 		Extension:       cmd.extension(runtime.GOOS),

@@ -7,7 +7,12 @@
       "type": "executable",
       "short": "print bonjour from command launcher",
       "executable": "{{.PackageDir}}/bonjour.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}",
-      "args": []
+      "args": [],
+      "requiredFlags": [
+        "name\t n\t greeting name",
+        "language\t l\tgreeting language"
+      ],
+      "checkFlags": true
     }
   ]
 }

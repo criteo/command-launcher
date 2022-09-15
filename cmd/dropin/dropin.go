@@ -54,6 +54,7 @@ func Load(pathname string) (*DropinRepository, error) {
 							CmdValidArgsCmd:     cmd.ValidArgsCmd(),
 							CmdRequiredFlags:    cmd.RequiredFlags(),
 							CmdFlagValuesCmd:    cmd.FlagValuesCmd(),
+							CmdCheckFlags:       cmd.CheckFlags(),
 							PkgDir:              filepath.Join(pathname, f.Name()),
 						}
 						if newCmd.CmdType == "group" {
