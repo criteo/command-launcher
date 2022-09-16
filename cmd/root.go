@@ -289,15 +289,20 @@ func addCommands(groups []command.Command, executables []command.Command) {
 			Long:               v.LongDescription(),
 			Run: func(c *cobra.Command, args []string) {
 				var envVars []string = []string{}
+				var envTable map[string]string = map[string]string{}
 
 				log.Debugf("checkFlags=%t", checkFlags)
 				if checkFlags {
 					var err error = nil
 					envVarPrefix := strings.ToUpper(rootCtxt.appCtx.AppName())
-					envVars, err = parseCmdArgsToEnv(c, args, envVarPrefix)
+					envVars, envTable, err = parseCmdArgsToEnv(c, args, envVarPrefix)
 					if err != nil {
 						console.Error("Failed to parse arguments: %v", err)
 						rootExitCode = 1
+						return
+					}
+					if h, exist := envTable[fmt.Sprintf("%s_FLAG_HELP", envVarPrefix)]; exist && h == "true" {
+						c.Help()
 						return
 					}
 				}
@@ -527,25 +532,30 @@ func getCmdEnvContext(envVars []string) []string {
 	return vars
 }
 
-func parseCmdArgsToEnv(c *cobra.Command, args []string, envVarPrefix string) ([]string, error) {
+func parseCmdArgsToEnv(c *cobra.Command, args []string, envVarPrefix string) ([]string, map[string]string, error) {
 	envVars := []string{}
+	envTable := map[string]string{}
 	if err := c.LocalFlags().Parse(args); err != nil {
-		// rootExitCode = 1
-		return envVars, err
+		return envVars, envTable, err
 	}
 	c.LocalFlags().VisitAll(func(flag *pflag.Flag) {
+		n := strings.ReplaceAll(strings.ToUpper(flag.Name), "-", "_")
+		v := flag.Value.String()
+		k := fmt.Sprintf("%s_FLAG_%s", envVarPrefix, n)
 		envVars = append(envVars,
 			fmt.Sprintf(
-				"%s_FLAG_%s=%s",
-				envVarPrefix,
-				strings.ReplaceAll(strings.ToUpper(flag.Name), "-", "_"), flag.Value.String(),
+				"%s=%s",
+				k, v,
 			),
 		)
+		envTable[k] = v
 	})
 	for idx, arg := range c.LocalFlags().Args() {
-		envVars = append(envVars, fmt.Sprintf("%s_ARG_%s=%s", envVarPrefix, strconv.Itoa(idx+1), arg))
+		k := fmt.Sprintf("%s_ARG_%s", envVarPrefix, strconv.Itoa(idx+1))
+		envVars = append(envVars, fmt.Sprintf("%s=%s", k, arg))
+		envTable[k] = arg
 	}
-	return envVars, nil
+	return envVars, envTable, nil
 }
 
 func initContext(appName string, appVersion string, buildNum string) {
