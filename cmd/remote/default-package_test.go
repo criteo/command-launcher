@@ -44,6 +44,9 @@ func TestReadManifestInYaml(t *testing.T) {
 	assert.Equal(t, "Fake manifest long description\n\nYou can have multiple line descriptions\n", cmds[0].LongDescription())
 	assert.Equal(t, "fake", cmds[0].Executable())
 	assert.Equal(t, 2, len(cmds[0].Arguments()))
+
+	assert.Equal(t, 2, len(cmds[0].RequiredFlags()))
+	assert.Equal(t, 3, len(cmds[0].OptionalFlags()))
 }
 
 func TestCreatePackage(t *testing.T) {

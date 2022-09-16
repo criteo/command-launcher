@@ -9,3 +9,7 @@ cmds:
       You can have multiple line descriptions
     executable: fake
     args: [ "A", "B" ]
+    requiredFlags: ["required-1", "required-2"]
+    optionalFlags: ["optional-1", "optional-2", "optional-3"]
+
+

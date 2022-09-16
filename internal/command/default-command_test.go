@@ -23,9 +23,39 @@ func getDefaultCommand() DefaultCommand {
 		CmdValidArgs:        nil,
 		CmdValidArgsCmd:     nil,
 		CmdRequiredFlags:    nil,
+		CmdOptionalFlags:    nil,
+		CmdExclusiveFlags:   nil,
+		CmdTogetherFlags:    nil,
 		CmdFlagValuesCmd:    nil,
 		PkgDir:              "/tmp/test/root",
 	}
+}
+
+func TestCommandFlags(t *testing.T) {
+	cmd := getDefaultCommand()
+	cmd.CmdValidArgs = []string{"args1", "args2"}
+	cmd.CmdValidArgsCmd = []string{}
+	cmd.CmdRequiredFlags = []string{"moab", "moab-id", "build-num"}
+	cmd.CmdOptionalFlags = []string{"opt-1", "opt-2"}
+	cmd.CmdExclusiveFlags = [][]string{
+		{"moab-id", "build-num"},
+	}
+	cmd.CmdTogetherFlags = [][]string{
+		{"opt-1", "opt-2"},
+	}
+	cmd.CmdFlagValuesCmd = []string{}
+
+	exclusiveFlags := cmd.ExclusiveFlags()
+	assert.Equal(t, 1, len(exclusiveFlags))
+	assert.Equal(t, 2, len(exclusiveFlags[0]))
+	assert.Equal(t, "moab-id", exclusiveFlags[0][0])
+	assert.Equal(t, "build-num", exclusiveFlags[0][1])
+
+	togetherFlags := cmd.TogetherFlags()
+	assert.Equal(t, 1, len(togetherFlags))
+	assert.Equal(t, 2, len(togetherFlags[0]))
+	assert.Equal(t, "opt-1", togetherFlags[0][0])
+	assert.Equal(t, "opt-2", togetherFlags[0][1])
 }
 
 func TestCommandValidArgs(t *testing.T) {
@@ -86,6 +116,14 @@ func TestNullFields(t *testing.T) {
 func TestCloneCommand(t *testing.T) {
 	cmd := getDefaultCommand()
 	cmd.CmdExecutable = "#CACHE#/#OS#/#ARCH#/test#EXT#"
+	cmd.CmdRequiredFlags = []string{"moab", "moab-id", "build-num"}
+	cmd.CmdOptionalFlags = []string{"opt-1", "opt-2"}
+	cmd.CmdExclusiveFlags = [][]string{
+		{"moab-id", "build-num"},
+	}
+	cmd.CmdTogetherFlags = [][]string{
+		{"opt-1", "opt-2"},
+	}
 
 	newCmd := cmd.Clone()
 	assert.NotNil(t, newCmd.CmdValidArgs)
@@ -93,11 +131,24 @@ func TestCloneCommand(t *testing.T) {
 	assert.NotNil(t, newCmd.CmdValidArgsCmd)
 	assert.Equal(t, 0, len(newCmd.CmdValidArgsCmd))
 	assert.NotNil(t, newCmd.CmdRequiredFlags)
-	assert.Equal(t, 0, len(newCmd.CmdRequiredFlags))
+	assert.Equal(t, 3, len(newCmd.CmdRequiredFlags))
 
 	assert.Equal(t, 2, len(newCmd.Arguments()))
 	assert.Equal(t, "-l", newCmd.Arguments()[0])
 	assert.Equal(t, "-a", newCmd.Arguments()[1])
+
+	exclusiveFlags := newCmd.ExclusiveFlags()
+	assert.Equal(t, 1, len(exclusiveFlags))
+	assert.Equal(t, 2, len(exclusiveFlags[0]))
+	assert.Equal(t, "moab-id", exclusiveFlags[0][0])
+	assert.Equal(t, "build-num", exclusiveFlags[0][1])
+
+	togetherFlags := newCmd.TogetherFlags()
+	assert.Equal(t, 1, len(togetherFlags))
+	assert.Equal(t, 2, len(togetherFlags[0]))
+	assert.Equal(t, "opt-1", togetherFlags[0][0])
+	assert.Equal(t, "opt-2", togetherFlags[0][1])
+
 }
 
 func TestLegacyVariableInterpolation(t *testing.T) {

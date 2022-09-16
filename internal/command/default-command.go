@@ -49,21 +49,24 @@ An additional "category" field is reserved in case we have too much first level 
 we can use it to category them in the cdt help output.
 */
 type DefaultCommand struct {
-	CmdName             string   `json:"name" yaml:"name"`
-	CmdCategory         string   `json:"category" yaml:"category"`
-	CmdType             string   `json:"type" yaml:"type"`
-	CmdGroup            string   `json:"group" yaml:"group"`
-	CmdShortDescription string   `json:"short" yaml:"short"`
-	CmdLongDescription  string   `json:"long" yaml:"long"`
-	CmdExecutable       string   `json:"executable" yaml:"executable"`
-	CmdArguments        []string `json:"args" yaml:"args"`
-	CmdDocFile          string   `json:"docFile" yaml:"docFile"`
-	CmdDocLink          string   `json:"docLink" yaml:"docLink"`
-	CmdValidArgs        []string `json:"validArgs" yaml:"validArgs"`         // the valid argument options
-	CmdValidArgsCmd     []string `json:"validArgsCmd" yaml:"validArgsCmd"`   // the command to call to get the args for autocompletion
-	CmdRequiredFlags    []string `json:"requiredFlags" yaml:"requiredFlags"` // the required flags
-	CmdFlagValuesCmd    []string `json:"flagValuesCmd" yaml:"flagValuesCmd"` // the command to call flag values for autocompletion
-	CmdCheckFlags       bool     `json:"checkFlags" yaml:"checkFlags"`       // whether parse the flags and check them before execution
+	CmdName             string     `json:"name" yaml:"name"`
+	CmdCategory         string     `json:"category" yaml:"category"`
+	CmdType             string     `json:"type" yaml:"type"`
+	CmdGroup            string     `json:"group" yaml:"group"`
+	CmdShortDescription string     `json:"short" yaml:"short"`
+	CmdLongDescription  string     `json:"long" yaml:"long"`
+	CmdExecutable       string     `json:"executable" yaml:"executable"`
+	CmdArguments        []string   `json:"args" yaml:"args"`
+	CmdDocFile          string     `json:"docFile" yaml:"docFile"`
+	CmdDocLink          string     `json:"docLink" yaml:"docLink"`
+	CmdValidArgs        []string   `json:"validArgs" yaml:"validArgs"`           // the valid argument options
+	CmdValidArgsCmd     []string   `json:"validArgsCmd" yaml:"validArgsCmd"`     // the command to call to get the args for autocompletion
+	CmdRequiredFlags    []string   `json:"requiredFlags" yaml:"requiredFlags"`   // the required flags
+	CmdOptionalFlags    []string   `json:"optionalFlags" yaml:"optionalFlags"`   // the optional flags
+	CmdExclusiveFlags   [][]string `json:"exclusiveFlags" yaml:"exclusiveFlags"` // the exclusive flags
+	CmdTogetherFlags    [][]string `json:"togetherFlags" yaml:"togetherFlags"`   // the together flags
+	CmdFlagValuesCmd    []string   `json:"flagValuesCmd" yaml:"flagValuesCmd"`   // the command to call flag values for autocompletion
+	CmdCheckFlags       bool       `json:"checkFlags" yaml:"checkFlags"`         // whether parse the flags and check them before execution
 
 	PkgDir string `json:"pkgDir"`
 }
@@ -193,6 +196,27 @@ func (cmd *DefaultCommand) RequiredFlags() []string {
 	return []string{}
 }
 
+func (cmd *DefaultCommand) OptionalFlags() []string {
+	if cmd.CmdOptionalFlags != nil && len(cmd.CmdOptionalFlags) > 0 {
+		return cmd.CmdOptionalFlags
+	}
+	return []string{}
+}
+
+func (cmd *DefaultCommand) ExclusiveFlags() [][]string {
+	if cmd.CmdExclusiveFlags != nil && len(cmd.CmdExclusiveFlags) > 0 {
+		return cmd.CmdExclusiveFlags
+	}
+	return [][]string{}
+}
+
+func (cmd *DefaultCommand) TogetherFlags() [][]string {
+	if cmd.CmdTogetherFlags != nil && len(cmd.CmdTogetherFlags) > 0 {
+		return cmd.CmdTogetherFlags
+	}
+	return [][]string{}
+}
+
 func (cmd *DefaultCommand) FlagValuesCmd() []string {
 	if cmd.CmdFlagValuesCmd != nil && len(cmd.CmdFlagValuesCmd) > 0 {
 		return cmd.CmdFlagValuesCmd
@@ -219,6 +243,9 @@ func (cmd *DefaultCommand) Clone() *DefaultCommand {
 		CmdValidArgs:        cmd.copyArray(cmd.CmdValidArgs),
 		CmdValidArgsCmd:     cmd.copyArray(cmd.CmdValidArgsCmd),
 		CmdRequiredFlags:    cmd.copyArray(cmd.CmdRequiredFlags),
+		CmdOptionalFlags:    cmd.copyArray(cmd.CmdOptionalFlags),
+		CmdExclusiveFlags:   cmd.copy2dArray(cmd.CmdExclusiveFlags),
+		CmdTogetherFlags:    cmd.copy2dArray(cmd.CmdTogetherFlags),
 		CmdFlagValuesCmd:    cmd.copyArray(cmd.CmdFlagValuesCmd),
 		CmdCheckFlags:       cmd.CmdCheckFlags,
 		PkgDir:              cmd.PkgDir,
@@ -230,6 +257,17 @@ func (cmd *DefaultCommand) copyArray(src []string) []string {
 		return []string{}
 	}
 	return append([]string{}, src...)
+}
+
+func (cmd *DefaultCommand) copy2dArray(src [][]string) [][]string {
+	if len(src) == 0 {
+		return [][]string{}
+	}
+	ret := [][]string{}
+	for _, v := range src {
+		ret = append(ret, cmd.copyArray(v))
+	}
+	return ret
 }
 
 func (cmd *DefaultCommand) interpolateArgs(values *[]string) {

@@ -253,6 +253,10 @@ func addCommands(groups []command.Command, executables []command.Command) {
 		group := v.Group()
 		name := v.Name()
 		requiredFlags := v.RequiredFlags()
+		optionalFlags := v.OptionalFlags()
+		exclusiveFlags := v.ExclusiveFlags()
+		togetherFlags := v.TogetherFlags()
+		checkFlags := v.CheckFlags()
 		cmd := &cobra.Command{
 			DisableFlagParsing: true,
 			Use:                v.Name(),
@@ -266,9 +270,7 @@ func addCommands(groups []command.Command, executables []command.Command) {
 				rootExitCode = exitCode
 			},
 		}
-		for _, flag := range requiredFlags {
-			addFlagToCmd(cmd, flag)
-		}
+		processFlags(cmd, checkFlags, requiredFlags, optionalFlags, exclusiveFlags, togetherFlags)
 		groupCmds[v.Name()] = cmd
 		rootCmd.AddCommand(cmd)
 	}
@@ -278,10 +280,12 @@ func addCommands(groups []command.Command, executables []command.Command) {
 		group := v.Group()
 		name := v.Name()
 		requiredFlags := v.RequiredFlags()
+		optionalFlags := v.OptionalFlags()
+		exclusiveFlags := v.ExclusiveFlags()
+		togetherFlags := v.TogetherFlags()
 		validArgs := v.ValidArgs()
 		validArgsCmd := v.ValidArgsCmd()
 		checkFlags := v.CheckFlags()
-		// flagValuesCmd := v.FlagValuesCmd()
 		cmd := &cobra.Command{
 			DisableFlagParsing: true,
 			Use:                v.Name(),
@@ -289,19 +293,25 @@ func addCommands(groups []command.Command, executables []command.Command) {
 			Long:               v.LongDescription(),
 			Run: func(c *cobra.Command, args []string) {
 				var envVars []string = []string{}
+				var envTable map[string]string = map[string]string{}
 
 				log.Debugf("checkFlags=%t", checkFlags)
 				if checkFlags {
 					var err error = nil
 					envVarPrefix := strings.ToUpper(rootCtxt.appCtx.AppName())
-					envVars, err = parseCmdArgsToEnv(c, args, envVarPrefix)
+					envVars, envTable, err = parseCmdArgsToEnv(c, args, envVarPrefix)
 					if err != nil {
 						console.Error("Failed to parse arguments: %v", err)
 						rootExitCode = 1
 						return
 					}
+					if h, exist := envTable[fmt.Sprintf("%s_FLAG_HELP", envVarPrefix)]; exist && h == "true" {
+						c.Help()
+						return
+					}
 				}
 				log.Debugf("flag & args environments: %v", envVars)
+				log.Debugf("envTable=%v", envTable)
 
 				// TODO: in order to support flag value auto completion, we need to set DisableFlagParsing: false
 				// when setting disable flagParsing to false, the parent command will parse the flags
@@ -314,42 +324,7 @@ func addCommands(groups []command.Command, executables []command.Command) {
 			},
 		}
 
-		// TODO: uncomment to enable the flag value auto-completion
-		/*
-			cmd.SetHelpFunc(func(c *cobra.Command, args []string) {
-				err := executeCommand(group, name, args)
-				if err != nil {
-					c.Help()
-				}
-			})
-		*/
-
-		for _, flag := range requiredFlags {
-			addFlagToCmd(cmd, flag)
-			// TODO: enable flag parsing in cdt command to enable the flag value auto-completion.
-			// for now comment out this code as it will impact the flag parsing for the subcommand
-			// need to work it later
-			/*
-				cmd.RegisterFlagCompletionFunc(flagName, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-					// call external command for flag value completon
-					if len(flagValuesCmd) > 0 {
-						flagValuesCmdArgs := append([]string{flagName}, args...)
-						output, err := executeFlagValuesOfCommand(group, name, flagValuesCmdArgs)
-						if err != nil {
-							return []string{}, cobra.ShellCompDirectiveNoFileComp
-						}
-						parts := strings.Split(output, "\n")
-						if len(parts) > 0 {
-							if strings.HasPrefix(parts[0], "#") { // skip the first control line, for further controls
-								return parts[1:], cobra.ShellCompDirectiveNoFileComp
-							}
-							return parts, cobra.ShellCompDirectiveNoFileComp
-						}
-					}
-					return []string{}, cobra.ShellCompDirectiveNoFileComp
-				})
-			*/
-		}
+		processFlags(cmd, checkFlags, requiredFlags, optionalFlags, exclusiveFlags, togetherFlags)
 
 		cmd.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			if len(validArgsCmd) > 0 {
@@ -458,6 +433,32 @@ func executeFlagValuesOfCommand(group, name string, args []string) (string, erro
 	return output, nil
 }
 
+func processFlags(cmd *cobra.Command, checkFlags bool, requiredFlags []string, optionalFlags []string, exclusiveFlags [][]string, togetherFlags [][]string) {
+	log.Tracef("process flag: %v, %v, %v, %v", requiredFlags, optionalFlags, exclusiveFlags, togetherFlags)
+	if requiredFlags != nil {
+		for _, flag := range requiredFlags {
+			addFlagToCmd(cmd, flag)
+		}
+	}
+	if optionalFlags != nil {
+		for _, flag := range optionalFlags {
+			addFlagToCmd(cmd, flag)
+		}
+	}
+	if exclusiveFlags != nil {
+		for _, exclusive := range exclusiveFlags {
+			log.Debugf("Mark exclusive flags: %v", exclusive)
+			cmd.MarkFlagsMutuallyExclusive(exclusive...)
+		}
+	}
+	if togetherFlags != nil {
+		for _, together := range togetherFlags {
+			log.Debugf("Mark together flags: %v", together)
+			cmd.MarkFlagsRequiredTogether(together...)
+		}
+	}
+}
+
 func addFlagToCmd(cmd *cobra.Command, flag string) {
 	flagName, flagShort, flagDesc, flagType, defaultValue := parseFlagDefinition(flag)
 	switch flagType {
@@ -527,25 +528,30 @@ func getCmdEnvContext(envVars []string) []string {
 	return vars
 }
 
-func parseCmdArgsToEnv(c *cobra.Command, args []string, envVarPrefix string) ([]string, error) {
+func parseCmdArgsToEnv(c *cobra.Command, args []string, envVarPrefix string) ([]string, map[string]string, error) {
 	envVars := []string{}
+	envTable := map[string]string{}
 	if err := c.LocalFlags().Parse(args); err != nil {
-		// rootExitCode = 1
-		return envVars, err
+		return envVars, envTable, err
 	}
 	c.LocalFlags().VisitAll(func(flag *pflag.Flag) {
+		n := strings.ReplaceAll(strings.ToUpper(flag.Name), "-", "_")
+		v := flag.Value.String()
+		k := fmt.Sprintf("%s_FLAG_%s", envVarPrefix, n)
 		envVars = append(envVars,
 			fmt.Sprintf(
-				"%s_FLAG_%s=%s",
-				envVarPrefix,
-				strings.ReplaceAll(strings.ToUpper(flag.Name), "-", "_"), flag.Value.String(),
+				"%s=%s",
+				k, v,
 			),
 		)
+		envTable[k] = v
 	})
 	for idx, arg := range c.LocalFlags().Args() {
-		envVars = append(envVars, fmt.Sprintf("%s_ARG_%s=%s", envVarPrefix, strconv.Itoa(idx+1), arg))
+		k := fmt.Sprintf("%s_ARG_%s", envVarPrefix, strconv.Itoa(idx+1))
+		envVars = append(envVars, fmt.Sprintf("%s=%s", k, arg))
+		envTable[k] = arg
 	}
-	return envVars, nil
+	return envVars, envTable, nil
 }
 
 func initContext(appName string, appVersion string, buildNum string) {

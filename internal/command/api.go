@@ -31,6 +31,12 @@ type CommandManifest interface {
 
 	RequiredFlags() []string
 
+	OptionalFlags() []string
+
+	ExclusiveFlags() [][]string
+
+	TogetherFlags() [][]string
+
 	FlagValuesCmd() []string
 
 	CheckFlags() bool
