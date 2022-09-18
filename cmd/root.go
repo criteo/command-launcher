@@ -231,7 +231,7 @@ func installCommands(repo repository.PackageRepository) error {
 }
 
 func addBuiltinCommands() {
-	AddversionCmd(rootCmd, rootCtxt.appCtx)
+	AddVersionCmd(rootCmd, rootCtxt.appCtx)
 	AddConfigCmd(rootCmd, rootCtxt.appCtx)
 	AddLoginCmd(rootCmd, rootCtxt.appCtx)
 	AddUpdateCmd(rootCmd, rootCtxt.appCtx, rootCtxt.localRepo)
@@ -252,10 +252,15 @@ func addCommands(groups []command.Command, executables []command.Command) {
 	for _, v := range groups {
 		group := v.Group()
 		name := v.Name()
+		usage := strings.TrimSpace(fmt.Sprintf("%s %s",
+			v.Name(),
+			strings.TrimSpace(strings.Trim(v.ArgsUsage(), v.Name())),
+		))
 		requiredFlags := v.RequiredFlags()
 		cmd := &cobra.Command{
 			DisableFlagParsing: true,
-			Use:                v.Name(),
+			Use:                usage,
+			Example:            formatExamples(v.Examples()),
 			Short:              v.ShortDescription(),
 			Long:               v.LongDescription(),
 			Run: func(cmd *cobra.Command, args []string) {
@@ -277,6 +282,10 @@ func addCommands(groups []command.Command, executables []command.Command) {
 	for _, v := range executables {
 		group := v.Group()
 		name := v.Name()
+		usage := strings.TrimSpace(fmt.Sprintf("%s %s",
+			v.Name(),
+			strings.TrimSpace(strings.Trim(v.ArgsUsage(), v.Name())),
+		))
 		requiredFlags := v.RequiredFlags()
 		validArgs := v.ValidArgs()
 		validArgsCmd := v.ValidArgsCmd()
@@ -284,7 +293,8 @@ func addCommands(groups []command.Command, executables []command.Command) {
 		// flagValuesCmd := v.FlagValuesCmd()
 		cmd := &cobra.Command{
 			DisableFlagParsing: true,
-			Use:                v.Name(),
+			Use:                usage,
+			Example:            formatExamples(v.Examples()),
 			Short:              v.ShortDescription(),
 			Long:               v.LongDescription(),
 			Run: func(c *cobra.Command, args []string) {
@@ -397,6 +407,22 @@ func addCommands(groups []command.Command, executables []command.Command) {
 		}
 
 	}
+}
+
+func formatExamples(examples []command.ExampleEntry) string {
+	if examples == nil || len(examples) == 0 {
+		return ""
+	}
+
+	output := []string{}
+
+	for _, v := range examples {
+		output = append(output, fmt.Sprintf(`  # %s
+  %s
+`, v.Scenario, v.Command))
+	}
+
+	return strings.Join(output, "\n")
 }
 
 func getExecutableCommand(group, name string) (command.Command, error) {

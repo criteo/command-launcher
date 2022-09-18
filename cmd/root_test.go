@@ -4,9 +4,29 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/criteo/command-launcher/internal/command"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
+
+func Test_FormatExamples(t *testing.T) {
+	exampleText := formatExamples(nil)
+	assert.Equal(t, "", exampleText)
+
+	exampleText = formatExamples([]command.ExampleEntry{})
+	assert.Equal(t, "", exampleText)
+
+	exampleText = formatExamples([]command.ExampleEntry{
+		{
+			Scenario: "scenario 1",
+			Command:  "test -O opt arg1 arg2",
+		},
+	})
+	assert.Equal(t,
+		`  # scenario 1
+  test -O opt arg1 arg2
+`, exampleText)
+}
 
 func Test_ParseFlagDefinition(t *testing.T) {
 	name, short, desc, flagType, defaultValue := parseFlagDefinition("test\t An test flag definition without short form")

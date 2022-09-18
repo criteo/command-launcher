@@ -10,10 +10,17 @@ import (
 
 func getDefaultCommand() DefaultCommand {
 	return DefaultCommand{
-		CmdName:             "test",
-		CmdCategory:         "",
-		CmdType:             "executable",
-		CmdGroup:            "",
+		CmdName:      "test",
+		CmdCategory:  "",
+		CmdType:      "executable",
+		CmdGroup:     "",
+		CmdArgsUsage: "[-O opt1] arg1 arg2",
+		CmdExamples: []ExampleEntry{
+			{
+				Scenario: "scenario 1",
+				Command:  "test -O opt1 arg1",
+			},
+		},
 		CmdShortDescription: "test command",
 		CmdLongDescription:  "test command - long description",
 		CmdExecutable:       "ls",
@@ -24,6 +31,7 @@ func getDefaultCommand() DefaultCommand {
 		CmdValidArgsCmd:     nil,
 		CmdRequiredFlags:    nil,
 		CmdFlagValuesCmd:    nil,
+		CmdCheckFlags:       true,
 		PkgDir:              "/tmp/test/root",
 	}
 }
@@ -83,11 +91,10 @@ func TestNullFields(t *testing.T) {
 	assert.Equal(t, 0, len(validArgsCmd))
 }
 
-func TestCloneCommand(t *testing.T) {
+func TestNewDefaultCommandFromCopy(t *testing.T) {
 	cmd := getDefaultCommand()
-	cmd.CmdExecutable = "#CACHE#/#OS#/#ARCH#/test#EXT#"
 
-	newCmd := cmd.Clone()
+	newCmd := NewDefaultCommandFromCopy(&cmd, "/new-pkg-dir")
 	assert.NotNil(t, newCmd.CmdValidArgs)
 	assert.Equal(t, 0, len(newCmd.CmdValidArgs))
 	assert.NotNil(t, newCmd.CmdValidArgsCmd)
@@ -98,6 +105,12 @@ func TestCloneCommand(t *testing.T) {
 	assert.Equal(t, 2, len(newCmd.Arguments()))
 	assert.Equal(t, "-l", newCmd.Arguments()[0])
 	assert.Equal(t, "-a", newCmd.Arguments()[1])
+	assert.Equal(t, "/new-pkg-dir", newCmd.PkgDir)
+
+	assert.Equal(t, "[-O opt1] arg1 arg2", newCmd.ArgsUsage())
+	assert.Equal(t, 1, len(newCmd.Examples()))
+	assert.Equal(t, "scenario 1", newCmd.Examples()[0].Scenario)
+	assert.Equal(t, "test -O opt1 arg1", newCmd.Examples()[0].Command)
 }
 
 func TestLegacyVariableInterpolation(t *testing.T) {

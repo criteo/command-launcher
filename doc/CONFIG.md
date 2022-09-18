@@ -44,6 +44,17 @@ For enterprise user, you can setup a remote configuration file to ensure all use
 
 Command launcher's built in command `config` allows you to setup a log level for it. If your command also logs according to a log level, you can take this environment variable as input.
 
+### Configuration keys related to parsed flags and arguments
+
+When `checkFlags: true` is declared in the command's manifest, command launcher will first parse the arguments throwing errors if found any (ex. unknown flag name), and pass the following variables to the command runtime:
+
+**FLAG_[FLAG_NAME]**
+
+For example, a command declared a flag 'user-name', an environment named `[APP_NAME]_FLAG_USER_NAME` can be accessed during the command's runtime.
+
+**ARG_[ARG_INDEX]**
+
+The parsed arguments (exclude the flags) starting with index 1. For example, command `test -O opt1 my-args1` can access `my-arg1` from the environment variable `[APP_NAME]_ARG_1`
 
 ## Configuration load sequence
 

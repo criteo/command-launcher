@@ -19,10 +19,11 @@ cmds:
       Example command for yaml
 
       This is another line
-
-      Examples:
-        bonjour2
+    argsUsage: bonjour2 name
+    examples:
+      - scenario: Print greeting message
+        cmd: bonjour2
     executable: "{{.PackageDir}}/bonjour.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}"
     args:
       - monde
-
+    checkFlags: true

@@ -135,6 +135,27 @@ else
   exit 1
 fi
 
+echo "> test argsUsage and examples, when checkFlags=true, should have custom help message"
+RESULT=$($OUTPUT_DIR/cl bonjour2 -h)
+echo $RESULT
+echo $RESULT | grep -q "bonjour2 name"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - wrong format of custom help message"
+  exit 1
+fi
+
+echo $RESULT | grep -q "# Print greeting message"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - wrong format of example message"
+  exit 1
+fi
+
+
+
 ##
 # test exit code
 ##
