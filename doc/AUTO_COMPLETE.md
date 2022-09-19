@@ -118,7 +118,7 @@ You can put a list of static flags in the `requiredFlags` field, in the format o
 ```
 [long ]\t [short ]\t [description] \t [type] \t [default value]
 ```
-Currently only "bool" and "string" type are supported
+Currently only "bool" and "string" types are supported
 
 or
 
