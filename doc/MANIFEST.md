@@ -121,7 +121,7 @@ Usage:
   APP_NAME group command_name [flags]
 ```
 
-For some commands that accept multiple types of arguments, it would be nice to have a usage that show the different argument names and their orders. For example, for a commend that accepts the 1st argument as country, and 2nd argument as city name, we can custom the usage message with following manifest:
+For some commands that accept multiple types of arguments, it would be nice to have a usage that show the different argument names and their orders. For example, for a command that accepts the 1st argument as country, and 2nd argument as city name, we can custom the usage message with following manifest:
 
 ```json
 {
