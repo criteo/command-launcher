@@ -4,9 +4,29 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/criteo/command-launcher/internal/command"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
+
+func Test_FormatExamples(t *testing.T) {
+	exampleText := formatExamples(nil)
+	assert.Equal(t, "", exampleText)
+
+	exampleText = formatExamples([]command.ExampleEntry{})
+	assert.Equal(t, "", exampleText)
+
+	exampleText = formatExamples([]command.ExampleEntry{
+		{
+			Scenario: "scenario 1",
+			Command:  "test -O opt arg1 arg2",
+		},
+	})
+	assert.Equal(t,
+		`  # scenario 1
+  test -O opt arg1 arg2
+`, exampleText)
+}
 
 func Test_ParseFlagDefinition(t *testing.T) {
 	name, short, desc, flagType, defaultValue := parseFlagDefinition("test\t An test flag definition without short form")
@@ -59,16 +79,24 @@ func Test_ParseCmdArgToEnv(t *testing.T) {
 	cmd.Flags().BoolP("flag3", "c", false, "description")
 	cmd.Flags().BoolP("flag-with-dash", "d", false, "description")
 
-	envTable, err := parseCmdArgsToEnv(cmd, []string{"--flag1", "v1", "-b", "v2", "-c", "--flag-with-dash", "arg1", "arg2"}, "CDT")
+	envList, envTable, err := parseCmdArgsToEnv(cmd, []string{"--flag1", "v1", "-b", "v2", "-c", "--flag-with-dash", "arg1", "arg2"}, "CDT")
 	assert.Nil(t, err)
 
-	assert.True(t, findEnv(envTable, "CDT_FLAG_FLAG1", "v1"))
-	assert.True(t, findEnv(envTable, "CDT_FLAG_FLAG2", "v2"))
-	assert.True(t, findEnv(envTable, "CDT_FLAG_FLAG3", "true"))
-	assert.True(t, findEnv(envTable, "CDT_FLAG_FLAG_WITH_DASH", "true"))
+	assert.True(t, findEnv(envList, "CDT_FLAG_FLAG1", "v1"))
+	assert.True(t, findEnv(envList, "CDT_FLAG_FLAG2", "v2"))
+	assert.True(t, findEnv(envList, "CDT_FLAG_FLAG3", "true"))
+	assert.True(t, findEnv(envList, "CDT_FLAG_FLAG_WITH_DASH", "true"))
 
-	assert.True(t, findEnv(envTable, "CDT_ARG_1", "arg1"))
-	assert.True(t, findEnv(envTable, "CDT_ARG_2", "arg2"))
+	assert.True(t, findEnv(envList, "CDT_ARG_1", "arg1"))
+	assert.True(t, findEnv(envList, "CDT_ARG_2", "arg2"))
+
+	assert.Equal(t, envTable["CDT_FLAG_FLAG1"], "v1")
+	assert.Equal(t, envTable["CDT_FLAG_FLAG2"], "v2")
+	assert.Equal(t, envTable["CDT_FLAG_FLAG3"], "true")
+	assert.Equal(t, envTable["CDT_FLAG_FLAG_WITH_DASH"], "true")
+
+	assert.Equal(t, envTable["CDT_ARG_1"], "arg1")
+	assert.Equal(t, envTable["CDT_ARG_2"], "arg2")
 }
 
 func findEnv(envTable []string, key string, value string) bool {

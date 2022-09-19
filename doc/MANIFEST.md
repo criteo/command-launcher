@@ -21,7 +21,16 @@ Here is an example
 ```
 
 ## Command Definition
-Each package contains multiple command definitions. You can specify following definition for your command:
+
+> Command launcher is implemented with [cobra](https://github.com/spf13/cobra). It follows the same command concepts:
+>
+> Commands represent actions, Args are things and Flags are modifiers for those actions.
+>
+> The best applications read like sentences when used, and as a result, users intuitively know how to interact with them.
+>
+> The pattern to follow is APPNAME VERB NOUN --ADJECTIVE or APPNAME COMMAND ARG --FLAG.
+>
+> Each package contains multiple command definitions. You can specify following definition for your command:
 
 ### Command properties list
 
@@ -32,11 +41,15 @@ Each package contains multiple command definitions. You can specify following de
 | group         | no                 | the group of your command belongs to, default, command launcher root                                 |
 | short         | yes                | a short description of your command, it will be display in auto-complete options                     |
 | long          | no                 | a long description of your command                                                                   |
+| argsUsage     | no                 | custom the one line usage in help                                                                    |
+| examples      | no                 | a list of example entries                                                                            |
 | executable    | yes for executable | the executable to call when executing your command                                                   |
 | args          | no                 | the argument list to pass to the executable, command launcher arguments will be appended to the list |
 | validArgs     | no                 | the static list of options for auto-complete the arguments                                           |
 | validArgsCmd  | no                 | array of string, command to run to get the dynamic auto-complete options for arguments               |
 | requiredFlags | no                 | the static list of options for the command flags                                                     |
+| checkFlags    | no                 | whether check the flags defined in manifest before calling the command, default false                |
+
 
 
 ### Command properties
@@ -90,7 +103,7 @@ To registry a command at the root level of command launcher, set `group` to empt
       "name": "reintall",
       "type": "executable",
       "group": "infra",
-      "executable": "{{.Root}}/bin/reinstall",
+      "executable": "{{.PackageDir}}/bin/reinstall",
       "args": []
     }
     ...
@@ -108,6 +121,86 @@ The short description of the command. It is mostly used as the description in au
 
 The long description of the command. In case your command doesn't support "-h" or "--help" flags, command launcher will generate one help command for you, and render your long description in the output.
 
+#### argsUsage
+
+Custom the one-line usage message. By default, command launcher will generate a one-line usage in the format of:
+
+```
+Usage:
+  APP_NAME group command_name [flags]
+```
+
+For some commands that accept multiple types of arguments, it would be nice to have a usage that show the different argument names and their orders. For example, for a command that accepts the 1st argument as country, and 2nd argument as city name, we can custom the usage message with following manifest:
+
+```json
+{
+  ...
+  "cmds": [
+    {
+      "name": "get-city-population",
+      "type": "executable",
+      "executable": "{{.PackageDir}}/bin/get-city-population.sh",
+      "args": [],
+      "argsUsage": "country city"
+    }
+    ...
+  ]
+}
+```
+
+The help message looks like:
+```
+Usage:
+  cl get-city-population country city [flags]
+```
+
+#### examples
+
+You can add examples to your command's help message. The `examples` property defines a list of examples for your command. Each example contains two fields: `scenario` and `command`:
+
+- **scenario**, describes the use case.
+- **cmd**, demonstrates the command to apply for the particular use case.
+
+For example:
+
+```json
+{
+  ...
+  "cmds": [
+    {
+      "name": "get-city-population",
+      "type": "executable",
+      "executable": "{{.PackageDir}}/bin/get-city-population.sh",
+      "args": [],
+      "argsUsage": "country city"
+      "examples": [
+        {
+          "scenario": "get the city population of Paris, France",
+          "cmd": "get-city-population France Paris"
+        }
+      ]
+    }
+    ...
+  ]
+}
+```
+
+The help message looks like:
+
+```
+...
+
+Usage:
+  cl get-city-population country city [flags]
+
+Example:
+  # get the city population of Paris, France
+  get-city-population France Paris
+
+...
+```
+
+
 #### executable
 
 The executable to call when your command is trigger from command launcher. You can inject predefined variables in the executable location string. More detail about the variables see [Manifest Variables](./VARIABLE.md)
@@ -119,7 +212,7 @@ The executable to call when your command is trigger from command launcher. You c
   ...
   "cmds": [
     {
-      "executable": "{{.Root}}/bin/my-binary{{.Extension}}"
+      "executable": "{{.PackageDir}}/bin/my-binary{{.Extension}}"
     }
   ]
 }
@@ -139,7 +232,7 @@ The arguments that to be appended to the executable when the command is triggere
       "type": "executable",
       "group": "",
       "executable": "java",
-      "args": [ "-jar", "{{.Root}}/bin/crawler.jar"]
+      "args": [ "-jar", "{{.PackageDir}}/bin/crawler.jar"]
     }
   ]
 }
@@ -196,10 +289,10 @@ A command to execute to get the dynamic list of arguments.
       "name": "population",
       "type": "executable",
       "group": "city",
-      "executable": "{{.Root}}/bin/get-city-population",
+      "executable": "{{.PackageDir}}/bin/get-city-population",
       "args": [],
       "validArgsCmd": [
-        "{{.Root}}/bin/population-cities.sh",
+        "{{.PackageDir}}/bin/population-cities.sh",
         "-H",
       ]
     }
@@ -242,12 +335,16 @@ The static list of flags for your command
 
 It declares a `--human` flags with a short form: `-H`
 
+#### checkFlags
 
+Whether parse and check flags before execute the command. Default: false.
 
+The `requiredFlags`, `validArgs` and `validArgsCmd` are mainly used for auto completion. Command launcher will not parse the arguments by default, but it will simply pass the arguments to the callee command. In other words, in this case, it is the callee command's responsibility to parse the flags and arguments. This works fine when the command is implemented with languages that has advanced command line supports, like golang.
 
+For some cases, arguments parsing is difficult or has less support, for example, implementing the command in shell script. Enable `checkFlags` will allow command launcher to parse the arguments and catch errors. Further more, command launcher will pass the parsed flags and arguments to the callee command through environment variables:
 
+For flags: `[APP_NAME]_FLAG_[FLAG_NAME]` ('-' is replaced with '_'). Example: flag `--user-name` is passed through environment variable `[APP_NAME]_FLAG_USER_NAME`
+For arguments: `[APP_NAME]_ARG_[INDEX]` where the index starts from 1. Example: command `cl get-city-population France Paris` will get environment variable `[APP_NAME]_ARG_1=France` and `[APP_NAME]_ARG_2=Paris`
 
-
-
-
+Another behavior change is that once `checkFlags` is enabled, the `-h` and `--help` flags are handled by command launcher. The original behavior is managed by the callee command itself.
 

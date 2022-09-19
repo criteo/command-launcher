@@ -116,13 +116,27 @@ For flags, only static flags are supported for now.
 You can put a list of static flags in the `requiredFlags` field, in the format of:
 
 ```
+[long ]\t [short ]\t [description] \t [type] \t [default value]
+```
+Currently only "bool" and "string" types are supported
+
+or
+
+```
 [long ]\t [short ]\t [description]
 ```
+for string type flag with default value ""
 
 Or
 
 ```
 [long ]\t [description]
+```
+
+or
+
+```
+[long]
 ```
 
 For example:

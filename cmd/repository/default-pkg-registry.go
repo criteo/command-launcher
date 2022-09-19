@@ -57,25 +57,8 @@ func NewRegistryEntry(pkg command.Package, pkgDir string) defaultRegistryEntry {
 	}
 
 	for _, cmd := range pkg.Commands() {
-		newCmd := command.DefaultCommand{
-			CmdName:             cmd.Name(),
-			CmdCategory:         cmd.Category(),
-			CmdType:             cmd.Type(),
-			CmdGroup:            cmd.Group(),
-			CmdShortDescription: cmd.ShortDescription(),
-			CmdLongDescription:  cmd.LongDescription(),
-			CmdExecutable:       cmd.Executable(),
-			CmdArguments:        cmd.Arguments(),
-			CmdDocFile:          cmd.DocFile(),
-			CmdDocLink:          cmd.DocLink(),
-			CmdValidArgs:        cmd.ValidArgs(),
-			CmdValidArgsCmd:     cmd.ValidArgsCmd(),
-			CmdRequiredFlags:    cmd.RequiredFlags(),
-			CmdFlagValuesCmd:    cmd.FlagValuesCmd(),
-			CmdCheckFlags:       cmd.CheckFlags(),
-			PkgDir:              pkgDir,
-		}
-		defPkg.PkgCommands = append(defPkg.PkgCommands, &newCmd)
+		newCmd := command.NewDefaultCommandFromCopy(cmd, pkgDir)
+		defPkg.PkgCommands = append(defPkg.PkgCommands, newCmd)
 	}
 
 	return defPkg

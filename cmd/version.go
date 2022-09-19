@@ -22,7 +22,7 @@ func getVersion(version string, buildNum string) string {
 	return fmt.Sprintf("%s, build %s", version, buildNum)
 }
 
-func AddversionCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
+func AddVersionCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 	versionCmd := &cobra.Command{
 		Use:   "version",
 		Short: fmt.Sprintf("Print the version number of %s command", strings.ToTitle(appCtx.AppName())),

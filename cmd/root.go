@@ -231,7 +231,7 @@ func installCommands(repo repository.PackageRepository) error {
 }
 
 func addBuiltinCommands() {
-	AddversionCmd(rootCmd, rootCtxt.appCtx)
+	AddVersionCmd(rootCmd, rootCtxt.appCtx)
 	AddConfigCmd(rootCmd, rootCtxt.appCtx)
 	AddLoginCmd(rootCmd, rootCtxt.appCtx)
 	AddUpdateCmd(rootCmd, rootCtxt.appCtx, rootCtxt.localRepo)
@@ -252,10 +252,15 @@ func addCommands(groups []command.Command, executables []command.Command) {
 	for _, v := range groups {
 		group := v.Group()
 		name := v.Name()
+		usage := strings.TrimSpace(fmt.Sprintf("%s %s",
+			v.Name(),
+			strings.TrimSpace(strings.Trim(v.ArgsUsage(), v.Name())),
+		))
 		requiredFlags := v.RequiredFlags()
 		cmd := &cobra.Command{
 			DisableFlagParsing: true,
-			Use:                v.Name(),
+			Use:                usage,
+			Example:            formatExamples(v.Examples()),
 			Short:              v.ShortDescription(),
 			Long:               v.LongDescription(),
 			Run: func(cmd *cobra.Command, args []string) {
@@ -277,6 +282,10 @@ func addCommands(groups []command.Command, executables []command.Command) {
 	for _, v := range executables {
 		group := v.Group()
 		name := v.Name()
+		usage := strings.TrimSpace(fmt.Sprintf("%s %s",
+			v.Name(),
+			strings.TrimSpace(strings.Trim(v.ArgsUsage(), v.Name())),
+		))
 		requiredFlags := v.RequiredFlags()
 		validArgs := v.ValidArgs()
 		validArgsCmd := v.ValidArgsCmd()
@@ -284,20 +293,26 @@ func addCommands(groups []command.Command, executables []command.Command) {
 		// flagValuesCmd := v.FlagValuesCmd()
 		cmd := &cobra.Command{
 			DisableFlagParsing: true,
-			Use:                v.Name(),
+			Use:                usage,
+			Example:            formatExamples(v.Examples()),
 			Short:              v.ShortDescription(),
 			Long:               v.LongDescription(),
 			Run: func(c *cobra.Command, args []string) {
 				var envVars []string = []string{}
+				var envTable map[string]string = map[string]string{}
 
 				log.Debugf("checkFlags=%t", checkFlags)
 				if checkFlags {
 					var err error = nil
 					envVarPrefix := strings.ToUpper(rootCtxt.appCtx.AppName())
-					envVars, err = parseCmdArgsToEnv(c, args, envVarPrefix)
+					envVars, envTable, err = parseCmdArgsToEnv(c, args, envVarPrefix)
 					if err != nil {
 						console.Error("Failed to parse arguments: %v", err)
 						rootExitCode = 1
+						return
+					}
+					if h, exist := envTable[fmt.Sprintf("%s_FLAG_HELP", envVarPrefix)]; exist && h == "true" {
+						c.Help()
 						return
 					}
 				}
@@ -392,6 +407,22 @@ func addCommands(groups []command.Command, executables []command.Command) {
 		}
 
 	}
+}
+
+func formatExamples(examples []command.ExampleEntry) string {
+	if examples == nil || len(examples) == 0 {
+		return ""
+	}
+
+	output := []string{}
+
+	for _, v := range examples {
+		output = append(output, fmt.Sprintf(`  # %s
+  %s
+`, v.Scenario, v.Command))
+	}
+
+	return strings.Join(output, "\n")
 }
 
 func getExecutableCommand(group, name string) (command.Command, error) {
@@ -527,25 +558,30 @@ func getCmdEnvContext(envVars []string) []string {
 	return vars
 }
 
-func parseCmdArgsToEnv(c *cobra.Command, args []string, envVarPrefix string) ([]string, error) {
+func parseCmdArgsToEnv(c *cobra.Command, args []string, envVarPrefix string) ([]string, map[string]string, error) {
 	envVars := []string{}
+	envTable := map[string]string{}
 	if err := c.LocalFlags().Parse(args); err != nil {
-		// rootExitCode = 1
-		return envVars, err
+		return envVars, envTable, err
 	}
 	c.LocalFlags().VisitAll(func(flag *pflag.Flag) {
+		n := strings.ReplaceAll(strings.ToUpper(flag.Name), "-", "_")
+		v := flag.Value.String()
+		k := fmt.Sprintf("%s_FLAG_%s", envVarPrefix, n)
 		envVars = append(envVars,
 			fmt.Sprintf(
-				"%s_FLAG_%s=%s",
-				envVarPrefix,
-				strings.ReplaceAll(strings.ToUpper(flag.Name), "-", "_"), flag.Value.String(),
+				"%s=%s",
+				k, v,
 			),
 		)
+		envTable[k] = v
 	})
 	for idx, arg := range c.LocalFlags().Args() {
-		envVars = append(envVars, fmt.Sprintf("%s_ARG_%s=%s", envVarPrefix, strconv.Itoa(idx+1), arg))
+		k := fmt.Sprintf("%s_ARG_%s", envVarPrefix, strconv.Itoa(idx+1))
+		envVars = append(envVars, fmt.Sprintf("%s=%s", k, arg))
+		envTable[k] = arg
 	}
-	return envVars, nil
+	return envVars, envTable, nil
 }
 
 func initContext(appName string, appVersion string, buildNum string) {

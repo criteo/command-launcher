@@ -39,28 +39,11 @@ func Load(pathname string) (*DropinRepository, error) {
 				manifest, err := remote.ReadManifest(dropinPkgManifestFile)
 				if err == nil {
 					for _, cmd := range manifest.Commands() {
-						newCmd := command.DefaultCommand{
-							CmdName:             cmd.Name(),
-							CmdCategory:         cmd.Category(),
-							CmdType:             cmd.Type(),
-							CmdGroup:            cmd.Group(),
-							CmdShortDescription: cmd.ShortDescription(),
-							CmdLongDescription:  cmd.LongDescription(),
-							CmdExecutable:       cmd.Executable(),
-							CmdArguments:        cmd.Arguments(),
-							CmdDocFile:          cmd.DocFile(),
-							CmdDocLink:          cmd.DocLink(),
-							CmdValidArgs:        cmd.ValidArgs(),
-							CmdValidArgsCmd:     cmd.ValidArgsCmd(),
-							CmdRequiredFlags:    cmd.RequiredFlags(),
-							CmdFlagValuesCmd:    cmd.FlagValuesCmd(),
-							CmdCheckFlags:       cmd.CheckFlags(),
-							PkgDir:              filepath.Join(pathname, f.Name()),
-						}
+						newCmd := command.NewDefaultCommandFromCopy(cmd, filepath.Join(pathname, f.Name()))
 						if newCmd.CmdType == "group" {
-							registry.groupCmds[fmt.Sprintf("_%s", cmd.Name())] = &newCmd
+							registry.groupCmds[fmt.Sprintf("_%s", cmd.Name())] = newCmd
 						} else {
-							registry.executableCmds[fmt.Sprintf("%s_%s", cmd.Group(), cmd.Name())] = &newCmd
+							registry.executableCmds[fmt.Sprintf("%s_%s", cmd.Group(), cmd.Name())] = newCmd
 						}
 					}
 				}

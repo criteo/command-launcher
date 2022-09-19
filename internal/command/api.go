@@ -9,6 +9,10 @@ type CommandInfo interface {
 
 	Group() string
 
+	ArgsUsage() string
+
+	Examples() []ExampleEntry
+
 	ShortDescription() string
 
 	LongDescription() string
@@ -44,6 +48,8 @@ type Command interface {
 	ExecuteValidArgsCmd(envVars []string, args ...string) (int, string, error)
 
 	ExecuteFlagValuesCmd(envVars []string, args ...string) (int, string, error)
+
+	SetPkgDir(pkgDir string)
 }
 
 type PackageManifest interface {
@@ -58,4 +64,16 @@ type Package interface {
 	PackageManifest
 
 	InstallTo(pathname string) (PackageManifest, error)
+}
+
+type ExampleEntry struct {
+	Scenario string `json:"scenario" yaml:"scenario"`
+	Command  string `json:"cmd" yaml:"cmd"`
+}
+
+func (example ExampleEntry) Clone() ExampleEntry {
+	return ExampleEntry{
+		Scenario: example.Scenario,
+		Command:  example.Command,
+	}
 }
