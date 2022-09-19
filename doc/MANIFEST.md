@@ -330,7 +330,7 @@ It declares a `--human` flags with a short form: `-H`
 
 Whether parse and check flags before execute the command. Default: false.
 
-The `requiredFlags`, `validARgs` and `validArgsCmd` are mainly used for auto completion. Command launcher will not parse the arguments by default, instead, she will simply pass the arguments to the callee command. In the other word, in this case, it is the callee command's responsibility to parse the flags and arguments. This works fine when the command is implemented with languages that has better command line supports, like golang.
+The `requiredFlags`, `validArgs` and `validArgsCmd` are mainly used for auto completion. Command launcher will not parse the arguments by default, but it will simply pass the arguments to the callee command. In other words, in this case, it is the callee command's responsibility to parse the flags and arguments. This works fine when the command is implemented with languages that has advanced command line supports, like golang.
 
 For some cases, arguments parsing is difficult or has less support, for example, implementing the command in shell script. Enable `checkFlags` will allow command launcher to parse the arguments and catch errors. Further more, command launcher will pass the parsed flags and arguments to the callee command through environment variables:
 
