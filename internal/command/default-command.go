@@ -149,7 +149,6 @@ func (cmd *DefaultCommand) executeArrayCmd(envVars []string, cmdArray []string, 
 	}
 	cmd.interpolateArray(&validArgs)
 	// Should we interpolate the argumments too???
-	//cmd.interpolateArray(&args)
 	return helper.CallExternalWithOutput(envVars, wd, cmd.interpolate(validCmd), append(validArgs, args...)...)
 }
 

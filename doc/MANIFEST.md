@@ -21,7 +21,16 @@ Here is an example
 ```
 
 ## Command Definition
-Each package contains multiple command definitions. You can specify following definition for your command:
+
+> Command launcher is implemented with [cobra](https://github.com/spf13/cobra). It follows the same command concepts:
+>
+> Commands represent actions, Args are things and Flags are modifiers for those actions.
+>
+> The best applications read like sentences when used, and as a result, users intuitively know how to interact with them.
+>
+> The pattern to follow is APPNAME VERB NOUN --ADJECTIVE or APPNAME COMMAND ARG --FLAG.
+>
+> Each package contains multiple command definitions. You can specify following definition for your command:
 
 ### Command properties list
 
