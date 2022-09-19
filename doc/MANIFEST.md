@@ -332,7 +332,7 @@ Whether parse and check flags before execute the command. Default: false.
 
 The `requiredFlags`, `validARgs` and `validArgsCmd` are mainly used for auto completion. Command launcher will not parse the arguments by default, instead, she will simply pass the arguments to the callee command. In the other word, in this case, it is the callee command's responsibility to parse the flags and arguments. This works fine when the command is implemented with languages that has better command line supports, like golang.
 
-For some cases, the argument parsing is difficult or has less support, for example, implementing the command in shell script. Enable `checkFlags` will allow command launcher parse the arguments and catch errors. Further more, command launcher will pass the parsed flags and arguments to the callee command through environment varibles:
+For some cases, arguments parsing is difficult or has less support, for example, implementing the command in shell script. Enable `checkFlags` will allow command launcher to parse the arguments and catch errors. Further more, command launcher will pass the parsed flags and arguments to the callee command through environment variables:
 
 For flags: `[APP_NAME]_FLAG_[FLAG_NAME]` ('-' is replaced with '_'). Example: flag `--user-name` is passed through environment variable `[APP_NAME]_FLAG_USER_NAME`
 For arguments: `[APP_NAME]_ARG_[INDEX]` where the index starts from 1. Example: command `cl get-city-population France Paris` will get environment variable `[APP_NAME]_ARG_1=France` and `[APP_NAME]_ARG_2=Paris`
