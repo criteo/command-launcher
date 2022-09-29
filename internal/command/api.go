@@ -20,6 +20,8 @@ type CommandInfo interface {
 	DocFile() string
 
 	DocLink() string
+
+	RequestedContext() []string
 }
 
 type CommandManifest interface {

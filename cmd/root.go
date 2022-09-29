@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/criteo/command-launcher/cmd/consent"
 	"github.com/criteo/command-launcher/cmd/dropin"
 	"github.com/criteo/command-launcher/cmd/remote"
 	"github.com/criteo/command-launcher/cmd/repository"
@@ -257,6 +258,7 @@ func addCommands(groups []command.Command, executables []command.Command) {
 			strings.TrimSpace(strings.Trim(v.ArgsUsage(), v.Name())),
 		))
 		requiredFlags := v.RequiredFlags()
+		requestedCtx := v.RequestedContext()
 		cmd := &cobra.Command{
 			DisableFlagParsing: true,
 			Use:                usage,
@@ -264,7 +266,11 @@ func addCommands(groups []command.Command, executables []command.Command) {
 			Short:              v.ShortDescription(),
 			Long:               v.LongDescription(),
 			Run: func(cmd *cobra.Command, args []string) {
-				exitCode, err := executeCommand(group, name, args, []string{})
+				consents, err := consent.GetConsents(group, name, requestedCtx, viper.GetBool(config.ENABLE_USER_CONSENT_KEY))
+				if err != nil {
+					log.Warnf("failed to get user consent: %v", err)
+				}
+				exitCode, err := executeCommand(group, name, args, []string{}, consents)
 				if err != nil && err.Error() == EXECUTABLE_NOT_DEFINED {
 					cmd.Help()
 				}
@@ -290,6 +296,7 @@ func addCommands(groups []command.Command, executables []command.Command) {
 		validArgs := v.ValidArgs()
 		validArgsCmd := v.ValidArgsCmd()
 		checkFlags := v.CheckFlags()
+		requestedCtx := v.RequestedContext()
 		// flagValuesCmd := v.FlagValuesCmd()
 		cmd := &cobra.Command{
 			DisableFlagParsing: true,
@@ -298,32 +305,23 @@ func addCommands(groups []command.Command, executables []command.Command) {
 			Short:              v.ShortDescription(),
 			Long:               v.LongDescription(),
 			Run: func(c *cobra.Command, args []string) {
-				var envVars []string = []string{}
-				var envTable map[string]string = map[string]string{}
-
-				log.Debugf("checkFlags=%t", checkFlags)
-				if checkFlags {
-					var err error = nil
-					envVarPrefix := strings.ToUpper(rootCtxt.appCtx.AppName())
-					envVars, envTable, err = parseCmdArgsToEnv(c, args, envVarPrefix)
-					if err != nil {
-						console.Error("Failed to parse arguments: %v", err)
-						rootExitCode = 1
-						return
-					}
-					if h, exist := envTable[fmt.Sprintf("%s_FLAG_HELP", envVarPrefix)]; exist && h == "true" {
-						c.Help()
-						return
-					}
+				consents, err := consent.GetConsents(group, name, requestedCtx, viper.GetBool(config.ENABLE_USER_CONSENT_KEY))
+				if err != nil {
+					log.Warnf("failed to get user consent: %v", err)
 				}
-				log.Debugf("flag & args environments: %v", envVars)
+
+				envVars, code, shouldQuit := parseArgsToEnvVars(c, args, checkFlags)
+				if shouldQuit {
+					rootExitCode = code
+					return
+				}
 
 				// TODO: in order to support flag value auto completion, we need to set DisableFlagParsing: false
 				// when setting disable flagParsing to false, the parent command will parse the flags
 				// so the args pass to the subcommand will not include the flags
 				// we need to restore the flags into args here
 				// considering the complexity here, we will cover it later
-				if exitCode, err := executeCommand(group, name, args, envVars); err != nil {
+				if exitCode, err := executeCommand(group, name, args, envVars, consents); err != nil {
 					rootExitCode = exitCode
 				}
 			},
@@ -409,6 +407,37 @@ func addCommands(groups []command.Command, executables []command.Command) {
 	}
 }
 
+// parse args and inject environment vars
+// return the environment vars, and if we should exit
+func parseArgsToEnvVars(c *cobra.Command, args []string, checkFlags bool) ([]string, int, bool) {
+	var envVars []string = []string{}
+	var envTable map[string]string = map[string]string{}
+
+	shouldQuit := true
+
+	log.Debugf("checkFlags=%t", checkFlags)
+	if checkFlags {
+		var err error = nil
+		envVarPrefix := strings.ToUpper(rootCtxt.appCtx.AppName())
+		envVars, envTable, err = parseCmdArgsToEnv(c, args, envVarPrefix)
+		if err != nil {
+			console.Error("Failed to parse arguments: %v", err)
+			// set exit code to 1
+			return envVars, 1, shouldQuit
+		}
+		if h, exist := envTable[fmt.Sprintf("%s_FLAG_HELP", envVarPrefix)]; exist && h == "true" {
+			c.Help()
+			return envVars, 0, shouldQuit
+		}
+		shouldQuit = false
+	} else {
+		shouldQuit = false
+	}
+	log.Debugf("flag & args environments: %v", envVars)
+
+	return envVars, 0, shouldQuit
+}
+
 func formatExamples(examples []command.ExampleEntry) string {
 	if examples == nil || len(examples) == 0 {
 		return ""
@@ -437,7 +466,7 @@ func getExecutableCommand(group, name string) (command.Command, error) {
 }
 
 // execute a cdt command
-func executeCommand(group, name string, args []string, initialEnvCtx []string) (int, error) {
+func executeCommand(group, name string, args []string, initialEnvCtx []string, consent []string) (int, error) {
 	iCmd, err := getExecutableCommand(group, name)
 	if err != nil {
 		return 1, err
@@ -446,7 +475,7 @@ func executeCommand(group, name string, args []string, initialEnvCtx []string) (
 		return 1, errors.New(EXECUTABLE_NOT_DEFINED)
 	}
 
-	envCtx := getCmdEnvContext(initialEnvCtx)
+	envCtx := getCmdEnvContext(initialEnvCtx, consent)
 	exitCode, err := iCmd.Execute(envCtx, args...)
 	if err != nil {
 		return exitCode, err
@@ -462,7 +491,7 @@ func executeValidArgsOfCommand(group, name string, args []string) (string, error
 		return "", err
 	}
 
-	envCtx := getCmdEnvContext([]string{})
+	envCtx := getCmdEnvContext([]string{}, []string{})
 
 	_, output, err := iCmd.ExecuteValidArgsCmd(envCtx, args...)
 	if err != nil {
@@ -479,7 +508,7 @@ func executeFlagValuesOfCommand(group, name string, args []string) (string, erro
 		return "", err
 	}
 
-	envCtx := getCmdEnvContext([]string{})
+	envCtx := getCmdEnvContext([]string{}, []string{})
 
 	_, output, err := iCmd.ExecuteFlagValuesCmd(envCtx, args...)
 	if err != nil {
@@ -524,36 +553,46 @@ func parseFlagDefinition(line string) (string, string, string, string, string) {
 	return name, short, description, flagType, defaultValue
 }
 
-func getCmdEnvContext(envVars []string) []string {
+func getCmdEnvContext(envVars []string, consents []string) []string {
 	vars := append([]string{}, envVars...)
-	// user credential
-	username, err := helper.GetUsername()
-	if err != nil {
-		username = ""
+
+	for _, item := range consents {
+		switch item {
+		case consent.USERNAME:
+			username, err := helper.GetUsername()
+			if err != nil {
+				username = ""
+			}
+			if username != "" {
+				vars = append(vars, fmt.Sprintf("%s=%s", rootCtxt.appCtx.UsernameEnvVar(), username))
+			}
+		case consent.PASSWORD:
+			password, err := helper.GetPassword()
+			if err != nil {
+				password = ""
+			}
+			if password != "" {
+				vars = append(vars, fmt.Sprintf("%s=%s", rootCtxt.appCtx.PasswordEnvVar(), password))
+			}
+		case consent.LOGIN_TOKEN:
+			// TODO: add login token
+		case consent.LOG_LEVEL:
+			// append log level from configuration
+			logLevel := viper.GetString(config.LOG_LEVEL_KEY)
+			vars = append(vars, fmt.Sprintf("%s=%s",
+				rootCtxt.appCtx.LogLevelEnvVar(),
+				logLevel,
+			))
+		case consent.DEBUG_FLAGS:
+			// append debug flags from configuration
+			debugFlags := os.Getenv(rootCtxt.appCtx.DebugFlagsEnvVar())
+			vars = append(vars, fmt.Sprintf("%s=%s,%s",
+				rootCtxt.appCtx.DebugFlagsEnvVar(),
+				debugFlags,
+				viper.GetString(config.DEBUG_FLAGS_KEY),
+			))
+		}
 	}
-	password, err := helper.GetPassword()
-	if err != nil {
-		password = ""
-	}
-	if username != "" {
-		vars = append(vars, fmt.Sprintf("%s=%s", rootCtxt.appCtx.UsernameEnvVar(), username))
-	}
-	if password != "" {
-		vars = append(vars, fmt.Sprintf("%s=%s", rootCtxt.appCtx.PasswordEnvVar(), password))
-	}
-	// append debug flags from configuration
-	debugFlags := os.Getenv(rootCtxt.appCtx.DebugFlagsEnvVar())
-	vars = append(vars, fmt.Sprintf("%s=%s,%s",
-		rootCtxt.appCtx.DebugFlagsEnvVar(),
-		debugFlags,
-		viper.GetString(config.DEBUG_FLAGS_KEY),
-	))
-	// append log level from configuration
-	logLevel := viper.GetString(config.LOG_LEVEL_KEY)
-	vars = append(vars, fmt.Sprintf("%s=%s",
-		rootCtxt.appCtx.LogLevelEnvVar(),
-		logLevel,
-	))
 
 	return vars
 }

@@ -66,6 +66,7 @@ type DefaultCommand struct {
 	CmdRequiredFlags    []string       `json:"requiredFlags" yaml:"requiredFlags"` // the required flags
 	CmdFlagValuesCmd    []string       `json:"flagValuesCmd" yaml:"flagValuesCmd"` // the command to call flag values for autocompletion
 	CmdCheckFlags       bool           `json:"checkFlags" yaml:"checkFlags"`       // whether parse the flags and check them before execution
+	CmdRequestedContext []string       `json:"requestedContext" yaml:"requestedContext"`
 
 	PkgDir string `json:"pkgDir"`
 }
@@ -89,6 +90,7 @@ func NewDefaultCommandFromCopy(cmd Command, pkgDir string) *DefaultCommand {
 		CmdRequiredFlags:    cmd.RequiredFlags(),
 		CmdFlagValuesCmd:    cmd.FlagValuesCmd(),
 		CmdCheckFlags:       cmd.CheckFlags(),
+		CmdRequestedContext: cmd.RequestedContext(),
 		PkgDir:              pkgDir,
 	}
 }
@@ -213,6 +215,13 @@ func (cmd *DefaultCommand) DocFile() string {
 
 func (cmd *DefaultCommand) DocLink() string {
 	return cmd.CmdDocLink
+}
+
+func (cmd *DefaultCommand) RequestedContext() []string {
+	if cmd.CmdRequestedContext == nil {
+		return []string{}
+	}
+	return cmd.CmdRequestedContext
 }
 
 func (cmd *DefaultCommand) ValidArgs() []string {
