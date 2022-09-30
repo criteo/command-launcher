@@ -51,14 +51,10 @@ else
     echo "- $f"
     echo "------------------------------------------------------------"
 
-    if [ "$f" -eq "$EXCLUDE_TEST" ]; then
-      echo "exclude test $f ..."
-    else
-      OUTPUT_DIR=$OUTPUT_DIR \
-      CL_PATH=$OUTPUT_DIR/cl \
-      CL_HOME=$CL_HOME \
-      $f
-    fi
+    OUTPUT_DIR=$OUTPUT_DIR \
+    CL_PATH=$OUTPUT_DIR/cl \
+    CL_HOME=$CL_HOME \
+    $f
 
     echo ""
   done
