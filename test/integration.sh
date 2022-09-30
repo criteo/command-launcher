@@ -1,6 +1,8 @@
 #!/bin/bash
 
 SCRIPT_DIR=${SCRIPT_DIR:-$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )}
+# replace \ to / for windows
+SCRIPT_DIR=${SCRIPT_DIR//\\//}
 echo "integration test directory: $SCRIPT_DIR"
 
 
