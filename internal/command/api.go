@@ -21,7 +21,7 @@ type CommandInfo interface {
 
 	DocLink() string
 
-	RequestedContext() []string
+	RequestedResources() []string
 }
 
 type CommandManifest interface {

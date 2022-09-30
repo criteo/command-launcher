@@ -99,7 +99,7 @@ func saveCmdConsents(cmdGroup string, cmdName string, requests []string, duratio
 }
 
 func requestConsent(cmdGroup string, cmdName string, requests []string) bool {
-	fmt.Printf("Command '%s %s' requests accessing following context:\n", cmdGroup, cmdName)
+	fmt.Printf("Command '%s %s' requests access to the following resources:\n", cmdGroup, cmdName)
 	for _, request := range requests {
 		fmt.Printf("  - %s\n", request)
 	}

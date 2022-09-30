@@ -258,7 +258,7 @@ func addCommands(groups []command.Command, executables []command.Command) {
 			strings.TrimSpace(strings.Trim(v.ArgsUsage(), v.Name())),
 		))
 		requiredFlags := v.RequiredFlags()
-		requestedCtx := v.RequestedContext()
+		requestedResources := v.RequestedResources()
 		cmd := &cobra.Command{
 			DisableFlagParsing: true,
 			Use:                usage,
@@ -266,7 +266,7 @@ func addCommands(groups []command.Command, executables []command.Command) {
 			Short:              v.ShortDescription(),
 			Long:               v.LongDescription(),
 			Run: func(cmd *cobra.Command, args []string) {
-				consents, err := consent.GetConsents(group, name, requestedCtx, viper.GetBool(config.ENABLE_USER_CONSENT_KEY))
+				consents, err := consent.GetConsents(group, name, requestedResources, viper.GetBool(config.ENABLE_USER_CONSENT_KEY))
 				if err != nil {
 					log.Warnf("failed to get user consent: %v", err)
 				}
@@ -296,7 +296,7 @@ func addCommands(groups []command.Command, executables []command.Command) {
 		validArgs := v.ValidArgs()
 		validArgsCmd := v.ValidArgsCmd()
 		checkFlags := v.CheckFlags()
-		requestedCtx := v.RequestedContext()
+		requestedResources := v.RequestedResources()
 		// flagValuesCmd := v.FlagValuesCmd()
 		cmd := &cobra.Command{
 			DisableFlagParsing: true,
@@ -305,7 +305,7 @@ func addCommands(groups []command.Command, executables []command.Command) {
 			Short:              v.ShortDescription(),
 			Long:               v.LongDescription(),
 			Run: func(c *cobra.Command, args []string) {
-				consents, err := consent.GetConsents(group, name, requestedCtx, viper.GetBool(config.ENABLE_USER_CONSENT_KEY))
+				consents, err := consent.GetConsents(group, name, requestedResources, viper.GetBool(config.ENABLE_USER_CONSENT_KEY))
 				if err != nil {
 					log.Warnf("failed to get user consent: %v", err)
 				}
