@@ -41,7 +41,10 @@ if [ $# -ne 0 ]; then
   done
 else
   # otherwise run all tests in integration/ folder
-  for f in $SCRIPT_DIR/integration/*.sh; do
+  TESTS=$(ls $SCRIPT_DIR/integration/*.sh)
+  echo "find all tests in integration folder:"
+  echo "$TESTS"
+  for f in $TESTS; do
     echo "------------------------------------------------------------"
     echo "- $f"
     echo "------------------------------------------------------------"
