@@ -21,19 +21,26 @@ func getDefaultCommand() DefaultCommand {
 				Command:  "test -O opt1 arg1",
 			},
 		},
-		CmdShortDescription: "test command",
-		CmdLongDescription:  "test command - long description",
-		CmdExecutable:       "ls",
-		CmdArguments:        []string{"-l", "-a"},
-		CmdDocFile:          "",
-		CmdDocLink:          "",
-		CmdValidArgs:        nil,
-		CmdValidArgsCmd:     nil,
-		CmdRequiredFlags:    nil,
-		CmdFlagValuesCmd:    nil,
-		CmdCheckFlags:       true,
-		PkgDir:              "/tmp/test/root",
+		CmdShortDescription:   "test command",
+		CmdLongDescription:    "test command - long description",
+		CmdExecutable:         "ls",
+		CmdArguments:          []string{"-l", "-a"},
+		CmdDocFile:            "",
+		CmdDocLink:            "",
+		CmdValidArgs:          nil,
+		CmdValidArgsCmd:       nil,
+		CmdRequiredFlags:      nil,
+		CmdFlagValuesCmd:      nil,
+		CmdCheckFlags:         true,
+		CmdRequestedResources: nil,
+		PkgDir:                "/tmp/test/root",
 	}
+}
+
+func TestRequestResources(t *testing.T) {
+	cmd := getDefaultCommand()
+	assert.NotNil(t, cmd.RequestedResources())
+	assert.Equal(t, 0, len(cmd.RequestedResources()))
 }
 
 func TestCommandValidArgs(t *testing.T) {
