@@ -54,7 +54,7 @@ jobs:
     - name: Integration-test
       run: |
         echo "${{github.workspace}}/test"
-        test/integration.sh '${{github.workspace}}/test'
+        test/integration.sh
       shell: bash
 
     - name: Upload
