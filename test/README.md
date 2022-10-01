@@ -7,7 +7,7 @@ cd command-launcher
 ./test/interation.sh
 ```
 
-To run particular integration tests, pass the integration test file name in the `integration` folder as the arguments.
+To run particular integration tests, pass the integration test file name (without .sh) in the `integration` folder as the arguments.
 
 For example, the following command runs the tests in:
 - test/integration/test-basic.sh
@@ -17,3 +17,5 @@ For example, the following command runs the tests in:
 cd command-launcher
 ./test/interation.sh test-basic test-exit-code
 ```
+
+Copy the test-template.sh to create a new test suite
