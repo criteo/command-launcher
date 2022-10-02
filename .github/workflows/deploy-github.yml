@@ -21,9 +21,6 @@ jobs:
       - name: Install dependencies
         run: cd gh-pages && npm install
 
-      - name: Check for linting errors
-        run: cd gh-pages && npm test
-
       - name: Build production website
         run: cd gh-pages && npm run build
 
