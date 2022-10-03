@@ -100,7 +100,7 @@ RESULT=$(echo 'y' | $CL_PATH bonjour)
 echo $RESULT
 echo $RESULT | grep -q "authorize the access?"
 if [ $? -eq 0 ]; then
-  echo "KO - should NOT re-request authorization"
+  echo "KO - should NOT request authorization again"
   exit 1
 else
   echo "OK"
