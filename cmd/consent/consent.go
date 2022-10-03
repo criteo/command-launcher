@@ -45,17 +45,17 @@ func GetConsents(cmdGroup string, cmdName string, requests []string, enabled boo
 	}
 
 	if requestConsent(cmdGroup, cmdName, requests) {
-		// yes
-		// expire in seconds for 30 days = 3600 * 24 * 30 = 2592000
+		// user explicitly consented
 		keyLife := viper.GetDuration(config.USER_CONSENT_LIFE_KEY).Seconds()
 		if keyLife <= 0 {
+			// default value: expire in seconds for 30 days = 3600 * 24 * 30 = 2592000
 			keyLife = 2592000
 		}
 		if err := saveCmdConsents(cmdGroup, cmdName, requests, int64(keyLife)); err != nil {
 			return requests, err
 		}
 		return requests, nil
-	} // no
+	} // user refuse consent
 
 	return []string{}, nil
 }
@@ -85,8 +85,7 @@ func getConsentKey(cmdGroup string, cmdName string) string {
 func saveCmdConsents(cmdGroup string, cmdName string, requests []string, duration int64) error {
 	secretKey := getConsentKey(cmdGroup, cmdName)
 	secretValue, err := json.Marshal(Consent{
-		// seconds for 30 days = 3600 * 24 * 30 = 2592000
-		ExpiresAt: time.Now().Unix() + duration, //+ 2592000, // expires in 30 days
+		ExpiresAt: time.Now().Unix() + duration,
 		Consents:  requests,
 	})
 	if err != nil {

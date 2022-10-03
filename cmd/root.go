@@ -413,8 +413,6 @@ func parseArgsToEnvVars(c *cobra.Command, args []string, checkFlags bool) ([]str
 	var envVars []string = []string{}
 	var envTable map[string]string = map[string]string{}
 
-	shouldQuit := true
-
 	log.Debugf("checkFlags=%t", checkFlags)
 	if checkFlags {
 		var err error = nil
@@ -422,20 +420,18 @@ func parseArgsToEnvVars(c *cobra.Command, args []string, checkFlags bool) ([]str
 		envVars, envTable, err = parseCmdArgsToEnv(c, args, envVarPrefix)
 		if err != nil {
 			console.Error("Failed to parse arguments: %v", err)
-			// set exit code to 1
-			return envVars, 1, shouldQuit
+			// set exit code to 1, and should quit
+			return envVars, 1, true
 		}
 		if h, exist := envTable[fmt.Sprintf("%s_FLAG_HELP", envVarPrefix)]; exist && h == "true" {
 			c.Help()
-			return envVars, 0, shouldQuit
+			// show help and should quit
+			return envVars, 0, true
 		}
-		shouldQuit = false
-	} else {
-		shouldQuit = false
 	}
 	log.Debugf("flag & args environments: %v", envVars)
 
-	return envVars, 0, shouldQuit
+	return envVars, 0, false
 }
 
 func formatExamples(examples []command.ExampleEntry) string {
