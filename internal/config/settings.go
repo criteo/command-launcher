@@ -25,6 +25,8 @@ const (
 	DROPIN_FOLDER_KEY                    = "DROPIN_FOLDER"
 	CI_ENABLED_KEY                       = "CI_ENABLED"
 	PACKAGE_LOCK_FILE_KEY                = "PACKAGE_LOCK_FILE"
+	ENABLE_USER_CONSENT_KEY              = "ENABLE_USER_CONSENT"
+	USER_CONSENT_LIFE_KEY                = "USER_CONSENT_LIFE"
 
 	// internal commands are the commands with start partition number > INTERNAL_START_PARTITION
 	INTERNAL_COMMAND_ENABLED_KEY = "INTERNAL_COMMAND_ENABLED"
@@ -52,6 +54,8 @@ func init() {
 		PACKAGE_LOCK_FILE_KEY,
 		INTERNAL_COMMAND_ENABLED_KEY,
 		EXPERIMENTAL_COMMAND_ENABLED_KEY,
+		ENABLE_USER_CONSENT_KEY,
+		USER_CONSENT_LIFE_KEY,
 	)
 }
 
@@ -92,6 +96,10 @@ func SetSettingValue(key string, value string) error {
 		return setBooleanConfig(upperKey, value)
 	case INTERNAL_COMMAND_ENABLED_KEY:
 		return setBooleanConfig(upperKey, value)
+	case ENABLE_USER_CONSENT_KEY:
+		return setBooleanConfig(upperKey, value)
+	case USER_CONSENT_LIFE_KEY:
+		return setDurationConfig(upperKey, value)
 	}
 
 	return fmt.Errorf("unsupported config %s", key)
@@ -109,12 +117,9 @@ func setBooleanConfig(key string, value string) error {
 }
 
 func setDurationConfig(key string, value string) error {
-	if d, err := time.ParseDuration(value); err != nil {
-		viper.Set(key, d)
-		return nil
-	} else {
-		return fmt.Errorf("invalid format for duration type")
-	}
+	d, _ := time.ParseDuration(value)
+	viper.Set(key, d)
+	return nil
 }
 
 func setStringConfig(key string, value string) error {

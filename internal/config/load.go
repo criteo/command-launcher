@@ -101,6 +101,9 @@ func setDefaultConfig() {
 
 	viper.SetDefault(CI_ENABLED_KEY, false)
 	viper.SetDefault(PACKAGE_LOCK_FILE_KEY, filepath.Join(appDir, "lock.json"))
+
+	viper.SetDefault(ENABLE_USER_CONSENT_KEY, false)
+	viper.SetDefault(USER_CONSENT_LIFE_KEY, 7*24*time.Hour)
 }
 
 func initDefaultConfigFile() {

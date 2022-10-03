@@ -49,47 +49,49 @@ An additional "category" field is reserved in case we have too much first level 
 we can use it to category them in the cdt help output.
 */
 type DefaultCommand struct {
-	CmdName             string         `json:"name" yaml:"name"`
-	CmdCategory         string         `json:"category" yaml:"category"`
-	CmdType             string         `json:"type" yaml:"type"`
-	CmdGroup            string         `json:"group" yaml:"group"`
-	CmdArgsUsage        string         `json:"argsUsage" yaml:"argsUsage"` // optional, set this field will custom the one line usage
-	CmdExamples         []ExampleEntry `json:"examples" yaml:"examples"`
-	CmdShortDescription string         `json:"short" yaml:"short"`
-	CmdLongDescription  string         `json:"long" yaml:"long"`
-	CmdExecutable       string         `json:"executable" yaml:"executable"`
-	CmdArguments        []string       `json:"args" yaml:"args"`
-	CmdDocFile          string         `json:"docFile" yaml:"docFile"`
-	CmdDocLink          string         `json:"docLink" yaml:"docLink"`
-	CmdValidArgs        []string       `json:"validArgs" yaml:"validArgs"`         // the valid argument options
-	CmdValidArgsCmd     []string       `json:"validArgsCmd" yaml:"validArgsCmd"`   // the command to call to get the args for autocompletion
-	CmdRequiredFlags    []string       `json:"requiredFlags" yaml:"requiredFlags"` // the required flags
-	CmdFlagValuesCmd    []string       `json:"flagValuesCmd" yaml:"flagValuesCmd"` // the command to call flag values for autocompletion
-	CmdCheckFlags       bool           `json:"checkFlags" yaml:"checkFlags"`       // whether parse the flags and check them before execution
+	CmdName               string         `json:"name" yaml:"name"`
+	CmdCategory           string         `json:"category" yaml:"category"`
+	CmdType               string         `json:"type" yaml:"type"`
+	CmdGroup              string         `json:"group" yaml:"group"`
+	CmdArgsUsage          string         `json:"argsUsage" yaml:"argsUsage"` // optional, set this field will custom the one line usage
+	CmdExamples           []ExampleEntry `json:"examples" yaml:"examples"`
+	CmdShortDescription   string         `json:"short" yaml:"short"`
+	CmdLongDescription    string         `json:"long" yaml:"long"`
+	CmdExecutable         string         `json:"executable" yaml:"executable"`
+	CmdArguments          []string       `json:"args" yaml:"args"`
+	CmdDocFile            string         `json:"docFile" yaml:"docFile"`
+	CmdDocLink            string         `json:"docLink" yaml:"docLink"`
+	CmdValidArgs          []string       `json:"validArgs" yaml:"validArgs"`         // the valid argument options
+	CmdValidArgsCmd       []string       `json:"validArgsCmd" yaml:"validArgsCmd"`   // the command to call to get the args for autocompletion
+	CmdRequiredFlags      []string       `json:"requiredFlags" yaml:"requiredFlags"` // the required flags
+	CmdFlagValuesCmd      []string       `json:"flagValuesCmd" yaml:"flagValuesCmd"` // the command to call flag values for autocompletion
+	CmdCheckFlags         bool           `json:"checkFlags" yaml:"checkFlags"`       // whether parse the flags and check them before execution
+	CmdRequestedResources []string       `json:"requestedResources" yaml:"requestedResources"`
 
 	PkgDir string `json:"pkgDir"`
 }
 
 func NewDefaultCommandFromCopy(cmd Command, pkgDir string) *DefaultCommand {
 	return &DefaultCommand{
-		CmdName:             cmd.Name(),
-		CmdCategory:         cmd.Category(),
-		CmdType:             cmd.Type(),
-		CmdGroup:            cmd.Group(),
-		CmdArgsUsage:        cmd.ArgsUsage(),
-		CmdExamples:         cmd.Examples(),
-		CmdShortDescription: cmd.ShortDescription(),
-		CmdLongDescription:  cmd.LongDescription(),
-		CmdExecutable:       cmd.Executable(),
-		CmdArguments:        cmd.Arguments(),
-		CmdDocFile:          cmd.DocFile(),
-		CmdDocLink:          cmd.DocLink(),
-		CmdValidArgs:        cmd.ValidArgs(),
-		CmdValidArgsCmd:     cmd.ValidArgsCmd(),
-		CmdRequiredFlags:    cmd.RequiredFlags(),
-		CmdFlagValuesCmd:    cmd.FlagValuesCmd(),
-		CmdCheckFlags:       cmd.CheckFlags(),
-		PkgDir:              pkgDir,
+		CmdName:               cmd.Name(),
+		CmdCategory:           cmd.Category(),
+		CmdType:               cmd.Type(),
+		CmdGroup:              cmd.Group(),
+		CmdArgsUsage:          cmd.ArgsUsage(),
+		CmdExamples:           cmd.Examples(),
+		CmdShortDescription:   cmd.ShortDescription(),
+		CmdLongDescription:    cmd.LongDescription(),
+		CmdExecutable:         cmd.Executable(),
+		CmdArguments:          cmd.Arguments(),
+		CmdDocFile:            cmd.DocFile(),
+		CmdDocLink:            cmd.DocLink(),
+		CmdValidArgs:          cmd.ValidArgs(),
+		CmdValidArgsCmd:       cmd.ValidArgsCmd(),
+		CmdRequiredFlags:      cmd.RequiredFlags(),
+		CmdFlagValuesCmd:      cmd.FlagValuesCmd(),
+		CmdCheckFlags:         cmd.CheckFlags(),
+		CmdRequestedResources: cmd.RequestedResources(),
+		PkgDir:                pkgDir,
 	}
 }
 
@@ -213,6 +215,13 @@ func (cmd *DefaultCommand) DocFile() string {
 
 func (cmd *DefaultCommand) DocLink() string {
 	return cmd.CmdDocLink
+}
+
+func (cmd *DefaultCommand) RequestedResources() []string {
+	if cmd.CmdRequestedResources == nil {
+		return []string{}
+	}
+	return cmd.CmdRequestedResources
 }
 
 func (cmd *DefaultCommand) ValidArgs() []string {
