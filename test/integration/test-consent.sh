@@ -115,7 +115,7 @@ echo $RESULT | grep -q "authorize the access?"
 if [ $? -eq 0 ]; then
   echo "OK"
 else
-  echo "KO - should re-request authorization once expired"
+  echo "KO - should request authorization again once expired"
   exit 1
 fi
 
