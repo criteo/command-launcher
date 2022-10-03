@@ -1,7 +1,7 @@
 ---
 title: "Configuration"
-description: ""
-lead: ""
+description: "List of command launcher configurations"
+lead: "List of command launcher configurations"
 date: 2022-10-02T20:21:40+02:00
 lastmod: 2022-10-02T20:21:40+02:00
 draft: false

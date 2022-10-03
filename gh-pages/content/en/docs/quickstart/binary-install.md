@@ -1,7 +1,7 @@
 ---
 title: "Binary install"
-description: ""
-lead: ""
+description: "Install command launcher with pre-built binaries"
+lead: "Install command launcher with pre-built binaries"
 date: 2022-10-02T17:25:20+02:00
 lastmod: 2022-10-02T17:25:20+02:00
 draft: false

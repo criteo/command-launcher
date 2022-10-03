@@ -1,7 +1,7 @@
 ---
 title: "Manage resources"
-description: ""
-lead: ""
+description: "Access informations that collected from command launcher"
+lead: "Access informations that collected from command launcher"
 date: 2022-10-02T19:21:34+02:00
 lastmod: 2022-10-02T19:21:34+02:00
 draft: false

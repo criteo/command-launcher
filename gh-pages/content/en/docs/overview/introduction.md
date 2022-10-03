@@ -1,7 +1,7 @@
 ---
 title: "Introduction"
-description: ""
-lead: ""
+description: "Overall introduction of command launcher"
+lead: "Overall introduction of command launcher"
 date: 2022-10-02T17:15:37+02:00
 lastmod: 2022-10-02T17:15:37+02:00
 draft: false

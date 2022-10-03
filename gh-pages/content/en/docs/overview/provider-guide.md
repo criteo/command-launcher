@@ -1,7 +1,7 @@
 ---
 title: "CLI provider guide"
-description: ""
-lead: ""
+description: "Complete guide to integrate your CLI to command launcher"
+lead: "Complete guide to integrate your CLI to command launcher"
 date: 2022-10-02T18:45:11+02:00
 lastmod: 2022-10-02T18:45:11+02:00
 draft: false

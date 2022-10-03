@@ -1,7 +1,7 @@
 ---
 title: "Build from source"
-description: ""
-lead: ""
+description: "Build command launcher from source"
+lead: "Build command launcher from source"
 date: 2022-10-02T17:34:04+02:00
 lastmod: 2022-10-02T17:34:04+02:00
 draft: false

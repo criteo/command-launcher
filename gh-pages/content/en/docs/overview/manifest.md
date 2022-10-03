@@ -1,7 +1,7 @@
 ---
 title: "Manifest.mf"
-description: ""
-lead: ""
+description: "Specification of manifest.mf file"
+lead: "Specification of manifest.mf file"
 date: 2022-10-02T19:02:32+02:00
 lastmod: 2022-10-02T19:02:32+02:00
 draft: false

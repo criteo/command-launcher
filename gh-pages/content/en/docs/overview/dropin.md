@@ -1,7 +1,7 @@
 ---
 title: "Dropin package"
-description: ""
-lead: ""
+description: "The easiest way to integrate your own scripts/tools to command launcher"
+lead: "The easiest way to integrate your own scripts/tools to command launcher"
 date: 2022-10-02T19:29:47+02:00
 lastmod: 2022-10-02T19:29:47+02:00
 draft: false

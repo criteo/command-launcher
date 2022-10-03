@@ -1,7 +1,7 @@
 ---
 title: "Variable"
-description: ""
-lead: ""
+description: "Use variables in manifest.mf file"
+lead: "Use variables in manifest.mf file"
 date: 2022-10-02T21:36:35+02:00
 lastmod: 2022-10-02T21:36:35+02:00
 draft: false

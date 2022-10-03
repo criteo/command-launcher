@@ -71,6 +71,11 @@ Source:
       store: [
         "href", "title", "description"
       ],
+      field: [
+        'title',
+        'description',
+        'content',
+      ],
       index: ["title", "description", "content"]
     }
   });
@@ -114,7 +119,7 @@ Source:
     index.add(
       {
         id: {{ $index }},
-        href: "{{ .RelPermalink }}",
+        href: "{{ .Permalink | absURL }}",
         title: {{ .Title | jsonify }},
         {{ with .Description -}}
           description: {{ . | jsonify }},

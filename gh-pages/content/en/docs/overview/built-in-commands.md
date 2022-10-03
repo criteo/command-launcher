@@ -1,7 +1,7 @@
 ---
 title: "Built-in commands"
-description: ""
-lead: ""
+description: "Command launcher built-in commands"
+lead: "Command launcher built-in commands"
 date: 2022-10-02T18:41:12+02:00
 lastmod: 2022-10-02T18:41:12+02:00
 draft: false
@@ -13,7 +13,6 @@ menu:
 weight: 220
 toc: true
 ---
-
 
 ## config
 
