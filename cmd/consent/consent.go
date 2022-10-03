@@ -48,7 +48,7 @@ func GetConsents(cmdGroup string, cmdName string, requests []string, enabled boo
 		// yes
 		// expire in seconds for 30 days = 3600 * 24 * 30 = 2592000
 		keyLife := viper.GetDuration(config.USER_CONSENT_LIFE_KEY).Seconds()
-		if keyLife == 0 {
+		if keyLife <= 0 {
 			keyLife = 2592000
 		}
 		if err := saveCmdConsents(cmdGroup, cmdName, requests, int64(keyLife)); err != nil {
