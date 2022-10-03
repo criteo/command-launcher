@@ -94,7 +94,7 @@ else
   exit 1
 fi
 
-echo "> test consent authorized - should not re-request authorization"
+echo "> test consent authorized - should not request authorization again"
 $CL_PATH config enable_user_consent true
 RESULT=$(echo 'y' | $CL_PATH bonjour)
 echo $RESULT
