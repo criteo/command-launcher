@@ -1,11 +1,11 @@
-# Deploy your Hyas site to GitHub Pages
+# Deploy your site to GitHub Pages
 
 name: GitHub Pages
 
 on:
   push:
     branches:
-      - online-doc
+      - main
 
 jobs:
   deploy:
