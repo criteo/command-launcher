@@ -10,7 +10,7 @@ description = "Command launcher is a small footprint, rich feature command manag
 # docsVersion = "0.3"
 
 ## Open Graph
-images = ["doks.png"]
+images = ["command-launcher.png"]
 ogLocale = "en_US"
 domainTLD = "criteo.com"
 titleHome = "Command Launcher"
@@ -28,10 +28,10 @@ schemaAuthorTwitter = "https://twitter.com/criteo"
 schemaAuthorLinkedIn = ""
 schemaAuthorGitHub = "https://github.com/criteo"
 schemaLocale = "en-US"
-schemaLogo = "logo-doks.png"
+schemaLogo = "logo-command-launcher.png"
 schemaLogoWidth = 512
 schemaLogoHeight = 512
-schemaImage = "doks.png"
+schemaImage = "command-launcher.png"
 schemaImageWidth = 1280
 schemaImageHeight = 640
 schemaTwitter = "https://twitter.com/criteo"
