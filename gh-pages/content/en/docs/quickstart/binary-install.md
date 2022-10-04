@@ -26,7 +26,7 @@ Command launcher will automatically handle auto completion for all sub commands.
 
 ### Bash
 
-```
+```bash
 $ source <(cdt completion bash)
 
 # To load completions for each session, execute once:
@@ -38,7 +38,7 @@ $ cdt completion bash > $(brew --prefix)/etc/bash_completion.d/cdt
 
 ### Zsh
 
-```
+```bash
 # If shell completion is not already enabled in your environment,
 # you will need to enable it.  You can execute the following once:
 
@@ -52,7 +52,7 @@ $ cdt completion zsh > "${fpath[1]}/_cdt"
 
 ### Powershell
 
-```
+```powershell
 PS> cdt completion powershell | Out-String | Invoke-Expression
 
 # To load completions for every new session, run:
@@ -62,13 +62,12 @@ PS> cdt completion powershell > cdt.ps1
 
 ### Fish
 
-```
+```bash
 $ cdt completion fish | source
 
 # To load completions for each session, execute once:
 $ cdt completion fish > ~/.config/fish/completions/cdt.fish
 ```
-
 
 ## Uninstall
 

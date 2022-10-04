@@ -24,26 +24,21 @@ Dropin package is also a good way for you to develop and test your command launc
 
 ## How to create a dropin package?
 
-1.identify the dropins folder: run the following command:
-
-```bash
-cdt config dropin_folder
-```
-If the dropin folder returned by the command doesn't exist, create it.
-
-2. create a package folder in the dropin folder, let's say, a package named `my-first-package`. You can named it whatever you want.
-
-3. add a `manifest.mf` in the newly created package folder, follow [MANIFEST.md](../manifest) guide to define your command in the manifest file. Note: you can copy your scripts in the package folder and use `{{.PackageDir}}` to reference the package location in your manifest file.
-
-4. run `cdt` any time to test your command
-
+1. identify the dropins folder: run the following command:
+  
+    ```shell
+    cdt config dropin_folder
+    ```
+  
+    If the dropin folder returned by the command doesn't exist, create it.
+1. create a package folder in the dropin folder, let's say, a package named `my-first-package`. You can named it whatever you want.
+1. add a `manifest.mf` in the newly created package folder, follow [MANIFEST.md](../manifest) guide to define your command in the manifest file. Note: you can copy your scripts in the package folder and use `{{.PackageDir}}` to reference the package location in your manifest file.
+1. run `cdt` any time to test your command
 
 ## How to share a dropin package with others?
 
 A dropin package is simply a directory with manifest.mf in it, the best way to share a dropin package is to push it to a git repository and ask for others to clone it in their own dropin folder
 
-
 ## How to update dropin package?
 
 For now, the command launcher does not update the dropin folder automatically, it is up to developers themselve to keep these dropin package up-to-date.
-

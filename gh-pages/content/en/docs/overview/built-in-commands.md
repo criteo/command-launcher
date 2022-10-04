@@ -28,7 +28,7 @@ Use `cdt config [key] [value]` to set one configuration.
 
 Setup auto completion. See help to get instructions:
 
-```
+```shell
 cdt completion --help
 ```
 
@@ -43,28 +43,3 @@ Check updates for command launcher and managed commands.
 ## version
 
 Return command launcher version information.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

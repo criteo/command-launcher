@@ -39,8 +39,6 @@ toc: true
 | usage_metrics_enabled            | bool     | whether enable metrics                                                                                                        |
 | user_consent_life                | duration | the life of user consent                                                                                                      |
 
-
-
 ## Change configuration
 
 It is recommended to use the built-in `config` command to change the configurations. For duration type configurations, you can use `h`, `m`, and `s` to present hour, minute, and seconds. For example:
@@ -48,7 +46,5 @@ It is recommended to use the built-in `config` command to change the configurati
 ```bash
 cdt config user_consent_life 24h
 ```
+
 sets the user consent life to 24 hours.
-
-
-

@@ -19,7 +19,7 @@ toc: true
 
 Command launcher synchronizes commands from the remote command repository. Commands are packaged into a `package`, then uploaded to remote command repository. The following diagram shows this architecture.
 
-```
+```text
                ┌─────────────────────────────┐
                │  Remote Command Repository  │
                └──────────────┬──────────────┘
@@ -39,6 +39,7 @@ Command launcher synchronizes commands from the remote command repository. Comma
 ## Remote command repository
 
 A remote command repository is a simple http server, with following endpoints:
+
 - `/index.json`: package registry, which returns the list of packages available.
 - `/{package-name}-{version}.pkg`: download endpoint of a particular package.
 - `/version`: returns the metadata of the latest version of command launcher.
@@ -46,12 +47,13 @@ A remote command repository is a simple http server, with following endpoints:
 
 It is up-to-you to implement such an http server. You can configure command launcher to point to your remote repository with following command:
 
-```
+```shell
 cdt config command_repository_base_url https://my-remote-repository/root/url
 ```
 
 You need to config an endpoint to auto update command launcher as well:
-```
+
+```shell
 cdt config self_update_base_url https://my-remote-repository/cdt/root/url
 cdt config self_update_latest_version_url https://my-remote-repository/cdt/root/url/version
 ```
@@ -61,7 +63,8 @@ cdt config self_update_latest_version_url https://my-remote-repository/cdt/root/
 Remote repository registry is a json file, which contains all available packages:
 
 The following example demonstrates a registry, which has three packages. Note that the package "hotfix" has two different versions, and the version `1.0.0-45149` targets to 30% of the user (partition 6, 7, and 8). More details about the partition see [Progressive Rollout](#progressive-rollout)
-```
+
+```json
 [
   {
     "name": "hotfix",
@@ -94,7 +97,7 @@ The following example demonstrates a registry, which has three packages. Note th
 
 Command launcher update itself by checking an endpoint defined in config `self_update_latest_version_url`. This endpoint returns the command version metadata:
 
-```
+```json
 {
     "version": "45861",
     "releaseNotes": "- feature 1\n-feature 2\nfeature 3",
@@ -102,8 +105,8 @@ Command launcher update itself by checking an endpoint defined in config `self_u
     "endPartition": 9
 }
 ```
-You can also target a small portion of your command user by specifying the partition. More details see: [Progressive Rollout](#progressive-rollout)
 
+You can also target a small portion of your command user by specifying the partition. More details see: [Progressive Rollout](#progressive-rollout)
 
 ## Integrate your command into command launcher
 
@@ -114,7 +117,8 @@ You can also target a small portion of your command user by specifying the parti
 A command package is simply a zip of your command and a manifest file that tell command launcher how to run your command. It is up-to-you to organize the structure of the package, the only requirement here is to keep the `manifest.mf` file in the root of the package.
 
 For example, the following structure keeps the binary in different folder according to the os.
-```
+
+```text
 my-package.pkg
 ├─linux/
 ├─windows/
@@ -134,12 +138,11 @@ Once you have your command package ready, you can upload it to the remote comman
 
 You also need to update the [index.json](#remote-repository-registry-indexjson) endpoint to include your package in it.
 
-
 ## Progressive Rollout
 
 Command launcher will assign each machine a unique partition ID from 0 to 9. When you roll out your package, you can specify the partition that you want to target to. For example, you just developed a new version, packaged into package `my-pkg 1.1.0`, uploaded it to remote repository. You can edit the `/index.json` registry, add following entry to target 40% of your audience (partition 4, 5, 6, and 7):
 
-```
+```json
 {
   "name": "my-pkg",
   "version": "1.1.0"
@@ -152,6 +155,5 @@ Command launcher will assign each machine a unique partition ID from 0 to 9. Whe
 You will have different monitoring vectors for each partition, which will help you making A/B tests.
 
 ## Monitoring
-
 
 ## Credential Management

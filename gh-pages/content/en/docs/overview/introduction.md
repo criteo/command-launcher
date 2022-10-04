@@ -18,7 +18,6 @@ toc: true
 
 Command launcher is a small footprint, rich feature CLI management tool for both enterprise and individual CLI developers. It eases the command line tool development by providing built-in common functionalities like: monitoring, progressive rollout, auto-completion, credential management, and more to your commands.
 
-
 ## Why a command launcher?
 
 At Criteo, we have many teams who provides command line applications for developers. These CLI providers repeatly handle the same features and functionalities for their CLI apps, such as auto-completion, credential management, release, delivery, monitoring, etc.
@@ -35,7 +34,7 @@ Developers can integrate their own commands into command launcher as a "dropin" 
 
 Developers run command launcher to access these commands, for example, you have a command called `toto`, instead of run it directly from command line, you use `cl toto`, where `cl` is the binary name of the command launcher, you can name it anything suits you. Every time you execute command launcher, it will synchronize with the remote command, and propose available updates if exists.
 
-```
+```text
 
                            ┌──────────────────┐    Synch    ┌───────────────────────────┐
             ┌──────────────│ command launcher │◄────────────│ Remote Command Repository │
@@ -75,27 +74,28 @@ The pre-built binary is named `cdt` (Criteo Dev Toolkit), if you want to use a d
 Requirements: golang >= 1.17
 
 You can build the command launcher with your prefered name (in the example: `Criteo Developer Toolkit`, a.k.a `cdt`).
-```
+
+```shell
 go build -o cdt -ldflags='-X main.version=dev -X main.appName=cdt -X "main.appLongName=Criteo Dev Toolkit"' main.go
 ```
 
 Or simply call the `build.sh` scripts
-```
+
+```shell
 ./build.sh [version] [app name] [app long name]
 ```
 
 ## Run tests
 
-```
+```shell
 go test -v ./...
 ```
-
 
 ## Release
 
 Simply tag a commit with format 'x.y.z', and push it.
 
-```
+```shell
 git tag x.y.z
 git push origin x.y.z
 ```

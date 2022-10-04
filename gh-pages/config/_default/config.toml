@@ -1,4 +1,11 @@
-baseurl = "https://doks.netlify.app/"
+title = "Command Launcher"
+baseurl = "http://localhost:1313/"
+description = "Command launcher is a small footprint, rich feature command management tool for both enterprise and individual command developers."
+titleSeparator = "-"
+titleAddition = "A better way to manage command line tools"
+
+themesDir = 'node_modules/@hyas'
+
 canonifyURLs = false
 disableAliases = true
 disableHugoGeneratorInject = true
@@ -10,8 +17,6 @@ rssLimit = 10
 
 # Multilingual
 defaultContentLanguage = "en"
-disableLanguages = ["de", "nl"]
-# defaultContentLanguageInSubdir = true
 
 # add redirects/headers
 [outputs]
@@ -63,7 +68,6 @@ rel  = "sitemap"
 
 [permalinks]
   blog = "/blog/:title/"
-# docs = "/docs/1.0/:sections[1:]/:title/"
 
 [minify.tdewolff.html]
   keepWhitespace = false
@@ -87,6 +91,8 @@ rel  = "sitemap"
     extended = true
     min = "0.80.0"
     max = ""
+  [[module.imports]]
+    path = 'doks'
   [[module.mounts]]
     source = "assets"
     target = "assets"
@@ -96,6 +102,9 @@ rel  = "sitemap"
   [[module.mounts]]
     source = "layouts"
     target = "layouts"
+  [[module.mounts]]
+    source = "node_modules/@hyas/doks/i18n"
+    target = "i18n"
   [[module.mounts]]
     source = "node_modules/flexsearch"
     target = "assets/js/vendor/flexsearch"

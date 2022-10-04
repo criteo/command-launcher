@@ -16,9 +16,11 @@ toc: true
 
 
 ## What is a manifest.mf file?
+
 A manifest.mf file is a file located at the root of your command launcher package. It describes the commands packaged in the zip file. When cdt install a package, it read the manifest file and register the commands in the manifest file.
 
 ## Format of manifest.mf
+
 manifest.mf is in JSON or YAML format. It contains 3 fields:
 
 - pkgName: a unique name of your package
@@ -26,7 +28,8 @@ manifest.mf is in JSON or YAML format. It contains 3 fields:
 - cmds: a list of command definition, see command definition section
 
 Here is an example
-```
+
+```json
 {
     "pkgName": "hotfix",
     "version": "1.0.0-44231",
@@ -65,21 +68,17 @@ Here is an example
 | checkFlags         | no                 | whether check the flags defined in manifest before calling the command, default false                |
 | requestedResources | no                 | the resources that the command requested, ex, USERNAME, PASSWORD                                     |
 
-
-
-
 ## Command properties
 
 ### name
 
 The name of the command. A user uses the group and the name of the command to run it:
 
-```
+```shell
 cdt {group} {name}
 ```
 
 You must make sure your command's group and name combination is unique
-
 
 ### type
 
@@ -89,12 +88,11 @@ An executable type of command is meant to be executed. You must fill the `execut
 
 A group type of command is used to group executable commands.
 
-
 ### group
 
 The group of your command. A user uses the group and the name of your command to run it:
 
-```
+```shell
 cdt {group} {name}
 ```
 
@@ -103,7 +101,6 @@ You must make sure your command's group and name combination is unique
 To registry a command at the root level of command launcher, set `group` to empty string.
 
 > Note: command launcher only supports one level of group, the "group" field of a "group" type command is ignored.
-
 
 **Example**
 
@@ -141,7 +138,7 @@ The long description of the command. In case your command doesn't support "-h" o
 
 Custom the one-line usage message. By default, command launcher will generate a one-line usage in the format of:
 
-```
+```text
 Usage:
   APP_NAME group command_name [flags]
 ```
@@ -165,7 +162,8 @@ For some commands that accept multiple types of arguments, it would be nice to h
 ```
 
 The help message looks like:
-```
+
+```text
 Usage:
   cdt get-city-population country city [flags]
 ```
@@ -203,7 +201,7 @@ For example:
 
 The help message looks like:
 
-```
+```text
 ...
 
 Usage:
@@ -215,7 +213,6 @@ Example:
 
 ...
 ```
-
 
 ### executable
 
@@ -239,6 +236,7 @@ The executable to call when your command is trigger from command launcher. You c
 The arguments that to be appended to the executable when the command is triggered. The other arguments passed from command launcher will be appeneded after these arguments that are defined in `args` field.
 
 **Example**
+
 ```json
 {
   ...
@@ -253,12 +251,16 @@ The arguments that to be appended to the executable when the command is triggere
   ]
 }
 ```
+
 When we call this command from command launcher:
-```
+
+```shell
 cdt crawler --url https://example.com
 ```
+
 It executes following command:
-```
+
+```shell
 java -jar {{package path}}/bin/crawler.jar --url https://example.com
 ```
 
@@ -288,16 +290,17 @@ A static list of the arguments for auto-complete.
   ]
 }
 ```
+
 Once you have configured auto-complete for command launcher, the command described above will have auto-complete for its arguments.
 
 When you type: `[cdt] city population [TAB]`, your shell will prompt options: `paris`, `rome`, and `london`
-
 
 ### validArgsCmd
 
 A command to execute to get the dynamic list of arguments.
 
 **Example**
+
 ```json
 {
   "cmds": [
@@ -319,7 +322,6 @@ A command to execute to get the dynamic list of arguments.
 When you type `[cdt] city poplution [TAB]`, command launcher will run the command specified in this field, and append all existing flags/arguments to the `validArgsCmd`.
 
 More details see: [Auto-Complete](./AUTO_COMPLETE.md)
-
 
 ### requiredFlags
 
@@ -370,6 +372,7 @@ Another behavior change is that once `checkFlags` is enabled, the `-h` and `--he
 Under the user consent, command launcher can pass several resources to the callee command, for example, the user credential collected and stored securely by the built-in `login` command. The `requestedResources` is used to request such resources. Command launcher will prompt user consent for the first time, and pass requested resources value to the callee command through environment variable. More detail see: [Manage resources](../resources)
 
 The following snippet requests to access the user name and password resources.
+
 ```json
 {
   "cmds": [

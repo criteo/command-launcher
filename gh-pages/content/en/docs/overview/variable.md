@@ -15,6 +15,7 @@ toc: true
 ---
 
 The two common use cases of integrating commands in command launcher are:
+
 1. Reference files that are located in the package itself
 2. Provide system/architecture-aware commands, for example, .sh script for linux, and .bat script for windows
 
@@ -33,7 +34,6 @@ To cover these use cases, in certain fields of the manifest file, predefined var
 | Extension       | The system-aware binary extension, "" for linux, ".exe" for windows    |
 | ScriptExtension | The system-aware scritp extension, ".sh" for linux, ".bat" for windows |
 
-
 ## Fields that accepts variables
 
 The command fields: `executable`, `args`, and `validArgsCmd`
@@ -51,10 +51,9 @@ You can reference them in form of `{{.Variable}}`. For example:
   }
 ]
 ```
+
 The executable on linux will be a script called `script.sh` located in the bin folder of the package. On windows, the executable will be a script called `script.bat`.
 
 ## Advanced usage of variables
 
 See golang [text/template](https://pkg.go.dev/text/template) for advanced usage (ex, if else)
-
-

@@ -27,17 +27,19 @@ To use a different name, you need to build command launcher from source and pass
 Requirements: golang >= 1.17
 
 You can build the command launcher with your prefered name (in the example: `Criteo Developer Toolkit`, a.k.a `cdt`).
-```
+
+```shell
 go build -o cdt -ldflags='-X main.version=dev -X main.appName=cdt -X "main.appLongName=Criteo Dev Toolkit"' main.go
 ```
 
 Or simply call the `build.sh` scripts
-```
+
+```shell
 ./build.sh [version] [app name] [app long name]
 ```
 
 ## Run tests
 
-```
+```shell
 go test -v ./...
 ```
