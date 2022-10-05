@@ -1,7 +1,6 @@
 package updater
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -14,13 +13,14 @@ import (
 	"github.com/criteo/command-launcher/internal/helper"
 	"github.com/inconshreveable/go-update"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 )
 
 type LatestVersion struct {
-	Version        string `json:"version"`
-	ReleaseNotes   string `json:"releaseNotes"`
-	StartPartition uint8  `json:"startPartition"`
-	EndPartition   uint8  `json:"endPartition"`
+	Version        string `json:"version" yaml:"version"`
+	ReleaseNotes   string `json:"releaseNotes" yaml:"releaseNotes"`
+	StartPartition uint8  `json:"startPartition" yaml:"startPartition"`
+	EndPartition   uint8  `json:"endPartition" yaml:"endPartition"`
 }
 
 type SelfUpdater struct {
@@ -91,7 +91,8 @@ func (u *SelfUpdater) checkSelfUpdate() <-chan bool {
 		}
 
 		u.latestVersion = LatestVersion{}
-		err = json.Unmarshal(data, &u.latestVersion)
+		// YAML is a supper set of json, should work with JSON as well.
+		err = yaml.Unmarshal(data, &u.latestVersion)
 		if err != nil {
 			log.Errorf(err.Error())
 			ch <- false
@@ -105,6 +106,7 @@ func (u *SelfUpdater) checkSelfUpdate() <-chan bool {
 }
 
 func (u *SelfUpdater) doSelfUpdate(url string) error {
+	log.Debugf("Update %s version %s from %s", u.BinaryName, u.latestVersion.Version, url)
 	resp, err := helper.HttpGetWrapper(url)
 	if err != nil {
 		return fmt.Errorf("cannot download the new version from %s: %v", url, err)
@@ -132,13 +134,16 @@ func (u *SelfUpdater) downloadUrl(version string) (string, error) {
 		return "", err
 	}
 
-	updateUrl.Path = path.Join(updateUrl.Path, version, runtime.GOOS, runtime.GOARCH, u.binaryFileName())
+	// the download url convention: [self_update_base_url]/[version]/[binaryName]_[OS]_[ARCH]_[version][extension]
+	// Example: https://github.com/criteo/command-launcher/releases/download/1.6.0/cdt_darwin_arm64_1.6.0"
+	updateUrl.Path = path.Join(updateUrl.Path, version, u.binaryFileName(version))
 	return updateUrl.String(), nil
 }
 
-func (u *SelfUpdater) binaryFileName() string {
+func (u *SelfUpdater) binaryFileName(version string) string {
+	downloadFileName := fmt.Sprintf("%s_%s_%s_%s", u.BinaryName, runtime.GOOS, runtime.GOARCH, version)
 	if runtime.GOOS == "windows" {
-		return fmt.Sprintf("%s.exe", u.BinaryName)
+		return fmt.Sprintf("%s.exe", downloadFileName)
 	}
-	return u.BinaryName
+	return downloadFileName
 }

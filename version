@@ -1,0 +1,9 @@
+version: 1.6.0
+releaseNotes: |
+  - Add the PackageDir context variable to reference the package's directory, same as the Cache and Root context variables. Cache and Root variables are deprecated.
+  - Extend the format of the flag definition. Now it is possible to add bool type flags: [name] \t [shorthand] \t [description] \t [type] \t [default].
+  - New command definition field in manifest, checkFlags. The default value is false, when it is true, before executing the command, the arguments will be parsed, and the parsed flags and args will be passed to the command in form of an environment variable: [APP_NAME]_FLAG_[FLAG_LONG_NAME] and [APP_NAME]_ARG_[ARG_INDEX_STARTS_FROM_1]
+  - New command definition field in the manifest: argsUsage to customize the one-line help message. This field will take effect when checkFlags=true
+  - New command definition field in the manifest: examples to customize the examples in the help message. This field will take effect when checkFlags=true
+startPartition: 0
+endPartition: 9

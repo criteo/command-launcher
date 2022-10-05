@@ -2,7 +2,6 @@ package remote
 
 import (
 	"archive/zip"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
@@ -139,14 +138,10 @@ func ReadManifest(file fs.File) (command.PackageManifest, error) {
 	}
 
 	var mf = defaultPackageManifest{}
-	// TODO: deperacate the JSON format
-	err = json.Unmarshal(payload, &mf)
+	// YAML is super set of json, should work with JSON as well
+	err = yaml.Unmarshal(payload, &mf)
 	if err != nil {
-		// try YAML format
-		yamlErr := yaml.Unmarshal(payload, &mf)
-		if yamlErr != nil {
-			return nil, fmt.Errorf("cannot read the manifest content, it is neither a valid JSON (%s) nor YAML (%s)", err, yamlErr)
-		}
+		return nil, fmt.Errorf("cannot read the manifest content, it is neither a valid JSON nor YAML (%s)", err)
 	}
 
 	return &mf, nil
