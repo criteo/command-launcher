@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"path"
 	"runtime"
-	"strings"
 	"time"
 
 	"github.com/criteo/command-launcher/cmd/user"
@@ -68,7 +67,7 @@ func (u *SelfUpdater) Update() error {
 	}
 
 	fmt.Printf("update and install the latest version of %s (%s)\n", u.BinaryName, u.latestVersion.Version)
-	downloadUrl, err := u.latestDownloadUrl()
+	downloadUrl, err := u.downloadUrl(u.latestVersion.Version)
 	if err != nil {
 		console.Error("update failed: %s\n", err)
 		return err
@@ -99,10 +98,7 @@ func (u *SelfUpdater) checkSelfUpdate() <-chan bool {
 			return
 		}
 
-		versionParts := strings.Split(u.CurrentVersion, "-")
-		suffixVersion := versionParts[len(versionParts)-1]
-
-		ch <- u.latestVersion.Version != suffixVersion &&
+		ch <- u.latestVersion.Version != u.CurrentVersion &&
 			u.User.InPartition(u.latestVersion.StartPartition, u.latestVersion.EndPartition)
 	}()
 	return ch
@@ -130,13 +126,13 @@ func (u *SelfUpdater) doSelfUpdate(url string) error {
 	return nil
 }
 
-func (u *SelfUpdater) latestDownloadUrl() (string, error) {
+func (u *SelfUpdater) downloadUrl(version string) (string, error) {
 	updateUrl, err := url.Parse(u.SelfUpdateRootUrl)
 	if err != nil {
 		return "", err
 	}
 
-	updateUrl.Path = path.Join(updateUrl.Path, "current", runtime.GOOS, runtime.GOARCH, u.binaryFileName())
+	updateUrl.Path = path.Join(updateUrl.Path, version, runtime.GOOS, runtime.GOARCH, u.binaryFileName())
 	return updateUrl.String(), nil
 }
 
