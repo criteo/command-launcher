@@ -1,0 +1,31 @@
+# Deploy your site to GitHub Pages
+
+name: GitHub Pages
+
+on:
+  push:
+    branches:
+      - online-doc
+
+jobs:
+  deploy:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+          cache: 'npm'
+          cache-dependency-path: gh-pages/package-lock.json
+
+      - name: Install dependencies
+        run: cd gh-pages && npm install
+
+      - name: Build production website
+        run: cd gh-pages && npm run build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./gh-pages/public
