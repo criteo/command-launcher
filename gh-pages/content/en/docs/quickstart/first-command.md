@@ -93,6 +93,7 @@ Bonjour! command launcher
 Now we have a working command/script. To make command launcher aware of it, we need to create a manifest file (in JSON or YAML format) at the root folder of the package:
 
 _manifest.mf_
+
 ```yaml
 pkgName: my-first-package
 version: 0.0.1
@@ -117,6 +118,7 @@ Command launcher will pass all the environment variables, arguments to itself to
 ## Tell more about your command to command launcher
 
 We can go even further to turn our bash scripts into a native-like program. Let's add extra information in the manifest, and make some improvements of its user interface:
+
 - the short and long description
 - some examples
 - use a flag to take language input instead of environment variable `LANG`
@@ -191,5 +193,3 @@ grepx    - Enhanced grep command
 $ cdt greeting --[TAB][TAB]
 $ cdt greeting --language
 ```
-
-
