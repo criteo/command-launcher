@@ -151,7 +151,7 @@ jobs:
       - name: Generate latest version file
         run: |
           mkdir output
-          cat release-notes.yaml | yq -r '."1.6.0"' > output/latest.yaml
+          cat release-notes.yaml | yq -r '."${{github.ref_name}}"' > output/latest.yaml
 
       - name: Display latest version file content
         run: cat output/latest.yaml
