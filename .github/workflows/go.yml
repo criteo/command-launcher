@@ -149,7 +149,9 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Generate latest version file
-        run: cat release-notes.yaml | yq -r '."1.6.0"' > output/latest.yaml
+        run: |
+          mkdir output
+          cat release-notes.yaml | yq -r '."1.6.0"' > output/latest.yaml
 
       - name: Display latest version file content
         run: cat output/latest.yaml
