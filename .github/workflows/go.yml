@@ -33,6 +33,13 @@ jobs:
       uses: actions/setup-go@v3
       with:
         go-version: 1.17
+    
+    - name: Set up Node
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+        cache: 'npm'
+        cache-dependency-path: gh-pages/package-lock.json
 
     - name: generate short sha1
       id: vars
@@ -56,6 +63,9 @@ jobs:
         echo "${{github.workspace}}/test"
         SCRIPT_DIR='${{github.workspace}}/test' test/integration.sh
       shell: bash
+    
+    - name: documentation lint
+      run: cd gh-pages && npm install && npm run test
 
     - name: Upload
       uses: actions/upload-artifact@v3

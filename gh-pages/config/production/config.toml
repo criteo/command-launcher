@@ -1,0 +1,2 @@
+baseurl = "https://criteo.github.io/command-launcher/"
+canonifyURLs = true
