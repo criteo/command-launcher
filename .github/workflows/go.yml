@@ -146,16 +146,25 @@ jobs:
     needs: [ packaging ]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
+
       - name: Generate latest version file
         run: cat release-notes.yaml | yq -r '."1.6.0"' > output/latest.yaml
 
       - name: Display latest version file content
         run: cat output/latest.yaml
 
-      - name: upload latest version index
+      - name: Upload latest version index
         uses: actions/upload-artifact@v3
         with:
           name: latest.yaml
           path: output/latest.yaml
+
+      - name: Release & Update the version index
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: output/latest.yaml
+
 
 
