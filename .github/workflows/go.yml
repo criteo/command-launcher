@@ -142,3 +142,14 @@ jobs:
           files: output/cdt_${{github.ref_name}}.zip
 
 
+  update-latest-version:
+    needs: [ packaging ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: upload latest version index
+        uses: actions/upload-artifact@v3
+        with:
+          name: latest.yaml
+          path: releases.yaml
+
+
