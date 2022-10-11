@@ -53,7 +53,11 @@ Pre-built binary can be downloaded from the release page. Unzip it, copy the bin
 
 The pre-built binary is named `cdt` (Criteo Dev Toolkit), if you want to use a different name, you can pass your prefered name in the build. See build section below.
 
-## Build
+## Contribute
+
+Begin with checking out the repository and run `npm install` at the root of it.
+
+### Build
 
 Requirements: golang >= 1.17
 
@@ -67,12 +71,17 @@ Or simply call the `build.sh` scripts
 ./build.sh [version] [app name] [app long name]
 ```
 
-## Run tests
+### Run tests
 
 ```
 go test -v ./...
 ```
 
+### Run pages locally
+
+```
+cd gh-pages && npm start
+```
 
 ### Release
 
