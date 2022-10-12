@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/criteo/command-launcher/cmd/dropin"
 	"github.com/criteo/command-launcher/internal/context"
 	"github.com/spf13/cobra"
 )
@@ -27,7 +28,7 @@ func AddDropinCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 		Short: "List all installed dropin packages",
 		Long:  "List all installed dropin packages",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return nil
+			return dropin.ListDropinPackages()
 		},
 	}
 

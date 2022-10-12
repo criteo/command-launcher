@@ -256,26 +256,8 @@ func (cmd *DefaultCommand) CheckFlags() bool {
 	return cmd.CmdCheckFlags
 }
 
-func (cmd *DefaultCommand) SetPkgDir(pkgDir string) {
-	cmd.PkgDir = pkgDir
-}
-
-func (cmd *DefaultCommand) copyArray(src []string) []string {
-	if len(src) == 0 {
-		return []string{}
-	}
-	return append([]string{}, src...)
-}
-
-func (cmd *DefaultCommand) copyExamples() []ExampleEntry {
-	ret := []ExampleEntry{}
-	if cmd.CmdExamples == nil || len(cmd.CmdExamples) == 0 {
-		return ret
-	}
-	for _, v := range cmd.CmdExamples {
-		ret = append(ret, v.Clone())
-	}
-	return ret
+func (cmd *DefaultCommand) PackageDir() string {
+	return cmd.PkgDir
 }
 
 func (cmd *DefaultCommand) interpolateArray(values *[]string) {

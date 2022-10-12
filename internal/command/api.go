@@ -40,6 +40,8 @@ type CommandManifest interface {
 	FlagValuesCmd() []string
 
 	CheckFlags() bool
+
+	PackageDir() string
 }
 
 type Command interface {
@@ -50,8 +52,6 @@ type Command interface {
 	ExecuteValidArgsCmd(envVars []string, args ...string) (int, string, error)
 
 	ExecuteFlagValuesCmd(envVars []string, args ...string) (int, string, error)
-
-	SetPkgDir(pkgDir string)
 }
 
 type PackageManifest interface {
