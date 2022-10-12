@@ -12,6 +12,7 @@ menu:
     identifier: "intro-7bb54696d0a61c0b18319f6b3e32f884"
 weight: 210
 toc: true
+mermaid: true
 ---
 
 ## What is command launcher?
