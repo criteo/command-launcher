@@ -98,3 +98,5 @@ The supported release tag format:
 - \*.\*.\*-\*
 
 Example: `1.0.0`, `1.0.1-preview`
+
+> Please make sure you have create an entry in [release-notes.yaml](release-notes.yaml) file so that the release will generate the new version index for auto-update.
