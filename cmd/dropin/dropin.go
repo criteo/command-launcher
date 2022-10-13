@@ -8,9 +8,7 @@ import (
 
 	"github.com/criteo/command-launcher/cmd/remote"
 	"github.com/criteo/command-launcher/internal/command"
-	"github.com/criteo/command-launcher/internal/config"
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 )
 
 type DropinRepository struct {
@@ -86,17 +84,4 @@ func (reg *DropinRepository) Command(group string, name string) (command.Command
 	}
 
 	return nil, fmt.Errorf("cannot find the command %s %s", group, name)
-}
-
-func ListDropinPackages() error {
-	dropinRepo, err := Load(viper.GetString(config.DROPIN_FOLDER_KEY))
-	if err != nil {
-		return err
-	}
-
-	for _, v := range dropinRepo.GroupCommands() {
-		fmt.Printf("- Package: %s, Command: %s\n", v.Name(), filepath.Base(v.PackageDir()))
-	}
-
-	return nil
 }
