@@ -10,7 +10,18 @@ func CreateLocalRepository(repoDirname string) (PackageRepository, error) {
 		return nil, err
 	}
 
-	log.Debug("Repository created: ", repo.RepoDir)
+	log.Debug("Local Repository created: ", repo.RepoDir)
 
 	return repo, nil
+}
+
+func CreateDropinRepository(repoDirname string) (PackageRepository, error) {
+	dropin := newPackageDropin(repoDirname)
+	if err := dropin.Load(); err != nil {
+		return nil, err
+	}
+
+	log.Debug("Dropin Repository created: ", dropin.RepoDir)
+
+	return dropin, nil
 }

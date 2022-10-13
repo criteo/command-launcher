@@ -19,7 +19,7 @@ var (
 	packageFlags = PackageFlags{}
 )
 
-func AddDropinCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
+func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 	packageCmd := &cobra.Command{
 		Use:   "package",
 		Short: "Manage the Packages",

@@ -47,7 +47,7 @@ func TestReadManifestInYaml(t *testing.T) {
 }
 
 func TestCreatePackage(t *testing.T) {
-	pkg, err := CreatePackage("assets/fake-1.0.0.pkg")
+	pkg, err := CreateZipPackage("assets/fake-1.0.0.pkg")
 	assert.Nil(t, err, "cannot create package")
 
 	assert.Equal(t, "fake", pkg.Name())
@@ -56,7 +56,7 @@ func TestCreatePackage(t *testing.T) {
 }
 
 func TestInstallPackage(t *testing.T) {
-	pkg, err := CreatePackage("assets/fake-1.0.0.pkg")
+	pkg, err := CreateZipPackage("assets/fake-1.0.0.pkg")
 	assert.Nil(t, err)
 
 	target, err := ioutil.TempDir("", "cdt-package-test-*")

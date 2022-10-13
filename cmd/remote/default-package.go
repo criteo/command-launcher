@@ -38,7 +38,16 @@ func (mf *defaultPackageManifest) Commands() []command.Command {
 
 type defaultPackage struct {
 	Manifest command.PackageManifest
-	ZipFile  string
+}
+
+type defaultFolderPackage struct {
+	defaultPackage
+	Folder string
+}
+
+type defaultZipPackage struct {
+	defaultPackage
+	ZipFile string
 }
 
 func (pkg *defaultPackage) Name() string {
@@ -53,7 +62,17 @@ func (pkg *defaultPackage) Commands() []command.Command {
 	return pkg.Manifest.Commands()
 }
 
-func (pkg *defaultPackage) InstallTo(targetDir string) (command.PackageManifest, error) {
+func (pkg *defaultPackage) InstallTo(_ string) (command.PackageManifest, error) {
+	log.Warnf("This package cannot be installed: %s", pkg.Name())
+	return pkg.Manifest, nil
+}
+
+func (pkg *defaultFolderPackage) InstallTo(_ string) (command.PackageManifest, error) {
+	log.Warnf("This package cannot be installed: %s", pkg.Name())
+	return pkg.Manifest, nil
+}
+
+func (pkg *defaultZipPackage) InstallTo(targetDir string) (command.PackageManifest, error) {
 	zipReader, _ := zip.OpenReader(pkg.ZipFile)
 	defer zipReader.Close()
 	for _, file := range zipReader.Reader.File {
@@ -100,7 +119,28 @@ func (pkg *defaultPackage) InstallTo(targetDir string) (command.PackageManifest,
 	return mf, nil
 }
 
-func CreatePackage(zipFilename string) (command.Package, error) {
+func CreateFolderPackage(folder string) (command.Package, error) {
+	manifestFile, err := os.Open(filepath.Join(folder, "manifest.mf"))
+	if os.IsNotExist(err) {
+		return nil, err
+	}
+
+	mf, err := ReadManifest(manifestFile)
+	if err != nil {
+		return nil, err
+	}
+
+	pkg := &defaultFolderPackage{
+		defaultPackage: defaultPackage{
+			Manifest: mf,
+		},
+		Folder: folder,
+	}
+
+	return pkg, nil
+}
+
+func CreateZipPackage(zipFilename string) (command.Package, error) {
 	reader, err := zip.OpenReader(zipFilename)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open: %s", err)
@@ -117,9 +157,11 @@ func CreatePackage(zipFilename string) (command.Package, error) {
 		return nil, fmt.Errorf("failed to read the manifest: %s", err)
 	}
 
-	var pkg = defaultPackage{
-		Manifest: mf,
-		ZipFile:  zipFilename,
+	var pkg = defaultZipPackage{
+		defaultPackage: defaultPackage{
+			Manifest: mf,
+		},
+		ZipFile: zipFilename,
 	}
 
 	return &pkg, nil

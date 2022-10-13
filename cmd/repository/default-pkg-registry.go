@@ -64,12 +64,16 @@ func NewRegistryEntry(pkg command.Package, pkgDir string) defaultRegistryEntry {
 	return defPkg
 }
 
-func LoadRegistry(pathname string) (*defaultRegistry, error) {
-	registry := defaultRegistry{
+func newRegistry() *defaultRegistry {
+	return &defaultRegistry{
 		packages:       make(map[string]defaultRegistryEntry),
 		groupCmds:      make(map[string]*command.DefaultCommand),
 		executableCmds: make(map[string]*command.DefaultCommand),
 	}
+}
+
+func LoadRegistry(pathname string) (*defaultRegistry, error) {
+	registry := newRegistry()
 
 	_, err := os.Stat(pathname)
 	if !os.IsNotExist(err) {
@@ -86,7 +90,7 @@ func LoadRegistry(pathname string) (*defaultRegistry, error) {
 
 	registry.extractCmds()
 
-	return &registry, nil
+	return registry, nil
 }
 
 func (reg *defaultRegistry) Store(pathname string) error {
