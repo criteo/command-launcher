@@ -2,9 +2,15 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/criteo/command-launcher/cmd/remote"
+	"github.com/criteo/command-launcher/cmd/repository"
+	"github.com/criteo/command-launcher/internal/config"
+	"github.com/criteo/command-launcher/internal/console"
 	"github.com/criteo/command-launcher/internal/context"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 type PackageFlags struct {
@@ -30,8 +36,31 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 		Use:   "list",
 		Short: "List installed packages",
 		Long:  "List installed packages with details",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return nil
+		PreRun: func(cmd *cobra.Command, args []string) {
+			if !packageFlags.dropin && !packageFlags.local && !packageFlags.remote {
+				packageFlags.dropin = true
+				packageFlags.local = true
+				packageFlags.remote = true
+			}
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			if packageFlags.local {
+				printPackages(rootCtxt.localRepo, "local repository")
+			}
+
+			if packageFlags.dropin {
+				printPackages(rootCtxt.dropinRepo, "dropin repository")
+			}
+
+			if packageFlags.remote {
+				remote := remote.CreateRemoteRepository(viper.GetString(config.COMMAND_REPOSITORY_BASE_URL_KEY))
+				packages, err := remote.All()
+				if err == nil {
+					printPackageInfos(packages, "remote repository")
+				} else {
+					console.Warn("Cannot load the remote repository: %v", err)
+				}
+			}
 		},
 	}
 	packageListCmd.Flags().BoolVar(&packageFlags.dropin, "dropin", false, "List only the dropin packages")
@@ -85,4 +114,20 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 	packageCmd.AddCommand(packageUpdateCmd)
 
 	rootCmd.AddCommand(packageCmd)
+}
+
+func printPackages(repo repository.PackageRepository, name string) {
+	console.Highlight("=== %s ===\n", strings.Title(name))
+	for _, pkg := range repo.InstalledPackages() {
+		fmt.Printf("  - %s - %s\n", pkg.Name(), pkg.Version())
+	}
+	fmt.Println()
+}
+
+func printPackageInfos(packages []remote.PackageInfo, name string) {
+	console.Highlight("=== %s ===\n", strings.Title(name))
+	for _, pkg := range packages {
+		fmt.Printf("  - %s - %s\n", pkg.Name, pkg.Version)
+	}
+	fmt.Println()
 }
