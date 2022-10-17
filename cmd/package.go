@@ -6,6 +6,7 @@ import (
 
 	"github.com/criteo/command-launcher/cmd/remote"
 	"github.com/criteo/command-launcher/cmd/repository"
+	"github.com/criteo/command-launcher/internal/command"
 	"github.com/criteo/command-launcher/internal/config"
 	"github.com/criteo/command-launcher/internal/console"
 	"github.com/criteo/command-launcher/internal/context"
@@ -14,11 +15,12 @@ import (
 )
 
 type PackageFlags struct {
-	gitUrl  string
-	fileUrl string
-	dropin  bool
-	local   bool
-	remote  bool
+	gitUrl     string
+	fileUrl    string
+	dropin     bool
+	local      bool
+	remote     bool
+	includeCmd bool
 }
 
 var (
@@ -45,17 +47,16 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			if packageFlags.local {
-				printPackages(rootCtxt.localRepo, "local repository")
+				printPackages(rootCtxt.localRepo, "local repository", packageFlags.includeCmd)
 			}
 
 			if packageFlags.dropin {
-				printPackages(rootCtxt.dropinRepo, "dropin repository")
+				printPackages(rootCtxt.dropinRepo, "dropin repository", packageFlags.includeCmd)
 			}
 
 			if packageFlags.remote {
 				remote := remote.CreateRemoteRepository(viper.GetString(config.COMMAND_REPOSITORY_BASE_URL_KEY))
-				packages, err := remote.All()
-				if err == nil {
+				if packages, err := remote.All(); err == nil {
 					printPackageInfos(packages, "remote repository")
 				} else {
 					console.Warn("Cannot load the remote repository: %v", err)
@@ -66,6 +67,7 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 	packageListCmd.Flags().BoolVar(&packageFlags.dropin, "dropin", false, "List only the dropin packages")
 	packageListCmd.Flags().BoolVar(&packageFlags.local, "local", false, "List only the local packages")
 	packageListCmd.Flags().BoolVar(&packageFlags.remote, "remote", false, "List only the remote packages")
+	packageListCmd.Flags().BoolVar(&packageFlags.includeCmd, "include-cmd", false, "List the packages with all commands")
 	packageListCmd.Flags().BoolP("all", "a", true, "List all packages")
 	packageListCmd.MarkFlagsMutuallyExclusive("all", "dropin", "local", "remote")
 
@@ -77,6 +79,7 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 		Example: fmt.Sprintf(`
   %s package install --git https://example.com/my-repo.git my-pkg`, appCtx.AppName()),
 		RunE: func(cmd *cobra.Command, args []string) error {
+
 			return nil
 		},
 	}
@@ -116,10 +119,13 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 	rootCmd.AddCommand(packageCmd)
 }
 
-func printPackages(repo repository.PackageRepository, name string) {
+func printPackages(repo repository.PackageRepository, name string, includeCmd bool) {
 	console.Highlight("=== %s ===\n", strings.Title(name))
 	for _, pkg := range repo.InstalledPackages() {
 		fmt.Printf("  - %s - %s\n", pkg.Name(), pkg.Version())
+		if includeCmd {
+			printCommands(pkg.Commands())
+		}
 	}
 	fmt.Println()
 }
@@ -127,7 +133,33 @@ func printPackages(repo repository.PackageRepository, name string) {
 func printPackageInfos(packages []remote.PackageInfo, name string) {
 	console.Highlight("=== %s ===\n", strings.Title(name))
 	for _, pkg := range packages {
-		fmt.Printf("  - %s - %s\n", pkg.Name, pkg.Version)
+		fmt.Printf("%2s %s - %s\n", "-", pkg.Name, pkg.Version)
 	}
 	fmt.Println()
+}
+
+func printCommands(commands []command.Command) {
+	cmdMap := make(map[string][]command.Command)
+	cmdMap["__no_group__"] = make([]command.Command, 0)
+
+	for _, cmd := range commands {
+		if cmd.Type() == "group" {
+			cmdMap[cmd.Name()] = make([]command.Command, 0)
+		} else if cmd.Type() == "executable" {
+			if cmd.Group() != "" {
+				cmdMap[cmd.Group()] = append(cmdMap[cmd.Group()], cmd)
+			} else {
+				cmdMap["__no_group__"] = append(cmdMap[cmd.Group()], cmd)
+			}
+		}
+	}
+
+	for g, cs := range cmdMap {
+		if len(cmdMap[g]) > 0 {
+			fmt.Printf("%4s %-20s %s\n", "*", g, "(group)")
+			for _, c := range cs {
+				fmt.Printf("%6s %-20s %s\n", "-", c.Name(), "(cmd)")
+			}
+		}
+	}
 }
