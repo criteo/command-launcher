@@ -107,7 +107,12 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 		Example: fmt.Sprintf(`
   %s package delete my-pkg`, appCtx.AppName()),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return nil
+			folder, err := findPackageFolder(args[0])
+			if err != nil {
+				return err
+			}
+
+			return os.RemoveAll(folder)
 		},
 	}
 
@@ -119,6 +124,27 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 		Example: fmt.Sprintf(`
   %s package update my-pkg`, appCtx.AppName()),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			folder, err := findPackageFolder(args[0])
+			if err != nil {
+				return err
+			}
+
+			gitFolder := filepath.Join(folder, ".git")
+			stat, err := os.Stat(gitFolder)
+			if os.IsNotExist(err) || !stat.IsDir() {
+				return fmt.Errorf("the package %s is not installed from a git repo", args[0])
+			}
+
+			ctx := exec.Command("git", "pull")
+			ctx.Dir = folder
+			ctx.Stdout = os.Stdout
+			ctx.Stderr = os.Stderr
+			ctx.Stdin = os.Stdin
+
+			if err = ctx.Run(); err != nil {
+				return fmt.Errorf("git pull has failed: %v", err)
+			}
+
 			return nil
 		},
 	}
@@ -242,4 +268,28 @@ func installZipFile(fileUrl string) error {
 	}
 
 	return err
+}
+
+func findPackageFolder(pkgName string) (string, error) {
+	if pkgName == "" {
+		return "", fmt.Errorf("invalid package name")
+	}
+
+	var pkgMf command.PackageManifest
+	for _, pkg := range rootCtxt.dropinRepo.InstalledPackages() {
+		if pkg.Name() == pkgName {
+			pkgMf = pkg
+			break
+		}
+	}
+
+	if pkgMf == nil {
+		return "", fmt.Errorf("cannot find the package in the dropin repository")
+	}
+
+	if len(pkgMf.Commands()) == 0 {
+		return "", fmt.Errorf("cannot find the package folder in the dropin repository")
+	}
+
+	return pkgMf.Commands()[0].PackageDir(), nil
 }
