@@ -94,6 +94,7 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 
 			return nil
 		},
+		ValidArgsFunction: packageNameValidatonFunc(true),
 	}
 	packageInstallCmd.Flags().StringVar(&packageFlags.fileUrl, "file", "", "URL or path of a package file")
 	packageInstallCmd.Flags().StringVar(&packageFlags.gitUrl, "git", "", "URL of a Git repo of package")
@@ -114,6 +115,7 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 
 			return os.RemoveAll(folder)
 		},
+		ValidArgsFunction: packageNameValidatonFunc(false),
 	}
 
 	packageUpdateCmd := &cobra.Command{
@@ -147,6 +149,7 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 
 			return nil
 		},
+		ValidArgsFunction: packageNameValidatonFunc(false),
 	}
 
 	packageCmd.AddCommand(packageListCmd)
@@ -155,6 +158,38 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 	packageCmd.AddCommand(packageUpdateCmd)
 
 	rootCmd.AddCommand(packageCmd)
+}
+
+func packageNameValidatonFunc(includeRemote bool) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
+	return func(c *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		localPkgs := rootCtxt.localRepo.InstalledPackages()
+		dropinPkgs := rootCtxt.dropinRepo.InstalledPackages()
+
+		pkgTable := map[string]string{}
+
+		for _, pkg := range localPkgs {
+			pkgTable[pkg.Name()] = pkg.Version()
+		}
+		for _, pkg := range dropinPkgs {
+			pkgTable[pkg.Name()] = pkg.Version()
+		}
+
+		if includeRemote {
+			remote := remote.CreateRemoteRepository(viper.GetString(config.COMMAND_REPOSITORY_BASE_URL_KEY))
+			if packages, err := remote.All(); err == nil {
+				for _, pkg := range packages {
+					pkgTable[pkg.Name] = pkg.Version
+				}
+			}
+		}
+
+		availablePkgs := []string{}
+		for k, _ := range pkgTable {
+			availablePkgs = append(availablePkgs, k)
+		}
+
+		return availablePkgs, cobra.ShellCompDirectiveNoFileComp
+	}
 }
 
 func printPackages(repo repository.PackageRepository, name string, includeCmd bool) {
