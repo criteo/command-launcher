@@ -68,7 +68,7 @@ func (repo *defaultPackageRepository) Install(pkg command.Package) error {
 		return fmt.Errorf("cannot install the command package %s: %v", pkg.Name(), err)
 	}
 
-	err = repo.registry.Add(NewRegistryEntry(pkg, pkgDir))
+	err = repo.registry.Add(newRegistryEntry(pkg, pkgDir))
 	if err != nil {
 		return fmt.Errorf("cannot add the command package %s: %v", pkg.Name(), err)
 	}

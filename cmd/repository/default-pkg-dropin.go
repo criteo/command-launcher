@@ -40,7 +40,7 @@ func (dropin *defaultDropinRepository) Load() error {
 			pkgFolder := filepath.Join(dropin.RepoDir, f.Name())
 			pkg, err := remote.CreateFolderPackage(pkgFolder)
 			if err == nil {
-				dropin.registry.Add(NewRegistryEntry(pkg, pkgFolder))
+				dropin.registry.Add(newRegistryEntry(pkg, pkgFolder))
 			}
 		}
 	}

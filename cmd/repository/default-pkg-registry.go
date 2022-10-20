@@ -46,10 +46,11 @@ func (pkg *defaultRegistryEntry) Commands() []command.Command {
 	for _, c := range pkg.PkgCommands {
 		cmds = append(cmds, c)
 	}
+
 	return cmds
 }
 
-func NewRegistryEntry(pkg command.Package, pkgDir string) defaultRegistryEntry {
+func newRegistryEntry(pkg command.Package, pkgDir string) defaultRegistryEntry {
 	defPkg := defaultRegistryEntry{
 		PkgName:     pkg.Name(),
 		PkgVersion:  pkg.Version(),
@@ -64,7 +65,7 @@ func NewRegistryEntry(pkg command.Package, pkgDir string) defaultRegistryEntry {
 	return defPkg
 }
 
-func newRegistry() *defaultRegistry {
+func newRegistry() *Registry {
 	return &defaultRegistry{
 		packages:       make(map[string]defaultRegistryEntry),
 		groupCmds:      make(map[string]*command.DefaultCommand),
@@ -72,40 +73,7 @@ func newRegistry() *defaultRegistry {
 	}
 }
 
-func LoadRegistry(pathname string) (*defaultRegistry, error) {
-	registry := newRegistry()
 
-	_, err := os.Stat(pathname)
-	if !os.IsNotExist(err) {
-		payload, err := ioutil.ReadFile(pathname)
-		if err != nil {
-			return nil, err
-		}
-
-		err = json.Unmarshal(payload, &registry.packages)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	registry.extractCmds()
-
-	return registry, nil
-}
-
-func (reg *defaultRegistry) Store(pathname string) error {
-	payload, err := json.Marshal(reg.packages)
-	if err != nil {
-		return fmt.Errorf("cannot encode in json: %v", err)
-	}
-
-	err = ioutil.WriteFile(pathname, payload, 0755)
-	if err != nil {
-		return fmt.Errorf("cannot write registry file: %v", err)
-	}
-
-	return nil
-}
 
 func (reg *defaultRegistry) Add(pkg defaultRegistryEntry) error {
 	reg.packages[pkg.PkgName] = pkg
