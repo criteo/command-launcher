@@ -41,13 +41,15 @@ jobs:
         cache: 'npm'
         cache-dependency-path: gh-pages/package-lock.json
 
-    - name: generate short sha1
+    - name: generate vars
       id: vars
       run: |
         echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
         echo "arch=${{matrix.arch}}" >> $GITHUB_OUTPUT
         echo "os=$(go run test/get-os.go)" >> $GITHUB_OUTPUT
         echo "ext=$(go run test/get-os.go extension)" >> $GITHUB_OUTPUT
+
+        echo $GITHUB_OUTPUT
 
     - name: Build
       env:
