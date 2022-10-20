@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/criteo/command-launcher/cmd/repository"
 	"github.com/criteo/command-launcher/cmd/updater"
 	"github.com/criteo/command-launcher/cmd/user"
 	"github.com/criteo/command-launcher/internal/config"
@@ -23,7 +22,7 @@ var (
 	updateFlags = UpdateFlags{}
 )
 
-func AddUpdateCmd(rootCmd *cobra.Command, appCtx context.LauncherContext, localRepo repository.PackageRepository) {
+func AddUpdateCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 	appName := appCtx.AppName()
 	updateCmd := &cobra.Command{
 		Use:   "update",
@@ -68,7 +67,7 @@ Check the update of %s and its commands.
 					fmt.Printf("CI mode enabled, load package lock file: %s\n", packageLockFile)
 				}
 				cmdUpdater := updater.CmdUpdater{
-					LocalRepo:            localRepo,
+					LocalRepo:            rootCtxt.localRepo,
 					CmdRepositoryBaseUrl: viper.GetString(config.COMMAND_REPOSITORY_BASE_URL_KEY),
 					User:                 u,
 					Timeout:              viper.GetDuration(config.SELF_UPDATE_TIMEOUT_KEY),
