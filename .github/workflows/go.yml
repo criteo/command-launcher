@@ -49,7 +49,7 @@ jobs:
         echo "os=$(go run test/get-os.go)" >> $GITHUB_OUTPUT
         echo "ext=$(go run test/get-os.go extension)" >> $GITHUB_OUTPUT
 
-        echo $GITHUB_OUTPUT
+        echo "$(go run test/get-os.go)"
 
     - name: Build
       env:
