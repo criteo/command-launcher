@@ -17,7 +17,7 @@ toc: true
 
 ## What is a manifest.mf file?
 
-A manifest.mf file is a file located at the root of your command launcher package. It describes the commands packaged in the zip file. When cdt install a package, it read the manifest file and register the commands in the manifest file.
+A manifest.mf file is a file located at the root of your command launcher package. It describes the commands packaged in the zip file. When cola install a package, it read the manifest file and register the commands in the manifest file.
 
 ## Format of manifest.mf
 
@@ -75,7 +75,7 @@ Here is an example
 The name of the command. A user uses the group and the name of the command to run it:
 
 ```shell
-cdt {group} {name}
+cola {group} {name}
 ```
 
 You must make sure your command's group and name combination is unique
@@ -93,7 +93,7 @@ A group type of command is used to group executable commands.
 The group of your command. A user uses the group and the name of your command to run it:
 
 ```shell
-cdt {group} {name}
+cola {group} {name}
 ```
 
 You must make sure your command's group and name combination is unique
@@ -124,7 +124,7 @@ To registry a command at the root level of command launcher, set `group` to empt
 }
 ```
 
-The above manifest snippet registered a command: `cdt infra reinstall`, when triggered, it will execute the `reinstall` binary located in the package's bin folder
+The above manifest snippet registered a command: `cola infra reinstall`, when triggered, it will execute the `reinstall` binary located in the package's bin folder
 
 ### short
 
@@ -165,7 +165,7 @@ The help message looks like:
 
 ```text
 Usage:
-  cdt get-city-population country city [flags]
+  cola get-city-population country city [flags]
 ```
 
 ### examples
@@ -205,7 +205,7 @@ The help message looks like:
 ...
 
 Usage:
-  cdt get-city-population country city [flags]
+  cola get-city-population country city [flags]
 
 Example:
   # get the city population of Paris, France
@@ -255,7 +255,7 @@ The arguments that to be appended to the executable when the command is triggere
 When we call this command from command launcher:
 
 ```shell
-cdt crawler --url https://example.com
+cola crawler --url https://example.com
 ```
 
 It executes following command:
@@ -293,7 +293,7 @@ A static list of the arguments for auto-complete.
 
 Once you have configured auto-complete for command launcher, the command described above will have auto-complete for its arguments.
 
-When you type: `[cdt] city population [TAB]`, your shell will prompt options: `paris`, `rome`, and `london`
+When you type: `[cola] city population [TAB]`, your shell will prompt options: `paris`, `rome`, and `london`
 
 ### validArgsCmd
 
@@ -319,7 +319,7 @@ A command to execute to get the dynamic list of arguments.
 }
 ```
 
-When you type `[cdt] city poplution [TAB]`, command launcher will run the command specified in this field, and append all existing flags/arguments to the `validArgsCmd`.
+When you type `[cola] city poplution [TAB]`, command launcher will run the command specified in this field, and append all existing flags/arguments to the `validArgsCmd`.
 
 More details see: [Auto-Complete](./AUTO_COMPLETE.md)
 
@@ -361,9 +361,9 @@ The `requiredFlags`, `validArgs` and `validArgsCmd` are mainly used for auto com
 
 For some cases, arguments parsing is difficult or has less support, for example, implementing the command in shell script. Enable `checkFlags` will allow command launcher to parse the arguments and catch errors. Further more, command launcher will pass the parsed flags and arguments to the callee command through environment variables:
 
-- For flags: `[APP_NAME]_FLAG_[FLAG_NAME]` ('-' is replaced with '_'). Example: flag `--user-name` is passed through environment variable `[APP_NAME]_FLAG_USER_NAME`
+- For flags: `COLA_FLAG_[FLAG_NAME]` ('-' is replaced with '_'). Example: flag `--user-name` is passed through environment variable `COLA_FLAG_USER_NAME`
 
-- For arguments: `[APP_NAME]_ARG_[INDEX]` where the index starts from 1. Example: command `cdt get-city-population France Paris` will get environment variable `[APP_NAME]_ARG_1=France` and `[APP_NAME]_ARG_2=Paris`
+- For arguments: `COLA_ARG_[INDEX]` where the index starts from 1. Example: command `cola get-city-population France Paris` will get environment variable `COLA_ARG_1=France` and `COLA_ARG_2=Paris`
 
 Another behavior change is that once `checkFlags` is enabled, the `-h` and `--help` flags are handled by command launcher. The original behavior is managed by the callee command itself.
 

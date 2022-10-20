@@ -15,7 +15,7 @@ toc: true
 ---
 
 
-> NOTE: in this page, we use `cdt` as the command launcher's binary name, you can build your own command launcher with a different name. See: [build from source](../../quickstart/build-from-source)
+> NOTE: in this page, we use `cola` as the command launcher's binary name, you can build your own command launcher with a different name. See: [build from source](../../quickstart/build-from-source)
 
 Command launcher synchronizes commands from the remote command repository. Commands are packaged into a `package`, then uploaded to remote command repository. The following diagram shows this architecture.
 
@@ -41,21 +41,20 @@ Command launcher synchronizes commands from the remote command repository. Comma
 A remote command repository is a simple http server, with following endpoints:
 
 - `/index.json`: package registry, which returns the list of packages available.
-- `/{package-name}-{version}.pkg`: download endpoint of a particular package.
 - `/version`: returns the metadata of the latest version of command launcher.
-- `/{version}/{os}/{arch}/{binary-name}`: endpoints that download command launcher binary.
+- `/{version}/{binaryName}_{OS}_{ARCH}_{version}{extension}`: endpoints that download command launcher binary.
 
 It is up-to-you to implement such an http server. You can configure command launcher to point to your remote repository with following command:
 
 ```shell
-cdt config command_repository_base_url https://my-remote-repository/root/url
+cola config command_repository_base_url https://my-remote-repository/root/url
 ```
 
 You need to config an endpoint to auto update command launcher as well:
 
 ```shell
-cdt config self_update_base_url https://my-remote-repository/cdt/root/url
-cdt config self_update_latest_version_url https://my-remote-repository/cdt/root/url/version
+cola config self_update_base_url https://my-remote-repository/cola/root/url
+cola config self_update_latest_version_url https://my-remote-repository/cola/root/url/version
 ```
 
 ### Remote repository registry /index.json

@@ -68,7 +68,7 @@ Developers run command launcher to access these commands, for example, you have 
 
 Pre-built binary can be downloaded from the release page. Unzip it, copy the binary into your PATH.
 
-The pre-built binary is named `cdt` (Criteo Dev Toolkit), if you want to use a different name, you can pass your prefered name in the build. See build section below.
+The two pre-built binaries are named `cola` (**Co**mmand **La**uncher) and `cdt` (Criteo Dev Toolkit), if you want to use a different name, you can pass your prefered name in the build. See build section below.
 
 ## Build
 
