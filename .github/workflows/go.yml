@@ -16,7 +16,7 @@ jobs:
     outputs:
       sha_short: ${{steps.vars.outputs.sha_short}}
       arch: ${{steps.vars.outputs.arch}}
-      os: ${{steps.vars.outputs.platform}}
+      os: ${{steps.vars.outputs.OS}}
     strategy:
       matrix:
         arch: [amd64]
@@ -46,7 +46,7 @@ jobs:
       run: |
         echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
         echo "arch=${{matrix.arch}}" >> $GITHUB_OUTPUT
-        echo "platform=$(go run test/get-os.go)" >> $GITHUB_OUTPUT
+        echo "OS=$(go run test/get-os.go)" >> $GITHUB_OUTPUT
         echo "ext=$(go run test/get-os.go extension)" >> $GITHUB_OUTPUT
 
         echo "$(go run test/get-os.go)"
@@ -56,9 +56,9 @@ jobs:
         GOARCH: ${{matrix.arch}}
         CGO_ENABLED: ${{matrix.cgo}}
       run: |
-        go build -o build/cdt_${{steps.vars.outputs.platform}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}} -ldflags='-X main.version=${{github.ref_name}} -X main.buildNum=${{github.run_number}} -X main.appName=cdt'
+        go build -o build/cdt_${{steps.vars.outputs.OS}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}} -ldflags='-X main.version=${{github.ref_name}} -X main.buildNum=${{github.run_number}} -X main.appName=cdt'
 
-        go build -o build/cola_${{steps.vars.outputs.platform}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}} -ldflags="-X main.version=${{github.ref_name}} -X main.buildNum=${{github.run_number}} -X main.appName=cola -X 'main.appLongName=Command Launcher'"
+        go build -o build/cola_${{steps.vars.outputs.OS}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}} -ldflags="-X main.version=${{github.ref_name}} -X main.buildNum=${{github.run_number}} -X main.appName=cola -X 'main.appLongName=Command Launcher'"
 
     - name: Test & Benchmark
       run: go test -v ./...
@@ -75,28 +75,28 @@ jobs:
     - name: Upload CDT
       uses: actions/upload-artifact@v3
       with:
-        name: ${{steps.vars.outputs.platform}}-${{matrix.arch}}
-        path: build/cdt_${{steps.vars.outputs.platform}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}}
+        name: ${{steps.vars.outputs.OS}}-${{matrix.arch}}
+        path: build/cdt_${{steps.vars.outputs.OS}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}}
 
     - name: Upload COLA
       uses: actions/upload-artifact@v3
       with:
-        name: ${{steps.vars.outputs.platform}}-${{matrix.arch}}
-        path: build/cola_${{steps.vars.outputs.platform}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}}
+        name: ${{steps.vars.outputs.OS}}-${{matrix.arch}}
+        path: build/cola_${{steps.vars.outputs.OS}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}}
 
     - name: Rename binary name for release
       if: startsWith(github.ref, 'refs/tags/')
       run: |
-        mv build/cdt_${{steps.vars.outputs.platform}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}} build/cdt_${{steps.vars.outputs.platform}}_${{matrix.arch}}_${{github.ref_name}}${{steps.vars.outputs.ext}}
-        mv build/cola_${{steps.vars.outputs.platform}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}} build/cola_${{steps.vars.outputs.platform}}_${{matrix.arch}}_${{github.ref_name}}${{steps.vars.outputs.ext}}
+        mv build/cdt_${{steps.vars.outputs.OS}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}} build/cdt_${{steps.vars.outputs.OS}}_${{matrix.arch}}_${{github.ref_name}}${{steps.vars.outputs.ext}}
+        mv build/cola_${{steps.vars.outputs.OS}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}} build/cola_${{steps.vars.outputs.OS}}_${{matrix.arch}}_${{github.ref_name}}${{steps.vars.outputs.ext}}
 
     - name: Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: |
-          build/cdt_${{steps.vars.outputs.platform}}_${{matrix.arch}}_${{github.ref_name}}${{steps.vars.outputs.ext}}
-          build/cola_${{steps.vars.outputs.platform}}_${{matrix.arch}}_${{github.ref_name}}${{steps.vars.outputs.ext}}
+          build/cdt_${{steps.vars.outputs.OS}}_${{matrix.arch}}_${{github.ref_name}}${{steps.vars.outputs.ext}}
+          build/cola_${{steps.vars.outputs.OS}}_${{matrix.arch}}_${{github.ref_name}}${{steps.vars.outputs.ext}}
 
   packaging:
     needs: [ build ]
