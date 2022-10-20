@@ -44,10 +44,10 @@ jobs:
     - name: generate short sha1
       id: vars
       run: |
-        echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
-        echo "::set-output name=arch::${{matrix.arch}}"
-        echo "::set-output name=os::$(go run test/get-os.go)"
-        echo "::set-output name=ext::$(go run test/get-os.go extension)"
+        echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        echo "arch=${{matrix.arch}}" >> $GITHUB_OUTPUT
+        echo "os=$(go run test/get-os.go)" >> $GITHUB_OUTPUT
+        echo "ext=$(go run test/get-os.go extension)" >> $GITHUB_OUTPUT
 
     - name: Build
       env:
