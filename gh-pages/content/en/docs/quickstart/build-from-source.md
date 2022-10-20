@@ -24,7 +24,6 @@ Another pre-built binary is called `cdt` (Criteo Dev Toolkit), its home folder w
 
 > For compatibility concern, we highly recommend to reference resources in your command with prefix `COLA_`
 
-
 To use a different name, you need to build command launcher from source and pass the desired short and long name to the build scripts.
 
 ## Build from source
