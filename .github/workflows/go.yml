@@ -54,9 +54,9 @@ jobs:
         GOARCH: ${{matrix.arch}}
         CGO_ENABLED: ${{matrix.cgo}}
       run: |
-        go build -o build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}} -ldflags='-X main.version=${{github.ref_name}} -X main.buildNum=${{github.run_id}} -X main.appName=cdt'
+        go build -o build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}} -ldflags='-X main.version=${{github.ref_name}} -X main.buildNum=${{github.run_number}} -X main.appName=cdt'
 
-        go build -o build/cola_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}} -ldflags="-X main.version=${{github.ref_name}} -X main.buildNum=${{github.run_id}} -X main.appName=cola -X 'main.appLongName=Command Launcher'"
+        go build -o build/cola_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}} -ldflags="-X main.version=${{github.ref_name}} -X main.buildNum=${{github.run_number}} -X main.appName=cola -X 'main.appLongName=Command Launcher'"
 
     - name: Test & Benchmark
       run: go test -v ./...
