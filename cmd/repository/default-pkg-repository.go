@@ -15,7 +15,7 @@ const (
 
 type defaultPackageRepository struct {
 	RepoDir  string
-	registry *defaultRegistry
+	registry Registry
 }
 
 func newdefaultPackageRepository(repoDirname string) *defaultPackageRepository {
@@ -34,7 +34,7 @@ func (repo *defaultPackageRepository) Load() error {
 	}
 
 	pathname := filepath.Join(repo.RepoDir, FILE_REGISTRY)
-	reg, err := LoadRegistry(pathname)
+	reg, err := newJsonRegistry(pathname)
 	if err != nil {
 		return err
 	}
@@ -68,14 +68,9 @@ func (repo *defaultPackageRepository) Install(pkg command.Package) error {
 		return fmt.Errorf("cannot install the command package %s: %v", pkg.Name(), err)
 	}
 
-	err = repo.registry.Add(NewRegistryEntry(pkg, pkgDir))
+	err = repo.registry.Add(pkg)
 	if err != nil {
 		return fmt.Errorf("cannot add the command package %s: %v", pkg.Name(), err)
-	}
-
-	err = repo.registry.Store(filepath.Join(repo.RepoDir, FILE_REGISTRY))
-	if err != nil {
-		return fmt.Errorf("cannot store the new registry %v", err)
 	}
 
 	return nil
@@ -85,11 +80,6 @@ func (repo *defaultPackageRepository) Uninstall(name string) error {
 	err := repo.registry.Remove(name)
 	if err != nil {
 		return fmt.Errorf("cannot remove the command %s: %v", name, err)
-	}
-
-	err = repo.registry.Store(filepath.Join(repo.RepoDir, FILE_REGISTRY))
-	if err != nil {
-		return fmt.Errorf("cannot store the new registry %v", err)
 	}
 
 	err = os.RemoveAll(filepath.Join(repo.RepoDir, name))
