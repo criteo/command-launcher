@@ -18,13 +18,14 @@ type defaultPackageRepository struct {
 	registry Registry
 }
 
-func newdefaultPackageRepository(repoDirname string) *defaultPackageRepository {
+func newdefaultPackageRepository(repoDirname string, reg Registry) *defaultPackageRepository {
 	return &defaultPackageRepository{
-		RepoDir: repoDirname,
+		RepoDir:  repoDirname,
+		registry: reg,
 	}
 }
 
-func (repo *defaultPackageRepository) Load() error {
+func (repo *defaultPackageRepository) load() error {
 	_, err := os.Stat(repo.RepoDir)
 	if os.IsNotExist(err) {
 		err := os.MkdirAll(repo.RepoDir, 0755)
@@ -33,13 +34,9 @@ func (repo *defaultPackageRepository) Load() error {
 		}
 	}
 
-	pathname := filepath.Join(repo.RepoDir, FILE_REGISTRY)
-	reg, err := newJsonRegistry(pathname)
-	if err != nil {
-		return err
+	if err = repo.registry.Load(repo.RepoDir); err != nil {
+		return fmt.Errorf("cannot load the packages: %v", err)
 	}
-
-	repo.registry = reg
 
 	log.Debugf("Commands loaded: %v", func() []string {
 		names := []string{}
@@ -49,6 +46,7 @@ func (repo *defaultPackageRepository) Load() error {
 		}
 		return names
 	}())
+
 	return nil
 }
 

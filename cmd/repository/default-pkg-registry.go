@@ -2,7 +2,12 @@ package repository
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
+	log "github.com/sirupsen/logrus"
+
+	"github.com/criteo/command-launcher/cmd/remote"
 	"github.com/criteo/command-launcher/internal/command"
 )
 
@@ -32,6 +37,38 @@ func newDefaultRegistry() (Registry, error) {
 	}
 
 	return &reg, nil
+}
+
+func (reg *defaultRegistry) Load(repoDir string) error {
+	_, err := os.Stat(repoDir)
+	if !os.IsNotExist(err) {
+		files, err := os.ReadDir(repoDir)
+		if err != nil {
+			log.Errorf("cannot read the repo dir: %v", err)
+			return err
+		}
+
+		for _, f := range files {
+			if !f.IsDir() && f.Type()&os.ModeSymlink != os.ModeSymlink {
+				continue
+			}
+			if dropinPkgManifestFile, err := os.Open(filepath.Join(repoDir, f.Name(), "manifest.mf")); err == nil {
+				manifest, err := remote.ReadManifest(dropinPkgManifestFile)
+				if err == nil {
+					for _, cmd := range manifest.Commands() {
+						newCmd := command.NewDefaultCommandFromCopy(cmd, filepath.Join(repoDir, f.Name()))
+						if newCmd.CmdType == "group" {
+							reg.groupCmds[fmt.Sprintf("_%s", cmd.Name())] = newCmd
+						} else {
+							reg.executableCmds[fmt.Sprintf("%s_%s", cmd.Group(), cmd.Name())] = newCmd
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return err
 }
 
 func (reg *defaultRegistry) Add(pkg command.PackageManifest) error {

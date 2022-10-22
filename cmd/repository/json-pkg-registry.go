@@ -23,10 +23,10 @@ func newJsonRegistry(path string) (Registry, error) {
 		pathname: path,
 	}
 
-	return &reg, reg.load()
+	return &reg, nil
 }
 
-func (reg *jsonRegistry) load() error {
+func (reg *jsonRegistry) Load(_ string) error {
 	_, err := os.Stat(reg.pathname)
 	if !os.IsNotExist(err) {
 		payload, err := os.ReadFile(reg.pathname)
@@ -35,10 +35,10 @@ func (reg *jsonRegistry) load() error {
 		}
 
 		packages := make(map[string]*defaultRegistryEntry, 0)
-		err = json.Unmarshal(payload, &packages)
-		if err != nil {
+		if err = json.Unmarshal(payload, &packages); err != nil {
 			return err
 		}
+
 		for name, pkg := range packages {
 			reg.packages[name] = pkg
 		}

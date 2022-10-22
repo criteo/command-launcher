@@ -3,6 +3,8 @@ package repository
 import "github.com/criteo/command-launcher/internal/command"
 
 type Registry interface {
+	Load(repoDir string) error
+
 	Add(pkg command.PackageManifest) error
 
 	Remove(pkgName string) error

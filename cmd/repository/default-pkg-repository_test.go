@@ -17,10 +17,10 @@ func TestLocalRepository(t *testing.T) {
 	err := os.Mkdir(localRepoPath, 0755)
 	assert.Nil(t, err)
 
-	reg, err := os.Create(filepath.Join(localRepoPath, "registry.json"))
+	regFile, err := os.Create(filepath.Join(localRepoPath, "registry.json"))
 	assert.Nil(t, err)
-	defer reg.Close()
-	reg.WriteString(fmt.Sprintf(`{
+	defer regFile.Close()
+	regFile.WriteString(fmt.Sprintf(`{
 		"ls": {
 			"pkgName": "ls",
 			"version": "0.0.2",
@@ -43,7 +43,10 @@ func TestLocalRepository(t *testing.T) {
 		}
 	}`, localRepoPath, "ls-0.0.2"))
 
-	localRepo, err := CreateLocalRepository(localRepoPath)
+	reg, err := newJsonRegistry(filepath.Join(localRepoPath, "registry.json"))
+	assert.Nil(t, err)
+
+	localRepo, err := CreateLocalRepository(localRepoPath, reg)
 	assert.Nil(t, err)
 
 	ls, err := localRepo.Command("", "ls")
@@ -93,7 +96,10 @@ func TestInstallCommand(t *testing.T) {
 	err = os.Mkdir(localRepoPath, 0755)
 	assert.Nil(t, err)
 
-	localRepo, err := CreateLocalRepository(localRepoPath)
+	reg, err := newJsonRegistry(filepath.Join(localRepoPath, "registry.json"))
+	assert.Nil(t, err)
+
+	localRepo, err := CreateLocalRepository(localRepoPath, reg)
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(localRepo.InstalledCommands()))
 
