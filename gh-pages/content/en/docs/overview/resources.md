@@ -18,7 +18,7 @@ toc: true
 
 Resources are the information collected by command launcher. One good example is the user name and password from the built-in `login` command.
 
-Some of these information requires user consent to acces them, a command needs to explicitly request the access to these resources through `requestedResources` property in the manifest.
+Some of these information require user consent to access them, a command needs to explicitly request the access to these resources through the `requestedResources` property in the manifest.
 
 Others are automatically passed to the command.
 
