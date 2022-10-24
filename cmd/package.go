@@ -33,21 +33,15 @@ var (
 )
 
 func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
-	packageCmd := &cobra.Command{
-		Use:   "package",
-		Short: "Manage the Packages",
-		Long:  "Provide CRUD operations on the Packages",
-	}
-
 	packageListCmd := &cobra.Command{
 		Use:   "list",
-		Short: "List installed packages",
-		Long:  "List installed packages with details",
+		Short: "List installed packages and commands",
+		Long:  "List installed packages and commands with details",
 		PreRun: func(cmd *cobra.Command, args []string) {
 			if !packageFlags.dropin && !packageFlags.local && !packageFlags.remote {
 				packageFlags.dropin = true
 				packageFlags.local = true
-				packageFlags.remote = true
+				packageFlags.remote = false
 			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
@@ -68,6 +62,7 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 				}
 			}
 		},
+		ValidArgsFunction: noArgCompletion,
 	}
 	packageListCmd.Flags().BoolVar(&packageFlags.dropin, "dropin", false, "List only the dropin packages")
 	packageListCmd.Flags().BoolVar(&packageFlags.local, "local", false, "List only the local packages")
@@ -78,8 +73,8 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 
 	packageInstallCmd := &cobra.Command{
 		Use:   "install [package_name]",
-		Short: "Install a package",
-		Long:  "Install a package package from a git repo or from a zip file or from its name",
+		Short: "Install a dropin package",
+		Long:  "Install a dropin package package from a git repo or from a zip file or from its name",
 		Args:  cobra.MaximumNArgs(1),
 		Example: fmt.Sprintf(`
   %s package install --git https://example.com/my-repo.git my-pkg`, appCtx.AppName()),
@@ -94,7 +89,7 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 
 			return nil
 		},
-		ValidArgsFunction: packageNameValidatonFunc(true),
+		ValidArgsFunction: noArgCompletion,
 	}
 	packageInstallCmd.Flags().StringVar(&packageFlags.fileUrl, "file", "", "URL or path of a package file")
 	packageInstallCmd.Flags().StringVar(&packageFlags.gitUrl, "git", "", "URL of a Git repo of package")
@@ -102,8 +97,8 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 
 	packageDeleteCmd := &cobra.Command{
 		Use:   "delete [package_name]",
-		Short: "Remove a package",
-		Long:  "Remove a package from its name",
+		Short: "Remove a dropin package",
+		Long:  "Remove a dropin package from its name",
 		Args:  cobra.ExactArgs(1),
 		Example: fmt.Sprintf(`
   %s package delete my-pkg`, appCtx.AppName()),
@@ -115,63 +110,30 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 
 			return os.RemoveAll(folder)
 		},
-		ValidArgsFunction: packageNameValidatonFunc(false),
+		ValidArgsFunction: packageNameValidatonFunc(false, true, false),
 	}
 
-	packageUpdateCmd := &cobra.Command{
-		Use:   "update [package name]",
-		Short: "Update a package",
-		Long:  "Update a package from its name, only when the packge is a Git repo",
-		Args:  cobra.ExactArgs(1),
-		Example: fmt.Sprintf(`
-  %s package update my-pkg`, appCtx.AppName()),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			folder, err := findPackageFolder(args[0])
-			if err != nil {
-				return err
-			}
-
-			gitFolder := filepath.Join(folder, ".git")
-			stat, err := os.Stat(gitFolder)
-			if os.IsNotExist(err) || !stat.IsDir() {
-				return fmt.Errorf("the package %s is not installed from a git repo", args[0])
-			}
-
-			ctx := exec.Command("git", "pull")
-			ctx.Dir = folder
-			ctx.Stdout = os.Stdout
-			ctx.Stderr = os.Stderr
-			ctx.Stdin = os.Stdin
-
-			if err = ctx.Run(); err != nil {
-				return fmt.Errorf("git pull has failed: %v", err)
-			}
-
-			return nil
-		},
-		ValidArgsFunction: packageNameValidatonFunc(false),
-	}
-
-	packageCmd.AddCommand(packageListCmd)
-	packageCmd.AddCommand(packageInstallCmd)
-	packageCmd.AddCommand(packageDeleteCmd)
-	packageCmd.AddCommand(packageUpdateCmd)
-
-	rootCmd.AddCommand(packageCmd)
+	rootCmd.AddCommand(packageListCmd)
+	rootCmd.AddCommand(packageInstallCmd)
+	rootCmd.AddCommand(packageDeleteCmd)
 }
 
-func packageNameValidatonFunc(includeRemote bool) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
+func packageNameValidatonFunc(includeLocal bool, includeDropin bool, includeRemote bool) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
 	return func(c *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		localPkgs := rootCtxt.localRepo.InstalledPackages()
 		dropinPkgs := rootCtxt.dropinRepo.InstalledPackages()
 
 		pkgTable := map[string]string{}
 
-		for _, pkg := range localPkgs {
-			pkgTable[pkg.Name()] = pkg.Version()
+		if includeLocal {
+			for _, pkg := range localPkgs {
+				pkgTable[pkg.Name()] = pkg.Version()
+			}
 		}
-		for _, pkg := range dropinPkgs {
-			pkgTable[pkg.Name()] = pkg.Version()
+		if includeDropin {
+			for _, pkg := range dropinPkgs {
+				pkgTable[pkg.Name()] = pkg.Version()
+			}
 		}
 
 		if includeRemote {
@@ -192,10 +154,14 @@ func packageNameValidatonFunc(includeRemote bool) func(*cobra.Command, []string,
 	}
 }
 
+func noArgCompletion(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	return nil, cobra.ShellCompDirectiveNoFileComp
+}
+
 func printPackages(repo repository.PackageRepository, name string, includeCmd bool) {
 	console.Highlight("=== %s ===\n", strings.Title(name))
 	for _, pkg := range repo.InstalledPackages() {
-		fmt.Printf("  - %s - %s\n", pkg.Name(), pkg.Version())
+		fmt.Printf("  - %-40s %s\n", pkg.Name(), pkg.Version())
 		if includeCmd {
 			printCommands(pkg.Commands())
 		}
@@ -206,7 +172,7 @@ func printPackages(repo repository.PackageRepository, name string, includeCmd bo
 func printPackageInfos(packages []remote.PackageInfo, name string) {
 	console.Highlight("=== %s ===\n", strings.Title(name))
 	for _, pkg := range packages {
-		fmt.Printf("%2s %s - %s\n", "-", pkg.Name, pkg.Version)
+		fmt.Printf("%2s %-40s %s\n", "-", pkg.Name, pkg.Version)
 	}
 	fmt.Println()
 }
@@ -229,9 +195,9 @@ func printCommands(commands []command.Command) {
 
 	for g, cs := range cmdMap {
 		if len(cmdMap[g]) > 0 {
-			fmt.Printf("%4s %-20s %s\n", "*", g, "(group)")
+			fmt.Printf("%4s %-39s %s\n", "*", g, "(group)")
 			for _, c := range cs {
-				fmt.Printf("%6s %-20s %s\n", "-", c.Name(), "(cmd)")
+				fmt.Printf("%6s %-37s %s\n", "-", c.Name(), "(cmd)")
 			}
 		}
 	}
