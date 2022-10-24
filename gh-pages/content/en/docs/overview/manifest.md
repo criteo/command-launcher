@@ -17,7 +17,7 @@ toc: true
 
 ## What is a manifest.mf file?
 
-A manifest.mf file is a file located at the root of your command launcher package. It describes the commands packaged in the zip file. When cola install a package, it read the manifest file and register the commands in the manifest file.
+A manifest.mf file is a file located at the root of your command launcher package. It describes the commands packaged in the zip file. When cola installs a package, it reads the manifest file and registers the commands in the manifest file.
 
 ## Format of manifest.mf
 
