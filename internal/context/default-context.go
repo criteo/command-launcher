@@ -79,5 +79,7 @@ func (ctx *defaultContext) envVarName(name string) string {
 }
 
 func (ctx *defaultContext) prefix() string {
+	// TODO: in 1.8+ use COLA as the prefix so that it is independent to the binary name
+	// return "COLA"
 	return strings.ToUpper(ctx.appName)
 }
