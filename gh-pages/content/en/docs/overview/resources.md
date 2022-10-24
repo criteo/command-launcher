@@ -20,7 +20,7 @@ Resources are the information collected by command launcher. One good example is
 
 Some of these information requires user consent to acces them, a command needs to explicitly request the access to these resources through `requestedResources` property in the manifest.
 
-Others will automatically passed to the command.
+Others are automatically passed to the command.
 
 Command Launcher passes resources to managed command through environment variables. The naming convention is: COLA_[RESOURCE_NAME]. If you compiled command launcher to a different name, command launcher will pass an additional environment variable `[APP_NAME]_[RESOURCE_NAME]` to the managed command as well.
 
