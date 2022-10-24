@@ -18,18 +18,18 @@ toc: true
 
 Get or set command launcher configuration.
 
-Use `cdt config` to list all configurations.
+Use `cola config` to list all configurations.
 
-Use `cdt config [key]` to get one configuration.
+Use `cola config [key]` to get one configuration.
 
-Use `cdt config [key] [value]` to set one configuration.
+Use `cola config [key] [value]` to set one configuration.
 
 ## completion
 
 Setup auto completion. See help to get instructions:
 
 ```shell
-cdt completion --help
+cola completion --help
 ```
 
 ## login

@@ -590,7 +590,18 @@ func getCmdEnvContext(envVars []string, consents []string) []string {
 		}
 	}
 
-	return vars
+	// Enable variable with prefix [binary_name] and COLA
+	// TODO: remove it when in version 1.8 all variables are migrated to COLA prefix
+	outputVars := []string{}
+	for _, v := range vars {
+		prefix := fmt.Sprintf("%s_", strings.ToUpper(rootCtxt.appCtx.AppName()))
+		if strings.HasPrefix(v, prefix) && prefix != "COLA_" {
+			outputVars = append(outputVars, strings.Replace(v, prefix, "COLA_", 1))
+		}
+		outputVars = append(outputVars, v)
+	}
+
+	return outputVars
 }
 
 func parseCmdArgsToEnv(c *cobra.Command, args []string, envVarPrefix string) ([]string, map[string]string, error) {
