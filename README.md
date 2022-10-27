@@ -18,7 +18,7 @@ Command launcher is a small binary downloaded by developer in their development 
 
 Developers can integrate their own commands into command launcher as a "dropin" package. These dropin package will be only accessible from the developers themselves. To share such commands see [Dropin Package](https://criteo.github.io/command-launcher/docs/overview/dropin/)
 
-Developers run command launcher to access these commands, for example, you have a command called `toto`, instead of run it directly from command line, you use `cl toto`, where `cl` is the binary name of the command launcher, you can name it anything suits you. Every time you execute command launcher, it will synchronize with the remote command, and propose available updates if exists.
+Developers run command launcher to access these commands, for example, you have a command called `toto`, instead of run it directly from command line, you use `cola toto`, where `cola` is the binary name of the command launcher, you can name it anything suits you. Every time you execute command launcher, it will synchronize with the remote command, and propose available updates if exists.
 
 ```
 
