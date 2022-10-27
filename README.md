@@ -2,6 +2,8 @@
 
 A command launcher 🚀 made with ❤️
 
+[https://criteo.github.io/command-launcher/](https://criteo.github.io/command-launcher/)
+
 ## Why a command launcher?
 
 At Criteo, we have many teams who provides command line applications for developers. These CLI providers repeatly handle the same features and functionalities for their CLI apps, such as auto-completion, credential management, release, delivery, monitoring, etc.
@@ -12,9 +14,9 @@ To improve both developer and CLI provider's experience, we developed a command 
 
 ## How it works?
 
-Command launcher is a small binary downloaded by developer in their development environment. CLI provider packages new commands or new version of command into a package, upload it to a remote repository, and update the package index of the repository. This process can be automated. More details about the remote repository, see [CLI Provider Guide](doc/CLI_PROVIDER_GUIDE.md)
+Command launcher is a small binary downloaded by developer in their development environment. CLI provider packages new commands or new version of command into a package, upload it to a remote repository, and update the package index of the repository. This process can be automated. More details about the remote repository, see [CLI Provider Guide](https://criteo.github.io/command-launcher/docs/overview/provider-guide/)
 
-Developers can integrate their own commands into command launcher as a "dropin" package. These dropin package will be only accessible from the developers themselves. To share such commands see [Dropin Package](doc/DROPIN_PACKAGE.md)
+Developers can integrate their own commands into command launcher as a "dropin" package. These dropin package will be only accessible from the developers themselves. To share such commands see [Dropin Package](https://criteo.github.io/command-launcher/docs/overview/dropin/)
 
 Developers run command launcher to access these commands, for example, you have a command called `toto`, instead of run it directly from command line, you use `cl toto`, where `cl` is the binary name of the command launcher, you can name it anything suits you. Every time you execute command launcher, it will synchronize with the remote command, and propose available updates if exists.
 
