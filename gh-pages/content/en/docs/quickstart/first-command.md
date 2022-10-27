@@ -16,16 +16,16 @@ toc: true
 
 ## Preparation
 
-If you want to use the default command launcher binary name (`cdt`): install command launcher following the guide [Binary install](../binary-install). Or if you prefer a different binary name, build command launcher from source: [Build from source](../build-from-source)
+If you want to use the default command launcher binary name (`cola`): install command launcher following the guide [Binary install](../binary-install). Or if you prefer a different binary name, build command launcher from source: [Build from source](../build-from-source)
 
-> Understand why binary name matters: [why command launcher binary name matters?](../build-from-source/#why-does-the-binary-name-matter)
+> In Criteo, we call it `cdt`, (Criteo Dev Toolkit)
 
-In this tutorial, we will use the binary name `cdt` (which stands for `Criteo Dev Toolkits`).
+In this tutorial, we will use the binary name `cola`.
 
 To check your command launcher installation, run following command:
 
 ```bash
-cdt config
+cola config
 ```
 
 It should list all your configurations. The important ones for this tutorial is the following:
@@ -46,7 +46,7 @@ _/home/[user_name]/[.binary_name]_
 _C:\Users\\[user_name]\\[.binary_name]_
 {{< /details >}}
 
-For example, on my Macbook (with user `criteo`), my command launcher home is `/Users/criteo/.cdt`
+For example, on my Macbook (with user `criteo`), my command launcher home is `/Users/criteo/.cola`
 
 Command launcher also provide auto-completion feature to all managed commands, you only need to setup auto-completion once: [setup auto-completion](../binary-install/#setup-auto-completion)
 
@@ -57,7 +57,7 @@ If you already have a command you can skip this step. Command launcher is techno
 In command launcher, commands are packaged into `package`s. Let's first create a package for our newly created command:
 
 ```bash
-cd $HOME/.cdt/dropins
+cd $HOME/.cola/dropins
 mkdir my-first-package
 cd my-first-package
 ```
@@ -106,10 +106,10 @@ cmds:
 That's it! Your command has been integrated to command launcher with a subcommand named `greeting`, to test it:
 
 ```bash
-$ cdt greeting "command launcher"
+$ cola greeting "command launcher"
 Hello! command launcher
 
-$ LANG=fr cdt greeting "command launcher"
+$ LANG=fr cola greeting "command launcher"
 Bonjour! command launcher
 ```
 
@@ -146,9 +146,9 @@ The above manifest tells command launcher that the `greeting` command requires a
 Now when you run the greeting command with `-h` or `--help`, you will get a nice help message like a native command:
 
 ```shell
-$ cdt greeting -h
+$ cola greeting -h
 Usage:
-  cdt greeting [flags]
+  cola greeting [flags]
 
 Examples:
   # Greeting with default language
@@ -168,7 +168,7 @@ But how can our script get the language passed from the `--language` flag? Comma
 ```bash
 #!/bin/bash
 
-LANG=${CDT_FLAG_LANGUAGE:-en}
+LANG=${COLA_FLAG_LANGUAGE:-en}
 
 if [ $LANG == "fr" ]; then
   echo "Bonjour! $1"
@@ -186,10 +186,10 @@ Now we have turned our bash script into a native-like command.
 Command launcher will automatically enable auto-completion for your command. Subcommand, flags, arguments will will be auto-completed when you type `[TAB][TAB]`, for example:
 
 ```shell
-$ cdt g[TAB][TAB]
+$ cola g[TAB][TAB]
 greeting - Simple greeting command
 grepx    - Enhanced grep command
 
-$ cdt greeting --[TAB][TAB]
-$ cdt greeting --language
+$ cola greeting --[TAB][TAB]
+$ cola greeting --language
 ```

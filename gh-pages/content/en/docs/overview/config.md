@@ -44,7 +44,7 @@ toc: true
 It is recommended to use the built-in `config` command to change the configurations. For duration type configurations, you can use `h`, `m`, and `s` to present hour, minute, and seconds. For example:
 
 ```bash
-cdt config user_consent_life 24h
+cola config user_consent_life 24h
 ```
 
 sets the user consent life to 24 hours.
