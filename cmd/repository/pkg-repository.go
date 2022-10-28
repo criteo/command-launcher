@@ -27,4 +27,6 @@ type PackageRepository interface {
 	Package(name string) (command.PackageManifest, error)
 
 	Command(group string, name string) (command.Command, error)
+
+	RepositoryFolder() (string, error)
 }

@@ -7,7 +7,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/criteo/command-launcher/cmd/remote"
+	"github.com/criteo/command-launcher/cmd/pkg"
 	"github.com/criteo/command-launcher/internal/command"
 )
 
@@ -52,8 +52,9 @@ func (reg *defaultRegistry) Load(repoDir string) error {
 			if !f.IsDir() && f.Type()&os.ModeSymlink != os.ModeSymlink {
 				continue
 			}
-			if dropinPkgManifestFile, err := os.Open(filepath.Join(repoDir, f.Name(), "manifest.mf")); err == nil {
-				manifest, err := remote.ReadManifest(dropinPkgManifestFile)
+			if manifestFile, err := os.Open(filepath.Join(repoDir, f.Name(), "manifest.mf")); err == nil {
+				defer manifestFile.Close()
+				manifest, err := pkg.ReadManifest(manifestFile)
 				if err == nil {
 					for _, cmd := range manifest.Commands() {
 						newCmd := command.NewDefaultCommandFromCopy(cmd, filepath.Join(repoDir, f.Name()))

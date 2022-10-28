@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func generateTestRegistryFile(reg Registry, numOfPkgs int, numOfCmds int) error {
+func generateTestRegistry(reg Registry, numOfPkgs int, numOfCmds int) error {
 	for i := 0; i < numOfPkgs; i++ {
 		pkg := defaultRegistryEntry{
 			PkgName:     fmt.Sprintf("test-%d", i),
@@ -50,7 +50,7 @@ func Test_defaultRegistry_Add(t *testing.T) {
 
 	reg, err := newDefaultRegistry()
 	assert.Nil(t, err)
-	err = generateTestRegistryFile(reg, nbOfPkgs, nbOfCmds)
+	err = generateTestRegistry(reg, nbOfPkgs, nbOfCmds)
 	assert.Nil(t, err)
 
 	pkgs := reg.AllPackages()
@@ -69,7 +69,7 @@ func Test_defaultRegistry_Remove(t *testing.T) {
 
 	reg, err := newDefaultRegistry()
 	assert.Nil(t, err)
-	err = generateTestRegistryFile(reg, nbOfPkgs, nbOfCmds)
+	err = generateTestRegistry(reg, nbOfPkgs, nbOfCmds)
 	assert.Nil(t, err)
 
 	err = reg.Remove("test-0")
@@ -97,7 +97,7 @@ func Test_defaultRegistry_Update(t *testing.T) {
 
 	reg, err := newDefaultRegistry()
 	assert.Nil(t, err)
-	err = generateTestRegistryFile(reg, nbOfPkgs, nbOfCmds)
+	err = generateTestRegistry(reg, nbOfPkgs, nbOfCmds)
 	assert.Nil(t, err)
 
 	pkg := defaultRegistryEntry{
@@ -121,7 +121,7 @@ func Test_defaultRegistry_Query(t *testing.T) {
 
 	reg, err := newDefaultRegistry()
 	assert.Nil(t, err)
-	err = generateTestRegistryFile(reg, nbOfPkgs, nbOfCmds)
+	err = generateTestRegistry(reg, nbOfPkgs, nbOfCmds)
 	assert.Nil(t, err)
 
 	pkg, err := reg.Package("test-0")

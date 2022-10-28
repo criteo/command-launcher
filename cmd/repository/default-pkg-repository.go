@@ -124,3 +124,7 @@ func (repo *defaultPackageRepository) Command(group string, name string) (comman
 	}
 	return cmd, nil
 }
+
+func (repo *defaultPackageRepository) RepositoryFolder() (string, error) {
+	return repo.RepoDir, nil
+}

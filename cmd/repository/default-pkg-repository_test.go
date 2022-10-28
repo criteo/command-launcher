@@ -140,3 +140,90 @@ func TestInstallCommand(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(localRepo.InstalledCommands()))
 }
+
+func Test_Load(t *testing.T) {
+	pathname, err := filepath.Abs("assets/simple_dropins/")
+	if err == nil {
+		fmt.Println("Absolute:", pathname)
+	}
+
+	reg, err := newDefaultRegistry()
+	assert.Nil(t, err)
+
+	repo, err := CreateLocalRepository(pathname, reg)
+	assert.Nil(t, err)
+
+	assert.Equal(t, 1, len(repo.InstalledGroupCommands()))
+	assert.Equal(t, 1, len(repo.InstalledExecutableCommands()))
+
+	assert.Equal(t, "wf", repo.InstalledGroupCommands()[0].Name())
+	assert.Equal(t, "debug-cdt-env", repo.InstalledExecutableCommands()[0].Name())
+}
+
+func Test_Load_Unexist_Folder(t *testing.T) {
+	pathname, err := filepath.Abs("assets/simple_dropins_not_exist/")
+	if err == nil {
+		fmt.Println("Absolute:", pathname)
+	}
+
+	reg, err := newDefaultRegistry()
+	assert.Nil(t, err)
+
+	repo, err := CreateLocalRepository(pathname, reg)
+	assert.Nil(t, err)
+
+	assert.Equal(t, 0, len(repo.InstalledGroupCommands()))
+	assert.Equal(t, 0, len(repo.InstalledExecutableCommands()))
+}
+
+func Test_Load_Malformat_Manifest(t *testing.T) {
+	pathname, err := filepath.Abs("assets/dropins_wrong_manifest_format/")
+	if err == nil {
+		fmt.Println("Absolute:", pathname)
+	}
+
+	reg, err := newDefaultRegistry()
+	assert.Nil(t, err)
+
+	repo, err := CreateLocalRepository(pathname, reg)
+	assert.Nil(t, err)
+
+	assert.Equal(t, 0, len(repo.InstalledGroupCommands()))
+	assert.Equal(t, 0, len(repo.InstalledExecutableCommands()))
+
+}
+
+func Test_Load_Multiple_Pkgs(t *testing.T) {
+	pathname, err := filepath.Abs("assets/dropins_multiple_pkgs/")
+	if err == nil {
+		fmt.Println("Absolute:", pathname)
+	}
+
+	reg, err := newDefaultRegistry()
+	assert.Nil(t, err)
+
+	repo, err := CreateLocalRepository(pathname, reg)
+	assert.Nil(t, err)
+
+	assert.Equal(t, 2, len(repo.InstalledGroupCommands()))
+	assert.Equal(t, 2, len(repo.InstalledExecutableCommands()))
+}
+
+func Test_Load_Symlink(t *testing.T) {
+	pathname, err := filepath.Abs("assets/symlink_dropins/")
+	if err == nil {
+		fmt.Println("Absolute:", pathname)
+	}
+
+	reg, err := newDefaultRegistry()
+	assert.Nil(t, err)
+
+	repo, err := CreateLocalRepository(pathname, reg)
+	assert.Nil(t, err)
+
+	assert.Equal(t, 1, len(repo.InstalledGroupCommands()))
+	assert.Equal(t, 1, len(repo.InstalledExecutableCommands()))
+
+	assert.Equal(t, "wf", repo.InstalledGroupCommands()[0].Name())
+	assert.Equal(t, "debug-cdt-env", repo.InstalledExecutableCommands()[0].Name())
+}

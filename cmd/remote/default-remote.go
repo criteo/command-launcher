@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/criteo/command-launcher/cmd/pkg"
 	"github.com/criteo/command-launcher/internal/command"
 	"github.com/criteo/command-launcher/internal/helper"
 	log "github.com/sirupsen/logrus"
@@ -142,7 +143,7 @@ func (remote *defaultRemoteRepository) Package(pkgName string, pkgVersion string
 		return nil, fmt.Errorf("error downloading %s: %v", url, err)
 	}
 
-	pkg, err := CreateZipPackage(pkgPathname)
+	pkg, err := pkg.CreateZipPackage(pkgPathname)
 	if err != nil {
 		return nil, fmt.Errorf("invalid package %s: %v", url, err)
 	}

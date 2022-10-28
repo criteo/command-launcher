@@ -14,7 +14,7 @@ func TestStore(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "test-reg.json")
 	reg, err := newJsonRegistry(path)
 	assert.Nil(t, err)
-	err = generateTestRegistryFile(reg, 1, 1)
+	err = generateTestRegistry(reg, 1, 1)
 	assert.Nil(t, err)
 
 	exeCmds := reg.ExecutableCommands()
@@ -32,7 +32,7 @@ func TestLoad(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "test-reg.json")
 	reg, err := newJsonRegistry(path)
 	assert.Nil(t, err)
-	err = generateTestRegistryFile(reg, 1, 1)
+	err = generateTestRegistry(reg, 1, 1)
 	assert.Nil(t, err)
 
 	exeCmds := reg.ExecutableCommands()
@@ -43,7 +43,7 @@ func TestAddRemove(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "test-reg.json")
 	reg, err := newJsonRegistry(path)
 	assert.Nil(t, err)
-	err = generateTestRegistryFile(reg, 1, 1)
+	err = generateTestRegistry(reg, 1, 1)
 	assert.Nil(t, err)
 
 	exeCmds := reg.ExecutableCommands()
@@ -70,7 +70,7 @@ func BenchmarkLoadLargeRegistry(t *testing.B) {
 	path := filepath.Join(t.TempDir(), "test-reg.json")
 	reg, err := newJsonRegistry(path)
 	assert.Nil(t, err)
-	err = generateTestRegistryFile(reg, numOfPkg, numOfCmd)
+	err = generateTestRegistry(reg, numOfPkg, numOfCmd)
 	assert.Nil(t, err)
 
 	exeCmds := reg.ExecutableCommands()

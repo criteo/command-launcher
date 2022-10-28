@@ -1,4 +1,4 @@
-package remote
+package pkg
 
 import (
 	"archive/zip"
