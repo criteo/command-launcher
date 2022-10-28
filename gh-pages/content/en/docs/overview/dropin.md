@@ -32,7 +32,7 @@ Dropin package is also a good way for you to develop and test your command launc
 
     If the dropin folder returned by the command doesn't exist, create it.
 1. create a package folder in the dropin folder, let's say, a package named `my-first-package`. You can named it whatever you want.
-1. add a `manifest.mf` in the newly created package folder, follow [MANIFEST.md](../manifest) guide to define your command in the manifest file. Note: you can copy your scripts in the package folder and use `{{.PackageDir}}` to reference the package location in your manifest file.
+1. add a `manifest.mf` in the newly created package folder, follow [MANIFEST](../manifest) guide to define your command in the manifest file. Note: you can copy your scripts in the package folder and use `{{.PackageDir}}` to reference the package location in your manifest file.
 1. run `cola` any time to test your command
 
 ## How to share a dropin package with others?
