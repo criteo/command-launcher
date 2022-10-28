@@ -15,17 +15,17 @@ type gitPackage struct {
 	folderPackage
 }
 
-func CreateGitRepo(urlAsString string) (command.Package, error) {
+func CreateGitRepoPackage(urlAsString string) (command.Package, error) {
 	if _, err := url.Parse(urlAsString); err != nil {
 		return nil, fmt.Errorf("invalid url or pathname: %s (%v)", urlAsString, err)
 	}
 
-	cloneDir, err := os.MkdirTemp("", "git-package-*")
+	tmpDir, err := os.MkdirTemp("", "git-package-*")
 	if err != nil {
 		return nil, fmt.Errorf("cannot create the folder to clone the git repo: %v", err)
 	}
 
-	mf, err := cloneRepo(urlAsString, cloneDir)
+	cloneDir, mf, err := cloneRepo(urlAsString, tmpDir)
 	if err != nil {
 		return nil, fmt.Errorf("git command has failed: %v", err)
 	}
@@ -39,10 +39,10 @@ func CreateGitRepo(urlAsString string) (command.Package, error) {
 		},
 	}
 
-	return &pkg, fmt.Errorf("not implemented yet")
+	return &pkg, nil
 }
 
-func cloneRepo(gitUrl string, targetDir string) (command.PackageManifest, error) {
+func cloneRepo(gitUrl string, targetDir string) (string, command.PackageManifest, error) {
 	ctx := exec.Command("git", "clone", gitUrl)
 	ctx.Dir = targetDir
 	ctx.Stdout = os.Stdout
@@ -50,15 +50,20 @@ func cloneRepo(gitUrl string, targetDir string) (command.PackageManifest, error)
 	ctx.Stdin = os.Stdin
 
 	if err := ctx.Run(); err != nil {
-		return nil, fmt.Errorf("git command has failed: %v", err)
+		return "", nil, fmt.Errorf("git command has failed: %v", err)
 	}
 
 	repoDir := strings.ReplaceAll(filepath.Base(gitUrl), filepath.Ext(gitUrl), "")
 	manifestFile, err := os.Open(filepath.Join(targetDir, repoDir, "manifest.mf"))
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 	defer manifestFile.Close()
 
-	return ReadManifest(manifestFile)
+	mf, err := ReadManifest(manifestFile)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return filepath.Join(targetDir, repoDir), mf, nil
 }
