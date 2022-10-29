@@ -111,6 +111,7 @@ func (cmd *DefaultCommand) Execute(envVars []string, args ...string) (int, error
 	ctx.Stderr = os.Stderr
 	ctx.Stdin = os.Stdin
 
+	log.Debug("Command start executing")
 	if err := ctx.Run(); err != nil {
 		log.Debug("Command execution err: ", err)
 		if exitError, ok := err.(*exec.ExitError); ok {
