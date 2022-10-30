@@ -26,7 +26,6 @@ The remote configuration is a JSON file contains the configuration items that yo
 
 For example, you can setup `self_update_enabled` to `true` in the remote configuration file. This will ensure that all users get the latest version of command launcher automatically.
 
-
 ### Remote configuration synchronise cycle
 
 It is always nice to be able to change the configuration temporarily. Command launcher will check the remote configuration periodically. You can setup this check period from the configuration: `remote_config_check_cycle`.
@@ -42,7 +41,6 @@ For example, the following configuration set up a 24-hour check period.
 ```
 
 > For the configuration items, which are missing from the remote configuration. The local value is always respected.
-
 
 ## Command auto-update: setup remote registry
 
@@ -87,7 +85,7 @@ You can host this `index.json` file on an http server, for example: `https://my-
 
 To make command launcher be aware of the remote package registry, setup the configuration:
 
-```
+```shell
 cola config command_repository_base_url https://my-company.com/cola-remote-registry
 ```
 
@@ -150,7 +148,7 @@ endPartition: 9
 
 The binary download URL must follow the convention:
 
-```
+```text
 [SELF_UPDATE_BASE_URL]/{version}/{binaryName}_{OS}_{ARCH}_{version}{extension}
 ```
 
@@ -164,7 +162,6 @@ The `[SELF_UPDATE_BASE_URL]` should be defined in `self_update_base_url` configu
 | linux   | arm64        | no         |
 | darwin  | amd64        | yes        |
 | darwin  | arm64        | yes        |
-
 
 ## Custom command launcher with system package
 
