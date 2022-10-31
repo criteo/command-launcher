@@ -40,6 +40,12 @@ jobs:
         node-version: '16'
         cache: 'npm'
         cache-dependency-path: gh-pages/package-lock.json
+    
+    - name: Setup Git
+      uses: lyricwulf/abc@v1
+      with:
+        linux: git
+        windows: git
 
     - name: generate vars
       id: vars
