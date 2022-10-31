@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/criteo/command-launcher/internal/helper"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,7 +20,7 @@ func createGitRepo(t *testing.T) string {
 	err = ctx.Run()
 	assert.Nil(t, err)
 
-	err = copyFile("assets/folder-package/manifest.mf", filepath.Join(repoDir, "manifest.mf"))
+	err = helper.CopyLocalFile("assets/folder-package/manifest.mf", filepath.Join(repoDir, "manifest.mf"), false)
 	assert.Nil(t, err)
 
 	ctx = exec.Command("git", "add", "manifest.mf")
