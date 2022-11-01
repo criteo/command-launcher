@@ -30,6 +30,9 @@ func createGitRepo(t *testing.T) string {
 
 	ctx = exec.Command("git", "commit", "-m", "initial import", "--author", "tester <test@example.com>")
 	ctx.Dir = repoDir
+	ctx.Stdout = os.Stdout
+	ctx.Stderr = os.Stderr
+	ctx.Stdin = os.Stdin
 	err = ctx.Run()
 	assert.Nil(t, err)
 
