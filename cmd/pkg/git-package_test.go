@@ -15,26 +15,26 @@ func createGitRepo(t *testing.T) string {
 	err := os.Mkdir(repoDir, 0777)
 	assert.Nil(t, err)
 
-	ctx := exec.Command("git", "init")
-	ctx.Dir = repoDir
-	err = ctx.Run()
-	assert.Nil(t, err)
+	commands := [...][]string{
+		{"init"},
+		{"add", "manifest.mf"},
+		{"config", "user.email", "test@example.com"},
+		{"config", "user.name", "tester"},
+		{"commit", "-m", "initial import"},
+	}
 
 	err = helper.CopyLocalFile("assets/folder-package/manifest.mf", filepath.Join(repoDir, "manifest.mf"), false)
 	assert.Nil(t, err)
 
-	ctx = exec.Command("git", "add", "manifest.mf")
-	ctx.Dir = repoDir
-	err = ctx.Run()
-	assert.Nil(t, err)
-
-	ctx = exec.Command("git", "commit", "-m", "initial import", "--author", "tester <test@example.com>")
-	ctx.Dir = repoDir
-	ctx.Stdout = os.Stdout
-	ctx.Stderr = os.Stderr
-	ctx.Stdin = os.Stdin
-	err = ctx.Run()
-	assert.Nil(t, err)
+	for _, cmd := range commands {
+		ctx := exec.Command("git", cmd...)
+		ctx.Dir = repoDir
+		ctx.Stdout = os.Stdout
+		ctx.Stderr = os.Stderr
+		ctx.Stdin = os.Stdin
+		err = ctx.Run()
+		assert.Nil(t, err)
+	}
 
 	return repoDir
 }
