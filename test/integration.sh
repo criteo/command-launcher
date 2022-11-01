@@ -5,6 +5,7 @@ SCRIPT_DIR=${SCRIPT_DIR:-$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/
 SCRIPT_DIR=${SCRIPT_DIR//\\//}
 echo "integration test directory: $SCRIPT_DIR"
 
+EXIT_CODE=0
 
 # create output folder
 OUTPUT_DIR=$SCRIPT_DIR/output
@@ -36,7 +37,7 @@ if [ $# -ne 0 ]; then
       echo "- DONE"
     else
       echo "- FAILED"
-      exit 1
+      EXIT_CODE=1
     fi
 
     echo ""
@@ -56,6 +57,13 @@ else
     CL_HOME=$CL_HOME \
     $f
 
+    if [ $? -eq 0 ]; then
+      echo "- DONE"
+    else
+      echo "- FAILED"
+      EXIT_CODE=1
+    fi
+
     echo ""
   done
 fi
@@ -65,3 +73,6 @@ fi
 ##
 echo "clean up"
 rm -rf $OUTPUT_DIR
+
+
+exit $EXIT_CODE

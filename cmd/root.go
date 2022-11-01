@@ -134,6 +134,8 @@ func initCmdUpdater() {
 		Timeout:              viper.GetDuration(config.SELF_UPDATE_TIMEOUT_KEY),
 		EnableCI:             viper.GetBool(config.CI_ENABLED_KEY),
 		PackageLockFile:      viper.GetString(config.PACKAGE_LOCK_FILE_KEY),
+		VerifyChecksum:       viper.GetBool(config.VERIFY_PACKAGE_CHECKSUM_KEY),
+		VerifySignature:      viper.GetBool(config.VERIFY_PACKAGE_SIGNATURE_KEY),
 	}
 }
 
@@ -212,6 +214,14 @@ func installCommands(repo repository.PackageRepository) error {
 			if err != nil {
 				log.Error(err)
 				errors = append(errors, fmt.Sprintf("cannot get the package %s: %v", pkgName, err))
+				continue
+			}
+			if ok, err := remote.Verify(pkg,
+				viper.GetBool(config.VERIFY_PACKAGE_CHECKSUM_KEY),
+				viper.GetBool(config.VERIFY_PACKAGE_SIGNATURE_KEY),
+			); !ok || err != nil {
+				log.Error(err)
+				errors = append(errors, fmt.Sprintf("failed to verify package %s, skip it: %v", pkgName, err))
 				continue
 			}
 			err = repo.Install(pkg)

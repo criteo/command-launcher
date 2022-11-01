@@ -128,6 +128,7 @@ func (remote *defaultRemoteRepository) QueryLatestPackageInfo(pkgName string, fi
 	return nil, fmt.Errorf("%s in remote repository: %s. The package exists, but no version match the query filter", ErrMsg_PackageNotFound, pkgName)
 }
 
+// get package from remote registry, this will download the package
 func (remote *defaultRemoteRepository) Package(pkgName string, pkgVersion string) (command.Package, error) {
 	tmpDir, err := os.MkdirTemp("", "package-download-*")
 	if err != nil {
@@ -148,6 +149,29 @@ func (remote *defaultRemoteRepository) Package(pkgName string, pkgVersion string
 	}
 
 	return pkg, nil
+}
+
+func (remote *defaultRemoteRepository) PackageInfo(pkgName string, pkgVersion string) (*PackageInfo, error) {
+	return remote.findPackage(pkgName, pkgVersion)
+}
+
+func (remote *defaultRemoteRepository) Verify(pkg command.Package, verifyChecksum, verifySignature bool) (bool, error) {
+	pkgName := pkg.Name()
+	pkgVersion := pkg.Version()
+	pkgInfo, err := remote.PackageInfo(pkgName, pkgVersion)
+	if err != nil {
+		return false, fmt.Errorf("Failed to get package information %s: %v\n", pkgName, err)
+	}
+	if verifyChecksum {
+		if ok, err := pkg.VerifyChecksum(pkgInfo.Checksum); !ok || err != nil {
+			return false, err
+		}
+	}
+	if verifySignature {
+		// TODO: add signature verification here
+		return true, nil
+	}
+	return true, nil
 }
 
 func (remote *defaultRemoteRepository) findPackage(name string, version string) (*PackageInfo, error) {

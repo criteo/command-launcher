@@ -65,6 +65,13 @@ type PackageManifest interface {
 type Package interface {
 	PackageManifest
 
+	// verify the sha256 checksum
+	VerifyChecksum(checksum string) (bool, error)
+
+	// verify the package signature
+	VerifySignature(signature string) (bool, error)
+
+	// install package to a local repository
 	InstallTo(pathname string) (PackageManifest, error)
 }
 
