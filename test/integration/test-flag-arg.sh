@@ -54,7 +54,7 @@ echo $RESULT | grep -q "cola flag: Joe"
 if [ $? -eq 0 ]; then
   echo "OK"
 else
-  echo "KO - no environment variable CL_FLAG_NAME found"
+  echo "KO - no environment variable COLA_FLAG_NAME found"
   exit 1
 fi
 
@@ -62,7 +62,7 @@ echo $RESULT | grep -q "cola flag: French"
 if [ $? -eq 0 ]; then
   echo "OK"
 else
-  echo "KO - no environment variable CL_FLAG_LANGUAGE found"
+  echo "KO - no environment variable COLA_FLAG_LANGUAGE found"
   exit 1
 fi
 
@@ -70,7 +70,7 @@ echo $RESULT | grep -q "cola arg: world"
 if [ $? -eq 0 ]; then
   echo "OK"
 else
-  echo "KO - no environment variable CL_ARG_1 found"
+  echo "KO - no environment variable COLA_ARG_1 found"
   exit 1
 fi
 
