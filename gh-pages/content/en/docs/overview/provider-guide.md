@@ -38,11 +38,9 @@ Command launcher synchronizes commands from the remote command repository. Comma
 
 ## Remote command repository
 
-A remote command repository is a simple http server, with following endpoints:
+A remote command repository is a simple http server with following endpoints:
 
-- `/index.json`: package registry, which returns the list of packages available.
-- `/version`: returns the metadata of the latest version of command launcher.
-- `/{version}/{binaryName}_{OS}_{ARCH}_{version}{extension}`: endpoints that download command launcher binary.
+- `/index.json`, which returns the list of packages available.
 
 It is up-to-you to implement such an http server. You can configure command launcher to point to your remote repository with following command:
 
@@ -50,12 +48,18 @@ It is up-to-you to implement such an http server. You can configure command laun
 cola config command_repository_base_url https://my-remote-repository/root/url
 ```
 
-You need to config an endpoint to auto update command launcher as well:
+> NOTE: the command launcher will search for [command_repository_base_url]/index.json for the remote registry. You can also use a local folder as the "base url", for example, `/tmp/cola-remote-repository/`. In this case, you need to create the `index.json` registry file in the folder. This is useful for test purpose.
+
+You need to config an endpoint to auto update command launcher itself as well:
 
 ```shell
-cola config self_update_base_url https://my-remote-repository/cola/root/url
 cola config self_update_latest_version_url https://my-remote-repository/cola/root/url/version
+cola config self_update_base_url https://my-remote-repository/cola/root/url
 ```
+
+The `self_update_latest_version_url` configuration defines the url to download the metadata of command launchers's latest version in YAML or JSON format, see: [Command Launcher version metadata](#command-launcher-version-metadata)
+
+The `self_update_base_url` configuratin defines the base url to download command launcher binary. It follows the following pattern: `[SELF_UPDATE_BASE_URL]/{version}/{binaryName}_{OS}_{ARCH}_{version}{extension}`. If you build your own binary, you should make it available following the same convention.
 
 ### Remote repository registry /index.json
 
@@ -69,6 +73,7 @@ The following example demonstrates a registry, which has three packages. Note th
     "name": "hotfix",
     "version": "1.0.0-44733",
     "checksum": "5f5f47e4966b984a4c7d33003dd2bbe8fff5d31bf2bee0c6db3add099e4542b3",
+    "url": "https://the-url-of-the-env-package/any-name.zip",
     "startPartition": 0,
     "endPartition": 9
   },
@@ -76,6 +81,7 @@ The following example demonstrates a registry, which has three packages. Note th
     "name": "hotfix",
     "version": "1.0.0-45149",
     "checksum": "773a919429e50346a7a002eb3ecbf2b48d058bae014df112119a67fc7d9a3598",
+    "url": "https://the-url-of-the-env-package/hotfix-1.0.0-45149.zip",
     "startPartition": 6,
     "endPartition": 8
   },
@@ -90,11 +96,11 @@ The following example demonstrates a registry, which has three packages. Note th
 ]
 ```
 
-> Please note that for "env" package, the presence of a `url` field indicates a different location to download the package than the url defined in configuration: `command_repository_base_url`. It enables the distributed package storage.
-
-### Command launcher version metadata /version
+### Command launcher version metadata
 
 Command launcher update itself by checking an endpoint defined in config `self_update_latest_version_url`. This endpoint returns the command version metadata:
+
+In JSON
 
 ```json
 {
@@ -104,6 +110,20 @@ Command launcher update itself by checking an endpoint defined in config `self_u
     "endPartition": 9
 }
 ```
+
+Or in YAML
+
+```YAML
+version: "45861"
+releaseNotes: |
+  * feature 1
+  * feature 2
+  * feature 3
+startPartition: 0
+endPartition: 9
+```
+
+> The version metadata endpoint supports both YAML and JSON format. It is recommandded to use YAML for this endpoint because of the multiple line string support in YAML
 
 You can also target a small portion of your command user by specifying the partition. More details see: [Progressive Rollout](#progressive-rollout)
 
@@ -131,11 +151,9 @@ See [manifest.mf specification](../manifest)
 
 ## Upload your package, and update package registry
 
-Once you have your command package ready, you can upload it to the remote command repository. Depends on how you implement the http server of your remote command repository, the upload process could be different, The only requirement here is to ensure your package can be downloaded from: `https://command_repository_base_url/[package-name]-[package-version].pkg`
+Once you have your command package ready, you can upload it to a remote server that command launcher have access. Depends on how you implement the http server of your remote command repository, the upload process could be different, The only requirement here is to ensure your package is accessible from command launcher.
 
-> Upload your package to the remote repository server is optional, you can upload your package to any http server that can be accessed by command launcher, and specify the url in the remote repository index.json
-
-You also need to update the [index.json](#remote-repository-registry-indexjson) endpoint to include your package in it.
+You also need to update the [index.json](#remote-repository-registry-indexjson) endpoint to include your package in it and specify the package url in the `url` property.
 
 ## Progressive Rollout
 
