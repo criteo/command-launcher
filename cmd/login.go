@@ -1,14 +1,18 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"syscall"
 
+	"github.com/criteo/command-launcher/internal/command"
 	"github.com/criteo/command-launcher/internal/context"
 	"github.com/criteo/command-launcher/internal/helper"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type LoginFlags struct {
@@ -29,7 +33,7 @@ func defaultUsername() string {
 	return user
 }
 
-func AddLoginCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
+func AddLoginCmd(rootCmd *cobra.Command, appCtx context.LauncherContext, loginHook command.Command) {
 	loginCmd := &cobra.Command{
 		Use:   "login",
 		Short: "Login to use services",
@@ -73,10 +77,25 @@ The credential will be stored in your system vault.`, appCtx.PasswordEnvVar()),
 				}
 			}
 
-			fmt.Println()
-
-			helper.SetUsername(username)
-			helper.SetPassword(passwd)
+			// call system login hook if defined
+			if loginHook != nil {
+				log.Debug("calling login system hook")
+				_, hookOutput, err := loginHook.ExecuteWithOutput([]string{}, username, passwd)
+				if err != nil {
+					return err
+				}
+				credentials, err := parseLoginHookOutput(hookOutput)
+				if err != nil {
+					return err
+				}
+				for k, v := range credentials {
+					helper.SetSecret(k, v)
+				}
+			} else {
+				log.Debug("no login system hook registered, use default")
+				helper.SetUsername(username)
+				helper.SetPassword(passwd)
+			}
 			return nil
 		},
 	}
@@ -84,4 +103,12 @@ The credential will be stored in your system vault.`, appCtx.PasswordEnvVar()),
 	loginCmd.Flags().StringVarP(&loginFlags.password, "password", "p", "", "User password")
 
 	rootCmd.AddCommand(loginCmd)
+}
+
+func parseLoginHookOutput(output string) (map[string]string, error) {
+	credentials := map[string]string{}
+	if err := json.Unmarshal([]byte(output), &credentials); err != nil {
+		return nil, err
+	}
+	return credentials, nil
 }

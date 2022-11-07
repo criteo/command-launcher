@@ -7,6 +7,8 @@ import (
 	"os"
 
 	"github.com/criteo/command-launcher/internal/command"
+	"github.com/criteo/command-launcher/internal/config"
+	"github.com/spf13/viper"
 )
 
 /*
@@ -25,6 +27,7 @@ type defaultRegistry struct {
 	packages       map[string]defaultRegistryEntry
 	groupCmds      map[string]*command.DefaultCommand // key is in form of [group]_[cmd name] ex. "_hotfix"
 	executableCmds map[string]*command.DefaultCommand // key is in form of [group]_[cmd name] ex. "hotfix_create"
+	systemCmds     map[string]command.Command         // key is the predefined system command name
 }
 
 type defaultRegistryEntry struct {
@@ -69,6 +72,7 @@ func LoadRegistry(pathname string) (*defaultRegistry, error) {
 		packages:       make(map[string]defaultRegistryEntry),
 		groupCmds:      make(map[string]*command.DefaultCommand),
 		executableCmds: make(map[string]*command.DefaultCommand),
+		systemCmds:     make(map[string]command.Command),
 	}
 
 	_, err := os.Stat(pathname)
@@ -166,6 +170,20 @@ func (reg *defaultRegistry) GroupCommands() []command.Command {
 	return cmds
 }
 
+func (reg *defaultRegistry) SystemLoginCommand() command.Command {
+	if cmd, exist := reg.systemCmds[SYSTEM_LOGIN_COMMAND]; exist {
+		return cmd
+	}
+	return nil
+}
+
+func (reg *defaultRegistry) SystemMetricsCommand() command.Command {
+	if cmd, exist := reg.systemCmds[SYSTEM_METRICS_COMMAND]; exist {
+		return cmd
+	}
+	return nil
+}
+
 func (reg *defaultRegistry) ExecutableCommands() []command.Command {
 	cmds := make([]command.Command, 0)
 
@@ -178,6 +196,8 @@ func (reg *defaultRegistry) ExecutableCommands() []command.Command {
 }
 
 func (reg *defaultRegistry) extractCmds() {
+	sysPkgName := viper.GetString(config.SYSTEM_PACKAGE_KEY)
+
 	reg.groupCmds = make(map[string]*command.DefaultCommand)
 	reg.executableCmds = make(map[string]*command.DefaultCommand)
 	// initiate group cmds and exectuable cmds map
@@ -186,12 +206,26 @@ func (reg *defaultRegistry) extractCmds() {
 		if pkg.PkgCommands != nil {
 			for _, cmd := range pkg.PkgCommands {
 				newCmd := cmd
-				if cmd.CmdType == "group" {
+				switch cmd.CmdType {
+				case "group":
 					reg.groupCmds[fmt.Sprintf("_%s", cmd.Name())] = newCmd
-				} else {
+				case "executable":
 					reg.executableCmds[fmt.Sprintf("%s_%s", cmd.Group(), cmd.Name())] = newCmd
+				case "system":
+					if sysPkgName != "" && pkg.Name() == sysPkgName {
+						reg.extractSystemCmds(newCmd)
+					}
 				}
 			}
 		}
+	}
+}
+
+func (reg *defaultRegistry) extractSystemCmds(cmd command.Command) {
+	switch cmd.Name() {
+	case SYSTEM_LOGIN_COMMAND:
+		reg.systemCmds[SYSTEM_LOGIN_COMMAND] = cmd
+	case SYSTEM_METRICS_COMMAND:
+		reg.systemCmds[SYSTEM_METRICS_COMMAND] = cmd
 	}
 }

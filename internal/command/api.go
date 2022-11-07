@@ -47,6 +47,8 @@ type Command interface {
 
 	Execute(envVars []string, args ...string) (int, error)
 
+	ExecuteWithOutput(envVars []string, args ...string) (int, string, error)
+
 	ExecuteValidArgsCmd(envVars []string, args ...string) (int, string, error)
 
 	ExecuteFlagValuesCmd(envVars []string, args ...string) (int, string, error)

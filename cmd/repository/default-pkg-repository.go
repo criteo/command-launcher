@@ -125,6 +125,13 @@ func (repo *defaultPackageRepository) InstalledExecutableCommands() []command.Co
 	return repo.registry.ExecutableCommands()
 }
 
+func (repo *defaultPackageRepository) InstalledSystemCommands() SystemCommands {
+	return SystemCommands{
+		Login:   repo.registry.SystemLoginCommand(),
+		Metrics: repo.registry.SystemMetricsCommand(),
+	}
+}
+
 func (repo *defaultPackageRepository) Package(name string) (command.PackageManifest, error) {
 	return repo.registry.Package(name)
 }
