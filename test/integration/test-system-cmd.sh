@@ -24,7 +24,9 @@ $CL_PATH config usage_metrics_enabled true
 
 # setup remote package using local file
 echo "> test download remote package with local filer"
-RESULT=$($OUTPUT_DIR/cl config command_repository_base_url file://${SCRIPT_DIR}/../remote-repo)
+NATIVE_SCRIPT_DIR=${SCRIPT_DIR/\/c\//C:/}
+echo $NATIVE_SCRIPT_DIR
+RESULT=$($OUTPUT_DIR/cl config command_repository_base_url file://${NATIVE_SCRIPT_DIR}/../remote-repo)
 RESULT=$($CL_PATH)
 
 echo $RESULT | grep -q "hello"
@@ -80,8 +82,7 @@ fi
 echo "> test login extension enabled by system package config"
 # set system package name
 RESULT=$($CL_PATH config system_package system-pkg-demo)
-RESULT=$($CL_PATH login -u test-user -p test-password)
-# $CL_PATH bonjour-consent
+$CL_PATH login -u test-user -p test-password
 RESULT=$($CL_PATH bonjour-consent)
 
 echo "* should use username returned from extension"
