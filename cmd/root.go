@@ -81,6 +81,7 @@ func postRun(cmd *cobra.Command, args []string) {
 		if err != nil {
 			log.Errorln("Metrics usage ♾️ sending has failed")
 		}
+		log.Debug("Successfully send metrics")
 	}
 }
 
