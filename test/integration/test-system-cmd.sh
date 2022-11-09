@@ -26,9 +26,9 @@ $CL_PATH config usage_metrics_enabled true
 echo "> test download remote package with local filer"
 # work around to make sure the native path on windows
 NATIVE_SCRIPT_DIR=${SCRIPT_DIR/\/c\//C:/}
-NATIVE_SCRIPT_DIR=${SCRIPT_DIR/\/d\//D:/}
-NATIVE_SCRIPT_DIR=${SCRIPT_DIR/\/e\//E:/}
-NATIVE_SCRIPT_DIR=${SCRIPT_DIR/\/f\//F:/}
+NATIVE_SCRIPT_DIR=${NATIVE_SCRIPT_DIR/\/d\//D:/}
+NATIVE_SCRIPT_DIR=${NATIVE_SCRIPT_DIR/\/e\//E:/}
+NATIVE_SCRIPT_DIR=${NATIVE_SCRIPT_DIR/\/f\//F:/}
 echo $NATIVE_SCRIPT_DIR
 RESULT=$($OUTPUT_DIR/cl config command_repository_base_url file://${NATIVE_SCRIPT_DIR}/../remote-repo)
 RESULT=$($CL_PATH)
