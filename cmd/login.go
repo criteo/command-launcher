@@ -77,6 +77,8 @@ The credential will be stored in your system vault.`, appCtx.PasswordEnvVar()),
 				}
 			}
 
+			fmt.Println()
+
 			// call system login hook if defined
 			if loginHook != nil {
 				log.Debug("calling login system hook")
