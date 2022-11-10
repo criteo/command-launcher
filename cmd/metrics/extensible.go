@@ -9,8 +9,6 @@ import (
 )
 
 type extensibleMetrics struct {
-	base Metrics
-
 	hook command.Command
 
 	CmdName        string
