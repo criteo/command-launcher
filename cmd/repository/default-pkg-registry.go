@@ -1,11 +1,13 @@
 package repository
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
+	"path/filepath"
 
+	log "github.com/sirupsen/logrus"
+
+	"github.com/criteo/command-launcher/cmd/pkg"
 	"github.com/criteo/command-launcher/internal/command"
 )
 
@@ -22,89 +24,56 @@ Further improvements could store registry as indexes, and laze load
 further information when necessary to reduce the startup time
 */
 type defaultRegistry struct {
-	packages       map[string]defaultRegistryEntry
-	groupCmds      map[string]*command.DefaultCommand // key is in form of [group]_[cmd name] ex. "_hotfix"
-	executableCmds map[string]*command.DefaultCommand // key is in form of [group]_[cmd name] ex. "hotfix_create"
+	packages       map[string]command.PackageManifest
+	groupCmds      map[string]command.Command // key is in form of [group]_[cmd name] ex. "_hotfix"
+	executableCmds map[string]command.Command // key is in form of [group]_[cmd name] ex. "hotfix_create"
 }
 
-type defaultRegistryEntry struct {
-	PkgName     string                    `json:"pkgName"`
-	PkgVersion  string                    `json:"version"`
-	PkgCommands []*command.DefaultCommand `json:"cmds"`
-}
-
-func (pkg *defaultRegistryEntry) Name() string {
-	return pkg.PkgName
-}
-
-func (pkg *defaultRegistryEntry) Version() string {
-	return pkg.PkgVersion
-}
-
-func (pkg *defaultRegistryEntry) Commands() []command.Command {
-	cmds := []command.Command{}
-	for _, c := range pkg.PkgCommands {
-		cmds = append(cmds, c)
-	}
-	return cmds
-}
-
-func NewRegistryEntry(pkg command.Package, pkgDir string) defaultRegistryEntry {
-	defPkg := defaultRegistryEntry{
-		PkgName:     pkg.Name(),
-		PkgVersion:  pkg.Version(),
-		PkgCommands: []*command.DefaultCommand{},
+func newDefaultRegistry() (Registry, error) {
+	reg := defaultRegistry{
+		packages:       make(map[string]command.PackageManifest),
+		groupCmds:      make(map[string]command.Command),
+		executableCmds: make(map[string]command.Command),
 	}
 
-	for _, cmd := range pkg.Commands() {
-		newCmd := command.NewDefaultCommandFromCopy(cmd, pkgDir)
-		defPkg.PkgCommands = append(defPkg.PkgCommands, newCmd)
-	}
-
-	return defPkg
+	return &reg, nil
 }
 
-func LoadRegistry(pathname string) (*defaultRegistry, error) {
-	registry := defaultRegistry{
-		packages:       make(map[string]defaultRegistryEntry),
-		groupCmds:      make(map[string]*command.DefaultCommand),
-		executableCmds: make(map[string]*command.DefaultCommand),
-	}
-
-	_, err := os.Stat(pathname)
+func (reg *defaultRegistry) Load(repoDir string) error {
+	_, err := os.Stat(repoDir)
 	if !os.IsNotExist(err) {
-		payload, err := ioutil.ReadFile(pathname)
+		files, err := os.ReadDir(repoDir)
 		if err != nil {
-			return nil, err
+			log.Errorf("cannot read the repo dir: %v", err)
+			return err
 		}
 
-		err = json.Unmarshal(payload, &registry.packages)
-		if err != nil {
-			return nil, err
+		for _, f := range files {
+			if !f.IsDir() && f.Type()&os.ModeSymlink != os.ModeSymlink {
+				continue
+			}
+			if manifestFile, err := os.Open(filepath.Join(repoDir, f.Name(), "manifest.mf")); err == nil {
+				defer manifestFile.Close()
+				manifest, err := pkg.ReadManifest(manifestFile)
+				if err == nil {
+					for _, cmd := range manifest.Commands() {
+						newCmd := command.NewDefaultCommandFromCopy(cmd, filepath.Join(repoDir, f.Name()))
+						if newCmd.CmdType == "group" {
+							reg.groupCmds[fmt.Sprintf("_%s", cmd.Name())] = newCmd
+						} else {
+							reg.executableCmds[fmt.Sprintf("%s_%s", cmd.Group(), cmd.Name())] = newCmd
+						}
+					}
+				}
+			}
 		}
 	}
 
-	registry.extractCmds()
-
-	return &registry, nil
+	return err
 }
 
-func (reg *defaultRegistry) Store(pathname string) error {
-	payload, err := json.Marshal(reg.packages)
-	if err != nil {
-		return fmt.Errorf("cannot encode in json: %v", err)
-	}
-
-	err = ioutil.WriteFile(pathname, payload, 0755)
-	if err != nil {
-		return fmt.Errorf("cannot write registry file: %v", err)
-	}
-
-	return nil
-}
-
-func (reg *defaultRegistry) Add(pkg defaultRegistryEntry) error {
-	reg.packages[pkg.PkgName] = pkg
+func (reg *defaultRegistry) Add(pkg command.PackageManifest) error {
+	reg.packages[pkg.Name()] = pkg
 	reg.extractCmds()
 	return nil
 }
@@ -115,8 +84,8 @@ func (reg *defaultRegistry) Remove(pkgName string) error {
 	return nil
 }
 
-func (reg *defaultRegistry) Update(pkg defaultRegistryEntry) error {
-	reg.packages[pkg.PkgName] = pkg
+func (reg *defaultRegistry) Update(pkg command.PackageManifest) error {
+	reg.packages[pkg.Name()] = pkg
 	reg.extractCmds()
 	return nil
 }
@@ -125,14 +94,14 @@ func (reg *defaultRegistry) AllPackages() []command.PackageManifest {
 	pkgs := []command.PackageManifest{}
 	for _, p := range reg.packages {
 		newPkg := p
-		pkgs = append(pkgs, &newPkg)
+		pkgs = append(pkgs, newPkg)
 	}
 	return pkgs
 }
 
 func (reg *defaultRegistry) Package(name string) (command.PackageManifest, error) {
 	if pkg, exists := reg.packages[name]; exists {
-		return &pkg, nil
+		return pkg, nil
 	}
 	return nil, fmt.Errorf("cannot find the package '%s'", name)
 }
@@ -178,15 +147,15 @@ func (reg *defaultRegistry) ExecutableCommands() []command.Command {
 }
 
 func (reg *defaultRegistry) extractCmds() {
-	reg.groupCmds = make(map[string]*command.DefaultCommand)
-	reg.executableCmds = make(map[string]*command.DefaultCommand)
+	reg.groupCmds = make(map[string]command.Command)
+	reg.executableCmds = make(map[string]command.Command)
 	// initiate group cmds and exectuable cmds map
 	// the key is in format of [group]_[cmd name]
 	for _, pkg := range reg.packages {
-		if pkg.PkgCommands != nil {
-			for _, cmd := range pkg.PkgCommands {
+		if pkg.Commands() != nil {
+			for _, cmd := range pkg.Commands() {
 				newCmd := cmd
-				if cmd.CmdType == "group" {
+				if cmd.Type() == "group" {
 					reg.groupCmds[fmt.Sprintf("_%s", cmd.Name())] = newCmd
 				} else {
 					reg.executableCmds[fmt.Sprintf("%s_%s", cmd.Group(), cmd.Name())] = newCmd
