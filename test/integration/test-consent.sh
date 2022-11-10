@@ -20,7 +20,7 @@ $CL_PATH login -u test-user -p test-password
 
 echo "> test consent disabled"
 $CL_PATH config enable_user_consent false
-RESULT=$($CL_PATH bonjour)
+RESULT=$($CL_PATH bonjour-consent)
 echo $RESULT
 echo $RESULT | grep -q "test-user"
 if [ $? -eq 0 ]; then
@@ -40,7 +40,7 @@ fi
 
 echo "> test consent enabled - user refused"
 $CL_PATH config enable_user_consent true
-RESULT=$(echo 'n' | $CL_PATH bonjour)
+RESULT=$(echo 'n' | $CL_PATH bonjour-consent)
 echo $RESULT
 echo $RESULT | grep -q "authorize the access?"
 if [ $? -eq 0 ]; then
@@ -68,7 +68,7 @@ fi
 
 echo "> test consent enabled - user authorized"
 $CL_PATH config enable_user_consent true
-RESULT=$(echo 'y' | $CL_PATH bonjour)
+RESULT=$(echo 'y' | $CL_PATH bonjour-consent)
 echo $RESULT
 echo $RESULT | grep -q "authorize the access?"
 if [ $? -eq 0 ]; then
@@ -96,7 +96,7 @@ fi
 
 echo "> test consent authorized - should not request authorization again"
 $CL_PATH config enable_user_consent true
-RESULT=$(echo 'y' | $CL_PATH bonjour)
+RESULT=$(echo 'y' | $CL_PATH bonjour-consent)
 echo $RESULT
 echo $RESULT | grep -q "authorize the access?"
 if [ $? -eq 0 ]; then
@@ -109,7 +109,7 @@ fi
 echo "> test consent authorized - should request authorization once expired"
 sleep 5
 $CL_PATH config enable_user_consent true
-RESULT=$(echo 'y' | $CL_PATH bonjour)
+RESULT=$(echo 'y' | $CL_PATH bonjour-consent)
 echo $RESULT
 echo $RESULT | grep -q "authorize the access?"
 if [ $? -eq 0 ]; then

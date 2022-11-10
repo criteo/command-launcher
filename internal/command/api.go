@@ -47,6 +47,8 @@ type Command interface {
 
 	Execute(envVars []string, args ...string) (int, error)
 
+	ExecuteWithOutput(envVars []string, args ...string) (int, string, error)
+
 	ExecuteValidArgsCmd(envVars []string, args ...string) (int, string, error)
 
 	ExecuteFlagValuesCmd(envVars []string, args ...string) (int, string, error)
@@ -65,6 +67,13 @@ type PackageManifest interface {
 type Package interface {
 	PackageManifest
 
+	// verify the sha256 checksum
+	VerifyChecksum(checksum string) (bool, error)
+
+	// verify the package signature
+	VerifySignature(signature string) (bool, error)
+
+	// install package to a local repository
 	InstallTo(pathname string) (PackageManifest, error)
 }
 

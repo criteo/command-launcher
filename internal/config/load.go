@@ -104,6 +104,13 @@ func setDefaultConfig() {
 
 	viper.SetDefault(ENABLE_USER_CONSENT_KEY, false)
 	viper.SetDefault(USER_CONSENT_LIFE_KEY, 7*24*time.Hour)
+
+	viper.SetDefault(SYSTEM_PACKAGE_KEY, "")
+	viper.SetDefault(SYSTEM_PACKAGE_PUBLIC_KEY_KEY, "")
+	viper.SetDefault(SYSTEM_PACKAGE_PUBLIC_KEY_FILE_KEY, "")
+
+	viper.SetDefault(VERIFY_PACKAGE_CHECKSUM_KEY, false)
+	viper.SetDefault(VERIFY_PACKAGE_SIGNATURE_KEY, false)
 }
 
 func initDefaultConfigFile() {

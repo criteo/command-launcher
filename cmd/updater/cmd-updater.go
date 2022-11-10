@@ -32,6 +32,8 @@ type CmdUpdater struct {
 	Timeout              time.Duration
 	EnableCI             bool
 	PackageLockFile      string
+	VerifyChecksum       bool
+	VerifySignature      bool
 }
 
 func (u *CmdUpdater) CheckUpdateAsync() {
@@ -92,7 +94,12 @@ func (u *CmdUpdater) Update() error {
 			pkg, err := remoteRepo.Package(pkgName, remoteVersion)
 			if err != nil {
 				errPool = append(errPool, err)
-				fmt.Printf("Cannot get the package of the command %s: %v\n", pkgName, err)
+				fmt.Printf("Cannot get the package %s: %v\n", pkgName, err)
+				continue
+			}
+			if ok, err := remoteRepo.Verify(pkg, u.VerifyChecksum, u.VerifySignature); !ok || err != nil {
+				errPool = append(errPool, err)
+				fmt.Printf("Failed to verify package %s, skip it: %v\n", pkgName, err)
 				continue
 			}
 			if err = repo.Update(pkg); err != nil {
@@ -112,6 +119,11 @@ func (u *CmdUpdater) Update() error {
 				if err != nil {
 					errPool = append(errPool, err)
 					fmt.Printf("Cannot get the package %s: %v\n", pkgName, err)
+					continue
+				}
+				if ok, err := remoteRepo.Verify(pkg, u.VerifyChecksum, u.VerifySignature); !ok || err != nil {
+					errPool = append(errPool, err)
+					fmt.Printf("Failed to verify package %s, skip it: %v\n", pkgName, err)
 					continue
 				}
 				if err = repo.Install(pkg); err != nil {

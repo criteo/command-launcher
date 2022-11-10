@@ -1,0 +1,9 @@
+pkgName: system-pkg-demo
+version: 0.0.1
+cmds:
+  - name: login
+    type: system
+    executable: "{{.PackageDir}}/login.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}"
+  - name: metrics
+    type: system
+    executable: "{{.PackageDir}}/metrics.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}"

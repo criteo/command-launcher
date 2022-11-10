@@ -2,6 +2,7 @@ package remote
 
 import (
 	"archive/zip"
+	"crypto/sha256"
 	"fmt"
 	"io"
 	"io/fs"
@@ -51,6 +52,23 @@ func (pkg *defaultPackage) Version() string {
 
 func (pkg *defaultPackage) Commands() []command.Command {
 	return pkg.Manifest.Commands()
+}
+
+func (pkg *defaultPackage) VerifyChecksum(checksum string) (bool, error) {
+	sha, err := packageChecksum(pkg.ZipFile)
+	if err != nil {
+		return false, fmt.Errorf("failed to calculate checksum of package %s@%s", pkg.Name(), pkg.Version())
+	}
+	remoteChecksum := fmt.Sprintf("%x", sha)
+	if remoteChecksum != checksum {
+		return false, fmt.Errorf("package %s@%s has a wrong checksum, expected %s, but get %s", pkg.Name(), pkg.Version(), checksum, remoteChecksum)
+	}
+	return true, nil
+}
+
+func (pkg *defaultPackage) VerifySignature(signature string) (bool, error) {
+	// TODO: implement the signature verification
+	return true, nil
 }
 
 func (pkg *defaultPackage) InstallTo(targetDir string) (command.PackageManifest, error) {
@@ -145,4 +163,19 @@ func ReadManifest(file fs.File) (command.PackageManifest, error) {
 	}
 
 	return &mf, nil
+}
+
+func packageChecksum(pkgFile string) ([]byte, error) {
+	f, err := os.Open(pkgFile)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return nil, err
+	}
+
+	return h.Sum(nil), nil
 }

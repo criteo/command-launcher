@@ -58,6 +58,10 @@ func (ctx *defaultContext) PasswordEnvVar() string {
 	return ctx.envVarName("PASSWORD")
 }
 
+func (ctx *defaultContext) LoginTokenEnvVar() string {
+	return ctx.envVarName("LOGIN_TOKEN")
+}
+
 func (ctx *defaultContext) LogLevelEnvVar() string {
 	return ctx.envVarName("LOG_LEVEL")
 }

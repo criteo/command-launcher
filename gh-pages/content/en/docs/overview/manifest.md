@@ -1,5 +1,5 @@
 ---
-title: "Manifest.mf"
+title: "Manifest.mf specification"
 description: "Specification of manifest.mf file"
 lead: "Specification of manifest.mf file"
 date: 2022-10-02T19:02:32+02:00
