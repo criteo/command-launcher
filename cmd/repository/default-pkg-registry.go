@@ -56,6 +56,7 @@ func (reg *defaultRegistry) Load(repoDir string) error {
 				defer manifestFile.Close()
 				manifest, err := pkg.ReadManifest(manifestFile)
 				if err == nil {
+					reg.packages[manifest.Name()] = manifest
 					for _, cmd := range manifest.Commands() {
 						newCmd := command.NewDefaultCommandFromCopy(cmd, filepath.Join(repoDir, f.Name()))
 						if newCmd.CmdType == "group" {
