@@ -41,3 +41,13 @@ func (pkg *folderPackage) InstallTo(targetDir string) (command.PackageManifest, 
 
 	return pkg.Manifest, nil
 }
+
+func (pkg *folderPackage) VerifyChecksum(checksum string) (bool, error) {
+	// TODO: what is the checksum for a folder package?
+	return true, nil
+}
+
+func (pkg *folderPackage) VerifySignature(signature string) (bool, error) {
+	// TODO: what is the signature for a folder package?
+	return true, nil
+}

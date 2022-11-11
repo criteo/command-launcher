@@ -19,6 +19,10 @@ type Registry interface {
 
 	ExecutableCommands() []command.Command
 
+	// intefaces for system commands
+	SystemLoginCommand() command.Command
+	SystemMetricsCommand() command.Command
+
 	Package(name string) (command.PackageManifest, error)
 
 	Command(group string, name string) (command.Command, error)

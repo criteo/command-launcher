@@ -12,7 +12,7 @@ const (
 	graphitePort = 3341
 )
 
-type defaultMetrics struct {
+type graphiteMetrics struct {
 	graphiteHost   string
 	CmdName        string
 	SubCmdName     string
@@ -20,13 +20,13 @@ type defaultMetrics struct {
 	UserPartition  uint8
 }
 
-func NewMetricsCollector(host string) Metrics {
-	return &defaultMetrics{
+func NewGraphiteMetricsCollector(host string) Metrics {
+	return &graphiteMetrics{
 		graphiteHost: host,
 	}
 }
 
-func (metrics *defaultMetrics) Collect(uid uint8, cmd string, subCmd string) error {
+func (metrics *graphiteMetrics) Collect(uid uint8, cmd string, subCmd string) error {
 	if cmd == "" {
 		return fmt.Errorf("unknown command")
 	}
@@ -39,7 +39,7 @@ func (metrics *defaultMetrics) Collect(uid uint8, cmd string, subCmd string) err
 	return nil
 }
 
-func (metrics *defaultMetrics) Send(cmdError error) error {
+func (metrics *graphiteMetrics) Send(cmdExitCode int, cmdError error) error {
 	duration := time.Now().UnixNano() - metrics.StartTimestamp.UnixNano()
 	graphiteClient, err := graphite.GraphiteFactory("udp", metrics.graphiteHost, graphitePort, metrics.prefix())
 	if err != nil {
@@ -62,6 +62,6 @@ func (metrics *defaultMetrics) Send(cmdError error) error {
 	return err
 }
 
-func (metrics *defaultMetrics) prefix() string {
+func (metrics *graphiteMetrics) prefix() string {
 	return fmt.Sprintf("devtools.cdt.%s.%s.%d", metrics.CmdName, metrics.SubCmdName, metrics.UserPartition)
 }

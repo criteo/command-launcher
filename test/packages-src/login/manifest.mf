@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "cmds": [
     {
-      "name": "bonjour",
+      "name": "bonjour-consent",
       "type": "executable",
       "short": "print bonjour from command launcher",
       "executable": "{{.PackageDir}}/bonjour.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}",
@@ -13,7 +13,7 @@
         "language\t l\tgreeting language"
       ],
       "checkFlags": true,
-      "requestedResources": [ "USERNAME", "PASSWORD" ]
+      "requestedResources": [ "USERNAME", "PASSWORD", "LOGIN_TOKEN" ]
     }
   ]
 }

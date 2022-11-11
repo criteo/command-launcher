@@ -27,6 +27,11 @@ const (
 	PACKAGE_LOCK_FILE_KEY                = "PACKAGE_LOCK_FILE"
 	ENABLE_USER_CONSENT_KEY              = "ENABLE_USER_CONSENT"
 	USER_CONSENT_LIFE_KEY                = "USER_CONSENT_LIFE"
+	SYSTEM_PACKAGE_KEY                   = "SYSTEM_PACKAGE"                 // the system package name
+	SYSTEM_PACKAGE_PUBLIC_KEY_KEY        = "SYSTEM_PACKAGE_PUBLIC_KEY"      // the public key to verify system package
+	SYSTEM_PACKAGE_PUBLIC_KEY_FILE_KEY   = "SYSTEM_PACKAGE_PUBLIC_KEY_FILE" // the public key file to verify system package
+	VERIFY_PACKAGE_CHECKSUM_KEY          = "VERIFY_PACKAGE_CHECKSUM"
+	VERIFY_PACKAGE_SIGNATURE_KEY         = "VERIFY_PACKAGE_SIGNATURE"
 
 	// internal commands are the commands with start partition number > INTERNAL_START_PARTITION
 	INTERNAL_COMMAND_ENABLED_KEY = "INTERNAL_COMMAND_ENABLED"
@@ -44,6 +49,7 @@ func init() {
 		SELF_UPDATE_TIMEOUT_KEY,
 		SELF_UPDATE_LATEST_VERSION_URL_KEY,
 		SELF_UPDATE_BASE_URL_KEY,
+		COMMAND_UPDATE_ENABLED_KEY,
 		COMMAND_REPOSITORY_BASE_URL_KEY,
 		LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY,
 		USAGE_METRICS_ENABLED_KEY,
@@ -56,6 +62,8 @@ func init() {
 		EXPERIMENTAL_COMMAND_ENABLED_KEY,
 		ENABLE_USER_CONSENT_KEY,
 		USER_CONSENT_LIFE_KEY,
+		SYSTEM_PACKAGE_KEY,
+		SYSTEM_PACKAGE_PUBLIC_KEY_FILE_KEY,
 	)
 }
 
@@ -100,6 +108,16 @@ func SetSettingValue(key string, value string) error {
 		return setBooleanConfig(upperKey, value)
 	case USER_CONSENT_LIFE_KEY:
 		return setDurationConfig(upperKey, value)
+	case SYSTEM_PACKAGE_KEY:
+		return setStringConfig(upperKey, value)
+	case SYSTEM_PACKAGE_PUBLIC_KEY_KEY:
+		return setStringConfig(upperKey, value)
+	case SYSTEM_PACKAGE_PUBLIC_KEY_FILE_KEY:
+		return setStringConfig(upperKey, value)
+	case VERIFY_PACKAGE_CHECKSUM_KEY:
+		return setBooleanConfig(upperKey, value)
+	case VERIFY_PACKAGE_SIGNATURE_KEY:
+		return setBooleanConfig(upperKey, value)
 	}
 
 	return fmt.Errorf("unsupported config %s", key)

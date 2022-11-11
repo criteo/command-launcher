@@ -1,5 +1,5 @@
 ---
-title: "Variable"
+title: "Variable in manifest"
 description: "Use variables in manifest.mf file"
 lead: "Use variables in manifest.mf file"
 date: 2022-10-02T21:36:35+02:00

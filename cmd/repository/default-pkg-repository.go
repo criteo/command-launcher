@@ -18,7 +18,7 @@ type defaultPackageRepository struct {
 	registry Registry
 }
 
-func newdefaultPackageRepository(repoDirname string, reg Registry) *defaultPackageRepository {
+func newDefaultPackageRepository(repoDirname string, reg Registry) *defaultPackageRepository {
 	return &defaultPackageRepository{
 		RepoDir:  repoDirname,
 		registry: reg,
@@ -111,6 +111,13 @@ func (repo *defaultPackageRepository) InstalledGroupCommands() []command.Command
 
 func (repo *defaultPackageRepository) InstalledExecutableCommands() []command.Command {
 	return repo.registry.ExecutableCommands()
+}
+
+func (repo *defaultPackageRepository) InstalledSystemCommands() SystemCommands {
+	return SystemCommands{
+		Login:   repo.registry.SystemLoginCommand(),
+		Metrics: repo.registry.SystemMetricsCommand(),
+	}
 }
 
 func (repo *defaultPackageRepository) Package(name string) (command.PackageManifest, error) {

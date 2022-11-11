@@ -16,7 +16,7 @@ func CreateLocalRepository(repoDirname string, registry Registry) (PackageReposi
 		reg = registry
 	}
 
-	repo := newdefaultPackageRepository(repoDirname, reg)
+	repo := newDefaultPackageRepository(repoDirname, reg)
 	if err := repo.load(); err != nil {
 		return nil, err
 	}
