@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/criteo/command-launcher/cmd/pkg"
 	"github.com/criteo/command-launcher/internal/command"
 	"github.com/criteo/command-launcher/internal/helper"
 	log "github.com/sirupsen/logrus"
@@ -143,7 +144,7 @@ func (remote *defaultRemoteRepository) Package(pkgName string, pkgVersion string
 		return nil, fmt.Errorf("error downloading %s: %v", url, err)
 	}
 
-	pkg, err := CreatePackage(pkgPathname)
+	pkg, err := pkg.CreateZipPackage(pkgPathname)
 	if err != nil {
 		return nil, fmt.Errorf("invalid package %s: %v", url, err)
 	}
@@ -180,7 +181,7 @@ func (remote *defaultRemoteRepository) findPackage(name string, version string) 
 	}
 	pkgInfos, err := remote.PackageInfosByCmdName(name)
 	if len(pkgInfos) == 0 {
-		return nil, fmt.Errorf("No package named %s found from remote registry", name)
+		return nil, fmt.Errorf("no package named %s found from remote registry", name)
 	}
 	if err != nil {
 		return nil, err
@@ -190,7 +191,7 @@ func (remote *defaultRemoteRepository) findPackage(name string, version string) 
 			return &info, nil
 		}
 	}
-	return nil, fmt.Errorf("No package named %s with version %s found from remote registry", name, version)
+	return nil, fmt.Errorf("no package named %s with version %s found from remote registry", name, version)
 }
 
 func (remote *defaultRemoteRepository) url(name string, version string) string {

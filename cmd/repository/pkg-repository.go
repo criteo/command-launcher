@@ -10,8 +10,6 @@ You can get the installed command from a package repository.
 Note: package repository manages packages, a packages contains multiple commands.
 */
 type PackageRepository interface {
-	Load() error
-
 	Install(pkg command.Package) error
 
 	Uninstall(name string) error
@@ -31,6 +29,8 @@ type PackageRepository interface {
 	Package(name string) (command.PackageManifest, error)
 
 	Command(group string, name string) (command.Command, error)
+
+	RepositoryFolder() (string, error)
 }
 
 /*

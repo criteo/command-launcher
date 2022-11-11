@@ -1,1 +1,1 @@
-ECHO %* >> metrics.txt
+@ECHO %* >> metrics.txt

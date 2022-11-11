@@ -1,4 +1,4 @@
-ECHO off
+@ECHO off
 
 ECHO bonjour! %CL_LOG_LEVEL%
 ECHO %CL_FLAG_NAME%

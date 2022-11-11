@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/criteo/command-launcher/cmd/consent"
-	"github.com/criteo/command-launcher/cmd/dropin"
 	"github.com/criteo/command-launcher/cmd/metrics"
 	"github.com/criteo/command-launcher/cmd/remote"
 	"github.com/criteo/command-launcher/cmd/repository"
@@ -34,7 +33,7 @@ const (
 type rootContext struct {
 	appCtx      ctx.LauncherContext
 	localRepo   repository.PackageRepository
-	dropinRepo  dropin.DropinRepository
+	dropinRepo  repository.PackageRepository
 	selfUpdater updater.SelfUpdater
 	cmdUpdater  updater.CmdUpdater
 	user        user.User
@@ -145,7 +144,7 @@ func initCmdUpdater() {
 }
 
 func initApp() repository.PackageRepository {
-	repo, err := repository.CreateLocalRepository(viper.GetString(config.LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY))
+	repo, err := repository.CreateLocalRepository(viper.GetString(config.LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY), nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -158,8 +157,8 @@ func initApp() repository.PackageRepository {
 
 	rootCtxt.localRepo = repo
 
-	if dropinRepo, err := dropin.Load(viper.GetString(config.DROPIN_FOLDER_KEY)); err == nil {
-		rootCtxt.dropinRepo = *dropinRepo
+	if dropinRepo, err := repository.CreateLocalRepository(viper.GetString(config.DROPIN_FOLDER_KEY), nil); err == nil {
+		rootCtxt.dropinRepo = dropinRepo
 	}
 
 	return repo
@@ -259,7 +258,7 @@ func addLocalCommands() {
 }
 
 func addDropinCommands() {
-	addCommands(rootCtxt.dropinRepo.GroupCommands(), rootCtxt.dropinRepo.ExecutableCommands())
+	addCommands(rootCtxt.dropinRepo.InstalledGroupCommands(), rootCtxt.dropinRepo.InstalledExecutableCommands())
 }
 
 func addCommands(groups []command.Command, executables []command.Command) {
