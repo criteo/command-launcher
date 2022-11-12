@@ -5,4 +5,4 @@ draft: true
 images: []
 ---
 
-{{< email user="hello" domain="criteo.com" >}}
+{{< email user="build-services-team" domain="criteo.com" >}}
