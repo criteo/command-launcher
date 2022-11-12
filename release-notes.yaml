@@ -1,3 +1,33 @@
+1.7.0:
+  version: 1.7.0
+  releaseNotes: |
+    * ✨New mechanism to access resources with user consent, resources required user consent:
+        * username
+        * password
+        * login_token
+        * log_level
+    * ✨New system package with system command. Now supports two types of system command:
+        * __login__: extends the built-in login command
+        * __metrics__: extends the built-in metrics
+    * ✨New package management with new built-in commands:
+        * list: list installed local and dropin packages and remote packages. It also provides the possibility to show the installed commands
+        * install: install dropin packages from git repository or remote/local zip file
+        * delete: delete installed dropin packages
+    * ✨New URL convention for command launcher self update. You can now use the Github release file as the latest version
+    * ✨New configurations:
+        * enable_user_consent
+        * user_consent_life
+        * system_package
+        * system_package_public_key
+        * system_package_public_key_file
+        * verify_package_checksum
+        * verify_package_signature
+    * 🔒️Enable package checksum verification
+    * ♻️Refactor local repository management and remote management
+    * 🔨Default local build version now takes the current branch name: [branch name]-dev. See build.sh
+  startPartition: 0
+  endPartition: 9
+
 1.6.0:
   version: 1.6.0
   releaseNotes: |
