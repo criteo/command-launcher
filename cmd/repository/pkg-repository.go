@@ -37,8 +37,8 @@ type PackageRepository interface {
 System commands
 */
 const (
-	SYSTEM_LOGIN_COMMAND   = "login"
-	SYSTEM_METRICS_COMMAND = "metrics"
+	SYSTEM_LOGIN_COMMAND   = "__login__"
+	SYSTEM_METRICS_COMMAND = "__metrics__"
 )
 
 type SystemCommands struct {
