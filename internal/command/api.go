@@ -53,7 +53,9 @@ type Command interface {
 
 	ExecuteFlagValuesCmd(envVars []string, args ...string) (int, string, error)
 
-	SetPkgDir(pkgDir string)
+	PackageDir() string
+
+	SetPackageDir(pkgDir string)
 }
 
 type PackageManifest interface {

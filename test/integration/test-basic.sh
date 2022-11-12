@@ -14,7 +14,7 @@ RESULT=$($OUTPUT_DIR/cl)
 # test application name
 ##
 echo "> test application name"
-echo $RESULT | grep -q "Command Launcher - A command launcher"
+echo "$RESULT" | grep -q "Command Launcher - A command launcher"
 if [ $? -ne 0 ]; then
   echo "KO - wrong application name"
   exit 1
@@ -40,7 +40,7 @@ fi
 ##
 echo "> test default command list"
 
-echo $RESULT | grep -q "hello"
+echo "$RESULT" | grep -q "hello"
 if [ $? -ne 0 ]; then
   # ok
   echo "OK"

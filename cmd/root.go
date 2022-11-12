@@ -251,6 +251,7 @@ func addBuiltinCommands() {
 	AddLoginCmd(rootCmd, rootCtxt.appCtx, getSystemCommand(repository.SYSTEM_LOGIN_COMMAND))
 	AddUpdateCmd(rootCmd, rootCtxt.appCtx, rootCtxt.localRepo)
 	AddCompletionCmd(rootCmd, rootCtxt.appCtx)
+	AddPackageCmd(rootCmd, rootCtxt.appCtx)
 }
 
 func addLocalCommands() {

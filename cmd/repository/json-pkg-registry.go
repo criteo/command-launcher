@@ -26,7 +26,7 @@ func newJsonRegistry(path string) (Registry, error) {
 	return &reg, nil
 }
 
-func (reg *jsonRegistry) Load(_ string) error {
+func (reg *jsonRegistry) Load(repoDir string) error {
 	_, err := os.Stat(reg.pathname)
 	if !os.IsNotExist(err) {
 		payload, err := os.ReadFile(reg.pathname)
@@ -44,7 +44,7 @@ func (reg *jsonRegistry) Load(_ string) error {
 		}
 	}
 
-	reg.extractCmds()
+	reg.extractCmds(repoDir)
 
 	return nil
 }
@@ -63,22 +63,22 @@ func (reg *jsonRegistry) store() error {
 	return nil
 }
 
-func (reg *jsonRegistry) Add(pkg command.PackageManifest) error {
-	if err := reg.defaultRegistry.Add(pkg); err != nil {
+func (reg *jsonRegistry) Add(pkg command.PackageManifest, repoDir string) error {
+	if err := reg.defaultRegistry.Add(pkg, repoDir); err != nil {
 		return err
 	}
 	return reg.store()
 }
 
-func (reg *jsonRegistry) Remove(pkgName string) error {
-	if err := reg.defaultRegistry.Remove(pkgName); err != nil {
+func (reg *jsonRegistry) Remove(pkgName string, repoDir string) error {
+	if err := reg.defaultRegistry.Remove(pkgName, repoDir); err != nil {
 		return err
 	}
 	return reg.store()
 }
 
-func (reg *jsonRegistry) Update(pkg command.PackageManifest) error {
-	if err := reg.defaultRegistry.Update(pkg); err != nil {
+func (reg *jsonRegistry) Update(pkg command.PackageManifest, repoDir string) error {
+	if err := reg.defaultRegistry.Update(pkg, repoDir); err != nil {
 		return err
 	}
 	return reg.store()

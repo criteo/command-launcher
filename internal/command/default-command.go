@@ -275,7 +275,11 @@ func (cmd *DefaultCommand) CheckFlags() bool {
 	return cmd.CmdCheckFlags
 }
 
-func (cmd *DefaultCommand) SetPkgDir(pkgDir string) {
+func (cmd *DefaultCommand) PackageDir() string {
+	return cmd.PkgDir
+}
+
+func (cmd *DefaultCommand) SetPackageDir(pkgDir string) {
 	cmd.PkgDir = pkgDir
 }
 

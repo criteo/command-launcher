@@ -30,6 +30,12 @@ if [ $# -ne 0 ]; then
     echo "- test/integration/${test}.sh"
     echo "------------------------------------------------------------"
 
+    # clean up for fresh start
+    rm -rf $CL_HOME/dropins
+    rm -rf $CL_HOME/current
+    rm -f $CL_HOME/config.json
+    mkdir -p $CL_HOME/dropins
+
     let TEST_COUNT++
 
     OUTPUT_DIR=$OUTPUT_DIR \
@@ -56,6 +62,12 @@ else
     echo "------------------------------------------------------------"
     echo "- $f"
     echo "------------------------------------------------------------"
+
+    # cleanup
+    rm -rf $CL_HOME/dropins
+    rm -rf $CL_HOME/current
+    rm -f $CL_HOME/config.json
+    mkdir -p $CL_HOME/dropins
 
     let TEST_COUNT++
 

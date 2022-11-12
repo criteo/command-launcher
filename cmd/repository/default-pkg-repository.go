@@ -66,7 +66,7 @@ func (repo *defaultPackageRepository) Install(pkg command.Package) error {
 		return fmt.Errorf("cannot install the command package %s: %v", pkg.Name(), err)
 	}
 
-	err = repo.registry.Add(pkg)
+	err = repo.registry.Add(pkg, repo.RepoDir)
 	if err != nil {
 		return fmt.Errorf("cannot add the command package %s: %v", pkg.Name(), err)
 	}
@@ -75,7 +75,7 @@ func (repo *defaultPackageRepository) Install(pkg command.Package) error {
 }
 
 func (repo *defaultPackageRepository) Uninstall(name string) error {
-	err := repo.registry.Remove(name)
+	err := repo.registry.Remove(name, repo.RepoDir)
 	if err != nil {
 		return fmt.Errorf("cannot remove the command %s: %v", name, err)
 	}
