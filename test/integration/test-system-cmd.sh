@@ -33,7 +33,7 @@ echo $NATIVE_SCRIPT_DIR
 RESULT=$($OUTPUT_DIR/cl config command_repository_base_url file://${NATIVE_SCRIPT_DIR}/../remote-repo)
 RESULT=$($CL_PATH)
 
-echo $RESULT | grep -q "hello"
+echo "$RESULT" | grep -q "hello"
 if [ $? -eq 0 ]; then
   # ok
   echo "OK"
@@ -43,7 +43,7 @@ else
 fi
 
 echo "> test system command should not exist"
-echo $RESULT | grep -q "metrics"
+echo "$RESULT" | grep -q "metrics"
 if [ $? -ne 0 ]; then
   # ok
   echo "OK"
@@ -56,7 +56,7 @@ echo "> test login extension without setup system package"
 echo "* should NOT use username returned from extension"
 RESULT=$($CL_PATH login -u test-user -p test-password)
 RESULT=$($CL_PATH bonjour-consent)
-echo $RESULT | grep -q "SECRET_1"
+echo "$RESULT" | grep -q "SECRET_1"
 if [ $? -ne 0 ]; then
   # ok
   echo "OK"
@@ -66,7 +66,7 @@ else
 fi
 
 echo "* should NOT use password returned from extension"
-echo $RESULT | grep -q "SECRET_2"
+echo "$RESULT" | grep -q "SECRET_2"
 if [ $? -ne 0 ]; then
   # ok
   echo "OK"
@@ -90,7 +90,7 @@ $CL_PATH login -u test-user -p test-password
 RESULT=$($CL_PATH bonjour-consent)
 
 echo "* should use username returned from extension"
-echo $RESULT | grep -q "SECRET_1"
+echo "$RESULT" | grep -q "SECRET_1"
 if [ $? -eq 0 ]; then
   # ok
   echo "OK"
@@ -100,7 +100,7 @@ else
 fi
 
 echo "* should use password returned from extension"
-echo $RESULT | grep -q "SECRET_2"
+echo "$RESULT" | grep -q "SECRET_2"
 if [ $? -eq 0 ]; then
   # ok
   echo "OK"
@@ -110,7 +110,7 @@ else
 fi
 
 echo "* should use login token returned from extension"
-echo $RESULT | grep -q "SECRET_3"
+echo "$RESULT" | grep -q "SECRET_3"
 if [ $? -eq 0 ]; then
   # ok
   echo "OK"

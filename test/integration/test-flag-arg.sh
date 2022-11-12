@@ -15,9 +15,9 @@ cp -R $SCRIPT_DIR/../packages-src/flag-env $CL_HOME/dropins
 
 echo "> test the flag and arg environment"
 RESULT=$($OUTPUT_DIR/cl bonjour --name Joe --language French world)
-echo $RESULT
+echo "$RESULT"
 
-echo $RESULT | grep -q "bonjour!"
+echo "$RESULT" | grep -q "bonjour!"
 if [ $? -eq 0 ]; then
   echo "OK"
 else

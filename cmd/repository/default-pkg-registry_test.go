@@ -35,7 +35,7 @@ func generateTestRegistry(reg Registry, numOfPkgs int, numOfCmds int) error {
 			}
 			pkg.PkgCommands = append(pkg.PkgCommands, &cmd)
 		}
-		err := reg.Add(&pkg)
+		err := reg.Add(&pkg, "")
 		if err != nil {
 			return err
 		}
@@ -72,7 +72,7 @@ func Test_defaultRegistry_Remove(t *testing.T) {
 	err = generateTestRegistry(reg, nbOfPkgs, nbOfCmds)
 	assert.Nil(t, err)
 
-	err = reg.Remove("test-0")
+	err = reg.Remove("test-0", "")
 	assert.Nil(t, err)
 	nbOfPkgs -= 1
 
@@ -81,7 +81,7 @@ func Test_defaultRegistry_Remove(t *testing.T) {
 	exeCmds := reg.ExecutableCommands()
 	assert.Equal(t, nbOfPkgs*nbOfCmds, len(exeCmds), fmt.Sprintf("there must be %d executable cmds", nbOfPkgs*nbOfCmds))
 
-	err = reg.Remove("test-1")
+	err = reg.Remove("test-1", "")
 	assert.Nil(t, err)
 	nbOfPkgs -= 1
 
@@ -106,7 +106,7 @@ func Test_defaultRegistry_Update(t *testing.T) {
 		PkgCommands: []*command.DefaultCommand{},
 	}
 
-	err = reg.Update(&pkg)
+	err = reg.Update(&pkg, "")
 	assert.Nil(t, err)
 
 	pkgs := reg.AllPackages()

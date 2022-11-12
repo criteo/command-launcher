@@ -63,8 +63,8 @@ func (reg *defaultRegistry) Load(repoDir string) error {
 				if err == nil {
 					reg.packages[manifest.Name()] = manifest
 					for _, cmd := range manifest.Commands() {
-						newCmd := command.NewDefaultCommandFromCopy(cmd, filepath.Join(repoDir, f.Name()))
-						reg.registerCmd(manifest, newCmd, sysPkgName != "" && sysPkgName == manifest.Name())
+						cmd.SetPackageDir(filepath.Join(repoDir, f.Name()))
+						reg.registerCmd(manifest, cmd, sysPkgName != "" && sysPkgName == manifest.Name())
 					}
 				}
 			}
@@ -74,21 +74,21 @@ func (reg *defaultRegistry) Load(repoDir string) error {
 	return err
 }
 
-func (reg *defaultRegistry) Add(pkg command.PackageManifest) error {
+func (reg *defaultRegistry) Add(pkg command.PackageManifest, repoDir string) error {
 	reg.packages[pkg.Name()] = pkg
-	reg.extractCmds()
+	reg.extractCmds(repoDir)
 	return nil
 }
 
-func (reg *defaultRegistry) Remove(pkgName string) error {
+func (reg *defaultRegistry) Remove(pkgName string, repoDir string) error {
 	delete(reg.packages, pkgName)
-	reg.extractCmds()
+	reg.extractCmds(repoDir)
 	return nil
 }
 
-func (reg *defaultRegistry) Update(pkg command.PackageManifest) error {
+func (reg *defaultRegistry) Update(pkg command.PackageManifest, repoDir string) error {
 	reg.packages[pkg.Name()] = pkg
-	reg.extractCmds()
+	reg.extractCmds(repoDir)
 	return nil
 }
 
@@ -162,7 +162,7 @@ func (reg *defaultRegistry) ExecutableCommands() []command.Command {
 	return cmds
 }
 
-func (reg *defaultRegistry) extractCmds() {
+func (reg *defaultRegistry) extractCmds(repoDir string) {
 	sysPkgName := viper.GetString(config.SYSTEM_PACKAGE_KEY)
 	reg.groupCmds = make(map[string]command.Command)
 	reg.executableCmds = make(map[string]command.Command)
@@ -171,8 +171,8 @@ func (reg *defaultRegistry) extractCmds() {
 	for _, pkg := range reg.packages {
 		if pkg.Commands() != nil {
 			for _, cmd := range pkg.Commands() {
-				newCmd := cmd
-				reg.registerCmd(pkg, newCmd, sysPkgName != "" && pkg.Name() == sysPkgName)
+				cmd.SetPackageDir(filepath.Join(repoDir, pkg.Name()))
+				reg.registerCmd(pkg, cmd, sysPkgName != "" && pkg.Name() == sysPkgName)
 			}
 		}
 	}

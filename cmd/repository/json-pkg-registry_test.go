@@ -56,7 +56,7 @@ func TestAddRemove(t *testing.T) {
 	assert.Equal(t, "test-0-0", c.Name())
 	assert.Equal(t, "Short Description", c.ShortDescription())
 
-	err = reg.Remove("test-0")
+	err = reg.Remove("test-0", "")
 	assert.Nil(t, err)
 
 	exeCmds = reg.ExecutableCommands()
