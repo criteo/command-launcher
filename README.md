@@ -57,8 +57,6 @@ The pre-built binary is named `cdt` (Criteo Dev Toolkit), if you want to use a d
 
 ## Contribute
 
-Begin with checking out the repository and run `npm install` at the root of it.
-
 ### Build
 
 Requirements: golang >= 1.17
@@ -84,6 +82,10 @@ go test -v ./...
 ```
 cd gh-pages && npm start
 ```
+
+### Run doc site locally
+
+Run `npm install` at the root, and run `npm start` in `gh-pages` folder
 
 ### Release
 
