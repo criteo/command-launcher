@@ -243,11 +243,10 @@ func installZipFile(fileUrl string) error {
 			}
 			defer os.RemoveAll(tmpDir)
 
-			pkgPathname := filepath.Join(tmpDir, filepath.Base(url.Path))
-			if err := helper.DownloadFile(fileUrl, pkgPathname, true); err != nil {
+			pathname = filepath.Join(tmpDir, filepath.Base(url.Path))
+			if err := helper.DownloadFile(fileUrl, pathname, true); err != nil {
 				return fmt.Errorf("error downloading %s: %v", url, err)
 			}
-
 		}
 	} else {
 		pathname = url.Path
@@ -258,9 +257,19 @@ func installZipFile(fileUrl string) error {
 		return fmt.Errorf("cannot create the package from the zip file: %v", err)
 	}
 
-	mf, err := zipPkg.InstallTo(viper.GetString(config.DROPIN_FOLDER_KEY))
+	targetDir := filepath.Join(viper.GetString(config.DROPIN_FOLDER_KEY), zipPkg.Name())
+	if _, err := os.Stat(targetDir); !os.IsNotExist(err) {
+		if err := os.RemoveAll(targetDir); err != nil {
+			return fmt.Errorf("cannot remove existing package directory %s: %v", targetDir, err)
+		}
+	}
+	if err := os.MkdirAll(targetDir, os.ModePerm); err != nil {
+		return fmt.Errorf("cannot create target package directory %s: %v", targetDir, err)
+	}
+
+	mf, err := zipPkg.InstallTo(targetDir)
 	if err == nil {
-		console.Success("Package %s installed in the dropin repository", mf.Name())
+		console.Success("Package '%s' version %s installed in the dropin repository", mf.Name(), mf.Version())
 	}
 
 	return err

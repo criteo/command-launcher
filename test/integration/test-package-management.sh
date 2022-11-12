@@ -256,3 +256,18 @@ else
   echo "KO - should NOT contain package from git repo"
   exit 1
 fi
+
+################
+echo "> test install file package"
+RESULT=$($CL_PATH install --file https://github.com/criteo/command-launcher/raw/main/test/remote-repo/command-launcher-demo-2.0.0.pkg)
+
+echo "* should contain 2.0.0 demo package"
+RESULT=$($CL_PATH list --dropin --include-cmd)
+echo "$RESULT" | grep -q "\- command-launcher-demo                              2.0.0"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should contain 2.0.0 demo package"
+  exit 1
+fi
+
