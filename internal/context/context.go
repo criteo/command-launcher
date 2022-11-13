@@ -15,7 +15,7 @@ type LauncherContext interface {
 
 	PasswordEnvVar() string
 
-	LoginTokenEnvVar() string
+	AuthTokenEnvVar() string
 
 	LogLevelEnvVar() string
 

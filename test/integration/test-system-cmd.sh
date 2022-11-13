@@ -110,12 +110,13 @@ else
 fi
 
 echo "* should use login token returned from extension"
+echo "$RESULT"
 echo "$RESULT" | grep -q "SECRET_3"
 if [ $? -eq 0 ]; then
   # ok
   echo "OK"
 else
-  echo "KO - should use login_token returned from extension"
+  echo "KO - should use auth_token returned from extension"
   exit 1
 fi
 

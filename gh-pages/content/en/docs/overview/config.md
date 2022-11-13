@@ -22,7 +22,7 @@ toc: true
 | command_repository_base_url      | string   | the base url of the remote repository, it must contain a `/index.json` endpoint to list the available pacakges                |
 | command_update_enabled           | bool     | whether auto update managed commands or not                                                                                   |
 | dropin_folder                    | string   | the absolute path of the dropin folder                                                                                        |
-| enabled_user_consent             | bool     | whether enable the user consent. Be caution, when set to false, all resources are allowed to pass to the managed commands.    |
+| enable_user_consent              | bool     | whether enable the user consent. Be caution, when set to false, all resources are allowed to pass to the managed commands.    |
 | experimental_command_enabled     | bool     | whether enable experimental command or not                                                                                    |
 | internal_command_enabled         | bool     | whether enable internal command or not                                                                                        |
 | local_command_repository_dirname | bool     | the absolute path of the local repository folder.                                                                             |
@@ -38,6 +38,11 @@ toc: true
 | self_update_timeout              | duration | timeout duration for self update                                                                                              |
 | usage_metrics_enabled            | bool     | whether enable metrics                                                                                                        |
 | user_consent_life                | duration | the life of user consent                                                                                                      |
+| system_package                   | string   | the system package name                                                                                                       |
+| system_package_public_key        | string   | the public key to verify the system package signature                                                                         |
+| system_package_public_key_file   | string   | the public key file to verify the system package signature                                                                    |
+| verify_package_checksum          | bool     | whether to verify the package checksum during package installation                                                            |
+| verify_package_signature         | bool     | whether to verify the package signature during package installation (will be available in 1.8)                                |
 
 ## Change configuration
 

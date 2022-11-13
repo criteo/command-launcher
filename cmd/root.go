@@ -585,13 +585,13 @@ func getCmdEnvContext(envVars []string, consents []string) []string {
 			if password != "" {
 				vars = append(vars, fmt.Sprintf("%s=%s", rootCtxt.appCtx.PasswordEnvVar(), password))
 			}
-		case consent.LOGIN_TOKEN:
-			token, err := helper.GetLoginToken()
+		case consent.AUTH_TOKEN:
+			token, err := helper.GetAuthToken()
 			if err != nil {
 				token = ""
 			}
 			if token != "" {
-				vars = append(vars, fmt.Sprintf("%s=%s", rootCtxt.appCtx.LoginTokenEnvVar(), token))
+				vars = append(vars, fmt.Sprintf("%s=%s", rootCtxt.appCtx.AuthTokenEnvVar(), token))
 			}
 		case consent.LOG_LEVEL:
 			// append log level from configuration

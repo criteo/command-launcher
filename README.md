@@ -73,8 +73,22 @@ Or simply call the `build.sh` scripts
 
 ### Run tests
 
-```
+Run unit tests
+
+```shell
 go test -v ./...
+```
+
+Run all integration tests
+
+```shell
+./test/integration.sh
+```
+
+You can run one integration test by specify the name of the integration test file (without the .sh extension). The integration tests can be found in [`test/integration`](https://github.com/criteo/command-launcher/tree/main/test/integration) folder, for example:
+
+```shell
+./test/integration.sh test-remote
 ```
 
 ### Run pages locally

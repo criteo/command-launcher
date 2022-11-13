@@ -16,6 +16,6 @@ func SetPassword(value string) error {
 	return SetSecret("password", value)
 }
 
-func GetLoginToken() (string, error) {
-	return GetSecret("login_token")
+func GetAuthToken() (string, error) {
+	return GetSecret("auth_token")
 }

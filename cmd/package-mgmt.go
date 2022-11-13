@@ -77,7 +77,7 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 		Long:  "Install a dropin package package from a git repo or from a zip file or from its name",
 		Args:  cobra.MaximumNArgs(1),
 		Example: fmt.Sprintf(`
-  %s package install --git https://example.com/my-repo.git my-pkg`, appCtx.AppName()),
+  %s install --git https://example.com/my-repo.git my-pkg`, appCtx.AppName()),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if packageFlags.fileUrl != "" {
 				return installZipFile(packageFlags.fileUrl)
@@ -101,7 +101,7 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 		Long:  "Remove a dropin package from its name",
 		Args:  cobra.ExactArgs(1),
 		Example: fmt.Sprintf(`
-  %s package delete my-pkg`, appCtx.AppName()),
+  %s delete my-pkg`, appCtx.AppName()),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			folder, err := findPackageFolder(args[0])
 			if err != nil {

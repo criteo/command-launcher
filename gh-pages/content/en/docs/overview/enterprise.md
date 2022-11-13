@@ -165,6 +165,4 @@ The `[SELF_UPDATE_BASE_URL]` should be defined in `self_update_base_url` configu
 
 ## Custom command launcher with system package
 
-### Login hook
-
-### Metrics hook
+See [System Package](../system-package)

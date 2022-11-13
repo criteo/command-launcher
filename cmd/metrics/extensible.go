@@ -39,7 +39,7 @@ func (metrics *extensibleMetrics) Collect(uid uint8, cmd string, subCmd string) 
 func (metrics *extensibleMetrics) Send(cmdExitCode int, cmdError error) error {
 	// call the external hook
 	if metrics.hook != nil {
-		errMsg := ""
+		errMsg := "nil"
 		if cmdError != nil {
 			errMsg = cmdError.Error()
 		}

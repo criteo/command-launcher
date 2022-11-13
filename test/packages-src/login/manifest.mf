@@ -13,7 +13,7 @@
         "language\t l\tgreeting language"
       ],
       "checkFlags": true,
-      "requestedResources": [ "USERNAME", "PASSWORD", "LOGIN_TOKEN" ]
+      "requestedResources": [ "USERNAME", "PASSWORD", "AUTH_TOKEN" ]
     }
   ]
 }
