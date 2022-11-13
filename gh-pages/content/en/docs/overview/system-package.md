@@ -60,7 +60,6 @@ To extend command launcher, you need to specify `system` type command in a syste
 | \_\_login\_\_       | calling your IAM system to return `login_token` |
 | \_\_metrics\_\_     | collect metrics                                 |
 
-
 ### System command \_\_login\_\_
 
 The built-in `login` command will trigger the `__login__` system command. It takes two arguments:
@@ -69,7 +68,7 @@ The built-in `login` command will trigger the `__login__` system command. It tak
 - password
 
 ```shell
-$ __login__ [username] [password]
+__login__ [username] [password]
 ```
 
 The `__login__` system command outputs the credentials to be stored by command launcher in a JSON format. The credentials could be one or many of following items:

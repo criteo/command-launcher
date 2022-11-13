@@ -61,5 +61,3 @@ You can run one integration test by specify the name of the integration test fil
 ```shell
 ./test/integration.sh test-remote
 ```
-
-

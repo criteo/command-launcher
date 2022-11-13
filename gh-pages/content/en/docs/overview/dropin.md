@@ -51,7 +51,6 @@ If you uploaded your package to an http server as a zip file, you can install it
 cola install --file https://github.com/criteo/command-launcher/raw/main/examples/remote-repo/command-launcher-demo-1.0.0.pkg
 ```
 
-
 ## How to update dropin package?
 
 For now, the command launcher does not update the dropin folder automatically, it is up to developers themselve to keep these dropin package up-to-date.

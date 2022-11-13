@@ -84,4 +84,3 @@ Remove a dropin package from the package name defined in manifest
 ```shell
 cola delete command-launcher-example-package
 ```
-
