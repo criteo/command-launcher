@@ -15,9 +15,9 @@ cp -R $SCRIPT_DIR/../packages-src/bonjour $CL_HOME/dropins
 
 echo "> test the command without LOG_LEVEL"
 RESULT=$($OUTPUT_DIR/cl bonjour)
-echo $RESULT
+echo "$RESULT"
 
-echo $RESULT | grep -q "bonjour!"
+echo "$RESULT" | grep -q "bonjour!"
 if [ $? -eq 0 ]; then
   echo "OK"
 else
@@ -28,7 +28,7 @@ fi
 echo "> test set config"
 RESULT=$($OUTPUT_DIR/cl config log_level debug)
 RESULT=$($OUTPUT_DIR/cl config)
-echo $RESULT | grep -q "log_level : debug"
+echo "$RESULT" | grep -q "log_level                               : debug"
 if [ $? -eq 0 ]; then
   echo "OK"
 else
@@ -57,9 +57,9 @@ fi
 
 echo "> test default checkFlags = false, no flag and arg environment should be injected"
 RESULT=$($OUTPUT_DIR/cl bonjour --name Joe --language French world)
-echo $RESULT
+echo "$RESULT"
 
-echo $RESULT | grep -q "Joe"
+echo "$RESULT" | grep -q "Joe"
 if [ $? -eq 0 ]; then
   echo "KO - no environment variable CL_FLAG_NAME should be found"
   exit 1
@@ -67,7 +67,7 @@ else
   echo "OK"
 fi
 
-echo $RESULT | grep -q "French"
+echo "$RESULT" | grep -q "French"
 if [ $? -eq 0 ]; then
   echo "KO - no environment variable CL_FLAG_LANGUAGE should be found"
   exit 1
@@ -75,7 +75,7 @@ else
   echo "OK"
 fi
 
-echo $RESULT | grep -q "world"
+echo "$RESULT" | grep -q "world"
 if [ $? -eq 0 ]; then
   echo "KO - no environment variable CL_ARG_1 should be found"
   exit 1

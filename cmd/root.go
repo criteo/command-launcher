@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/criteo/command-launcher/cmd/consent"
-	"github.com/criteo/command-launcher/cmd/dropin"
+	"github.com/criteo/command-launcher/cmd/metrics"
 	"github.com/criteo/command-launcher/cmd/remote"
 	"github.com/criteo/command-launcher/cmd/repository"
 	"github.com/criteo/command-launcher/cmd/updater"
@@ -18,7 +18,6 @@ import (
 	"github.com/criteo/command-launcher/internal/console"
 	ctx "github.com/criteo/command-launcher/internal/context"
 	"github.com/criteo/command-launcher/internal/helper"
-	"github.com/criteo/command-launcher/internal/metrics"
 
 	log "github.com/sirupsen/logrus"
 
@@ -34,7 +33,7 @@ const (
 type rootContext struct {
 	appCtx      ctx.LauncherContext
 	localRepo   repository.PackageRepository
-	dropinRepo  dropin.DropinRepository
+	dropinRepo  repository.PackageRepository
 	selfUpdater updater.SelfUpdater
 	cmdUpdater  updater.CmdUpdater
 	user        user.User
@@ -58,7 +57,11 @@ func preRun(cmd *cobra.Command, args []string) {
 		rootCtxt.cmdUpdater.CheckUpdateAsync()
 	}
 
-	rootCtxt.metrics = metrics.NewMetricsCollector(viper.GetString(config.METRIC_GRAPHITE_HOST_KEY))
+	graphite := metrics.NewGraphiteMetricsCollector(viper.GetString(config.METRIC_GRAPHITE_HOST_KEY))
+	extensible := metrics.NewExtensibleMetricsCollector(
+		getSystemCommand(repository.SYSTEM_METRICS_COMMAND),
+	)
+	rootCtxt.metrics = metrics.NewCompositeMetricsCollector(graphite, extensible)
 	subcmd, subsubcmd := cmdAndSubCmd(cmd)
 	rootCtxt.metrics.Collect(rootCtxt.user.Partition, subcmd, subsubcmd)
 }
@@ -73,10 +76,11 @@ func postRun(cmd *cobra.Command, args []string) {
 	}
 
 	if metricsEnabled(cmd, args) {
-		err := rootCtxt.metrics.Send(cmd.Context().Err())
+		err := rootCtxt.metrics.Send(rootExitCode, cmd.Context().Err())
 		if err != nil {
 			log.Errorln("Metrics usage ♾️ sending has failed")
 		}
+		log.Debug("Successfully send metrics")
 	}
 }
 
@@ -134,11 +138,13 @@ func initCmdUpdater() {
 		Timeout:              viper.GetDuration(config.SELF_UPDATE_TIMEOUT_KEY),
 		EnableCI:             viper.GetBool(config.CI_ENABLED_KEY),
 		PackageLockFile:      viper.GetString(config.PACKAGE_LOCK_FILE_KEY),
+		VerifyChecksum:       viper.GetBool(config.VERIFY_PACKAGE_CHECKSUM_KEY),
+		VerifySignature:      viper.GetBool(config.VERIFY_PACKAGE_SIGNATURE_KEY),
 	}
 }
 
 func initApp() repository.PackageRepository {
-	repo, err := repository.CreateLocalRepository(viper.GetString(config.LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY))
+	repo, err := repository.CreateLocalRepository(viper.GetString(config.LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY), nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -151,8 +157,8 @@ func initApp() repository.PackageRepository {
 
 	rootCtxt.localRepo = repo
 
-	if dropinRepo, err := dropin.Load(viper.GetString(config.DROPIN_FOLDER_KEY)); err == nil {
-		rootCtxt.dropinRepo = *dropinRepo
+	if dropinRepo, err := repository.CreateLocalRepository(viper.GetString(config.DROPIN_FOLDER_KEY), nil); err == nil {
+		rootCtxt.dropinRepo = dropinRepo
 	}
 
 	return repo
@@ -214,6 +220,14 @@ func installCommands(repo repository.PackageRepository) error {
 				errors = append(errors, fmt.Sprintf("cannot get the package %s: %v", pkgName, err))
 				continue
 			}
+			if ok, err := remote.Verify(pkg,
+				viper.GetBool(config.VERIFY_PACKAGE_CHECKSUM_KEY),
+				viper.GetBool(config.VERIFY_PACKAGE_SIGNATURE_KEY),
+			); !ok || err != nil {
+				log.Error(err)
+				errors = append(errors, fmt.Sprintf("failed to verify package %s, skip it: %v", pkgName, err))
+				continue
+			}
 			err = repo.Install(pkg)
 			if err != nil {
 				errors = append(errors, fmt.Sprintf("cannot install the package %s: %v", pkgName, err))
@@ -234,9 +248,10 @@ func installCommands(repo repository.PackageRepository) error {
 func addBuiltinCommands() {
 	AddVersionCmd(rootCmd, rootCtxt.appCtx)
 	AddConfigCmd(rootCmd, rootCtxt.appCtx)
-	AddLoginCmd(rootCmd, rootCtxt.appCtx)
+	AddLoginCmd(rootCmd, rootCtxt.appCtx, getSystemCommand(repository.SYSTEM_LOGIN_COMMAND))
 	AddUpdateCmd(rootCmd, rootCtxt.appCtx, rootCtxt.localRepo)
 	AddCompletionCmd(rootCmd, rootCtxt.appCtx)
+	AddPackageCmd(rootCmd, rootCtxt.appCtx)
 }
 
 func addLocalCommands() {
@@ -244,7 +259,7 @@ func addLocalCommands() {
 }
 
 func addDropinCommands() {
-	addCommands(rootCtxt.dropinRepo.GroupCommands(), rootCtxt.dropinRepo.ExecutableCommands())
+	addCommands(rootCtxt.dropinRepo.InstalledGroupCommands(), rootCtxt.dropinRepo.InstalledExecutableCommands())
 }
 
 func addCommands(groups []command.Command, executables []command.Command) {
@@ -570,8 +585,14 @@ func getCmdEnvContext(envVars []string, consents []string) []string {
 			if password != "" {
 				vars = append(vars, fmt.Sprintf("%s=%s", rootCtxt.appCtx.PasswordEnvVar(), password))
 			}
-		case consent.LOGIN_TOKEN:
-			// TODO: add login token
+		case consent.AUTH_TOKEN:
+			token, err := helper.GetAuthToken()
+			if err != nil {
+				token = ""
+			}
+			if token != "" {
+				vars = append(vars, fmt.Sprintf("%s=%s", rootCtxt.appCtx.AuthTokenEnvVar(), token))
+			}
 		case consent.LOG_LEVEL:
 			// append log level from configuration
 			logLevel := viper.GetString(config.LOG_LEVEL_KEY)
@@ -641,6 +662,17 @@ func initContext(appName string, appVersion string, buildNum string) {
 	addBuiltinCommands()
 	addLocalCommands()
 	addDropinCommands()
+}
+
+func getSystemCommand(name string) command.Command {
+	sysCmds := rootCtxt.localRepo.InstalledSystemCommands()
+	switch name {
+	case repository.SYSTEM_LOGIN_COMMAND:
+		return sysCmds.Login
+	case repository.SYSTEM_METRICS_COMMAND:
+		return sysCmds.Metrics
+	}
+	return nil
 }
 
 func createRootCmd(appName string, appLongName string) *cobra.Command {

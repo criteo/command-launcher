@@ -37,7 +37,19 @@ Dropin package is also a good way for you to develop and test your command launc
 
 ## How to share a dropin package with others?
 
-A dropin package is simply a directory with manifest.mf in it, the best way to share a dropin package is to push it to a git repository and ask for others to clone it in their own dropin folder
+A dropin package is simply a directory with manifest.mf in it, the best way to share a dropin package is to push it to a git repository and ask for others to clone it in their own dropin folder.
+
+Starting from 1.7.0, you can use the built-in `install` command to install a dropin package hosted in a git repository or a zip file:
+
+```shell
+cola install --git https://github.com/criteo/command-launcher-package-example
+```
+
+If you uploaded your package to an http server as a zip file, you can install it with `cola install --file`
+
+```shell
+cola install --file https://github.com/criteo/command-launcher/raw/main/examples/remote-repo/command-launcher-demo-1.0.0.pkg
+```
 
 ## How to update dropin package?
 

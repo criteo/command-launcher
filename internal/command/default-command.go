@@ -123,6 +123,22 @@ func (cmd *DefaultCommand) Execute(envVars []string, args ...string) (int, error
 	return 0, nil
 }
 
+func (cmd *DefaultCommand) ExecuteWithOutput(envVars []string, args ...string) (int, string, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		return 1, "", err
+	}
+	arguments := append(cmd.CmdArguments, args...)
+	cmd.interpolateArray(&arguments)
+	command := cmd.interpolateCmd()
+
+	env := append(os.Environ(), envVars...)
+
+	log.Debug("Execute command line with output: ", command, " ", arguments)
+
+	return helper.CallExternalWithOutput(env, wd, command, arguments...)
+}
+
 func (cmd *DefaultCommand) ExecuteValidArgsCmd(envVars []string, args ...string) (int, string, error) {
 	return cmd.executeArrayCmd(envVars, cmd.CmdValidArgsCmd, args...)
 }
@@ -160,7 +176,9 @@ func (cmd *DefaultCommand) Name() string {
 }
 
 func (cmd *DefaultCommand) Type() string {
-	if cmd.CmdType != "group" && cmd.CmdType != "executable" {
+	if cmd.CmdType != "group" &&
+		cmd.CmdType != "executable" &&
+		cmd.CmdType != "system" {
 		// for invalid cmd type, set it to group to make it do nothing
 		return "group"
 	}
@@ -257,7 +275,11 @@ func (cmd *DefaultCommand) CheckFlags() bool {
 	return cmd.CmdCheckFlags
 }
 
-func (cmd *DefaultCommand) SetPkgDir(pkgDir string) {
+func (cmd *DefaultCommand) PackageDir() string {
+	return cmd.PkgDir
+}
+
+func (cmd *DefaultCommand) SetPackageDir(pkgDir string) {
 	cmd.PkgDir = pkgDir
 }
 

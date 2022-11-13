@@ -1,5 +1,5 @@
 ---
-title: "Manifest.mf"
+title: "Manifest.mf specification"
 description: "Specification of manifest.mf file"
 lead: "Specification of manifest.mf file"
 date: 2022-10-02T19:02:32+02:00
@@ -82,11 +82,13 @@ You must make sure your command's group and name combination is unique
 
 ### type
 
-There are two types of commands: `group` or `executable`
+There are three types of commands: `group`, `executable`, or `system`
 
-An executable type of command is meant to be executed. You must fill the `executable` and `args` fields of an executable command.
+An `executable` type of command is meant to be executed. You must fill the `executable` and `args` fields of an executable command.
 
-A group type of command is used to group executable commands.
+A `group` type of command is used to group executable commands.
+
+A `system` type of command is an executable command which extends the built-in command-launcher functions. More details see [system package](../system-package)
 
 ### group
 

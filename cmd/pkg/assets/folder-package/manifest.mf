@@ -1,0 +1,11 @@
+{
+    "pkgName": "fake_test",
+    "version": "1.0.0",
+    "cmds": [{
+        "name": "fake_test",
+        "short": "Fake manifest",
+        "long": "Fake manifest long description",
+        "executable": "fake",
+        "args": [ "A", "B" ]
+    }]
+}

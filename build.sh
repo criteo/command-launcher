@@ -1,6 +1,8 @@
 #!/usr/bin/env sh
 
-VERSION=${1:-dev}
+DEFAULT_VERSION=$(git rev-parse --abbrev-ref HEAD)-dev
+
+VERSION=${1:-$DEFAULT_VERSION}
 APP_NAME=${2:-cdt}
 APP_LONG_NAME=${3:-Criteo Dev Toolkit}
 
