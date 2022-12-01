@@ -17,10 +17,10 @@ func TestLocalRepository(t *testing.T) {
 	err := os.Mkdir(localRepoPath, 0755)
 	assert.Nil(t, err)
 
-	reg, err := os.Create(filepath.Join(localRepoPath, "registry.json"))
+	regFile, err := os.Create(filepath.Join(localRepoPath, "registry.json"))
 	assert.Nil(t, err)
-	defer reg.Close()
-	reg.WriteString(fmt.Sprintf(`{
+	defer regFile.Close()
+	regFile.WriteString(fmt.Sprintf(`{
 		"ls": {
 			"pkgName": "ls",
 			"version": "0.0.2",
@@ -43,7 +43,10 @@ func TestLocalRepository(t *testing.T) {
 		}
 	}`, localRepoPath, "ls-0.0.2"))
 
-	localRepo, err := CreateLocalRepository(localRepoPath)
+	reg, err := newJsonRegistry(filepath.Join(localRepoPath, "registry.json"))
+	assert.Nil(t, err)
+
+	localRepo, err := CreateLocalRepository(localRepoPath, reg)
 	assert.Nil(t, err)
 
 	ls, err := localRepo.Command("", "ls")
@@ -93,7 +96,10 @@ func TestInstallCommand(t *testing.T) {
 	err = os.Mkdir(localRepoPath, 0755)
 	assert.Nil(t, err)
 
-	localRepo, err := CreateLocalRepository(localRepoPath)
+	reg, err := newJsonRegistry(filepath.Join(localRepoPath, "registry.json"))
+	assert.Nil(t, err)
+
+	localRepo, err := CreateLocalRepository(localRepoPath, reg)
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(localRepo.InstalledCommands()))
 
@@ -133,4 +139,91 @@ func TestInstallCommand(t *testing.T) {
 	err = localRepo.Uninstall("ls")
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(localRepo.InstalledCommands()))
+}
+
+func Test_Load(t *testing.T) {
+	pathname, err := filepath.Abs("assets/simple_dropins/")
+	if err == nil {
+		fmt.Println("Absolute:", pathname)
+	}
+
+	reg, err := newDefaultRegistry()
+	assert.Nil(t, err)
+
+	repo, err := CreateLocalRepository(pathname, reg)
+	assert.Nil(t, err)
+
+	assert.Equal(t, 1, len(repo.InstalledGroupCommands()))
+	assert.Equal(t, 1, len(repo.InstalledExecutableCommands()))
+
+	assert.Equal(t, "wf", repo.InstalledGroupCommands()[0].Name())
+	assert.Equal(t, "debug-cdt-env", repo.InstalledExecutableCommands()[0].Name())
+}
+
+func Test_Load_Unexist_Folder(t *testing.T) {
+	pathname, err := filepath.Abs("assets/simple_dropins_not_exist/")
+	if err == nil {
+		fmt.Println("Absolute:", pathname)
+	}
+
+	reg, err := newDefaultRegistry()
+	assert.Nil(t, err)
+
+	repo, err := CreateLocalRepository(pathname, reg)
+	assert.Nil(t, err)
+
+	assert.Equal(t, 0, len(repo.InstalledGroupCommands()))
+	assert.Equal(t, 0, len(repo.InstalledExecutableCommands()))
+}
+
+func Test_Load_Malformat_Manifest(t *testing.T) {
+	pathname, err := filepath.Abs("assets/dropins_wrong_manifest_format/")
+	if err == nil {
+		fmt.Println("Absolute:", pathname)
+	}
+
+	reg, err := newDefaultRegistry()
+	assert.Nil(t, err)
+
+	repo, err := CreateLocalRepository(pathname, reg)
+	assert.Nil(t, err)
+
+	assert.Equal(t, 0, len(repo.InstalledGroupCommands()))
+	assert.Equal(t, 0, len(repo.InstalledExecutableCommands()))
+
+}
+
+func Test_Load_Multiple_Pkgs(t *testing.T) {
+	pathname, err := filepath.Abs("assets/dropins_multiple_pkgs/")
+	if err == nil {
+		fmt.Println("Absolute:", pathname)
+	}
+
+	reg, err := newDefaultRegistry()
+	assert.Nil(t, err)
+
+	repo, err := CreateLocalRepository(pathname, reg)
+	assert.Nil(t, err)
+
+	assert.Equal(t, 2, len(repo.InstalledGroupCommands()))
+	assert.Equal(t, 2, len(repo.InstalledExecutableCommands()))
+}
+
+func Test_Load_Symlink(t *testing.T) {
+	pathname, err := filepath.Abs("assets/symlink_dropins/")
+	if err == nil {
+		fmt.Println("Absolute:", pathname)
+	}
+
+	reg, err := newDefaultRegistry()
+	assert.Nil(t, err)
+
+	repo, err := CreateLocalRepository(pathname, reg)
+	assert.Nil(t, err)
+
+	assert.Equal(t, 1, len(repo.InstalledGroupCommands()))
+	assert.Equal(t, 1, len(repo.InstalledExecutableCommands()))
+
+	assert.Equal(t, "wf", repo.InstalledGroupCommands()[0].Name())
+	assert.Equal(t, "debug-cdt-env", repo.InstalledExecutableCommands()[0].Name())
 }

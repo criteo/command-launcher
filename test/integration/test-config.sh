@@ -11,7 +11,7 @@ SCRIPT_DIR=${1:-$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && p
 ##
 echo "> test config"
 RESULT=$($OUTPUT_DIR/cl config)
-echo $RESULT | grep 'local_command_repository_dirname' | grep 'home' | grep -q 'current'
+echo "$RESULT" | grep 'local_command_repository_dirname' | grep 'home' | grep -q 'current'
 if [ $? -eq 0 ]; then
   # ok
   echo "OK"
@@ -22,7 +22,7 @@ fi
 
 echo "> test get all config in json"
 RESULT=$($OUTPUT_DIR/cl config --json)
-VALUE=$(echo $RESULT | jq -r '.log_enabled')
+VALUE=$(echo "$RESULT" | jq -r '.log_enabled')
 if [ $VALUE == "false" ]; then
   echo "OK"
 else
@@ -32,7 +32,7 @@ fi
 
 echo "> test get one config in json"
 RESULT=$($OUTPUT_DIR/cl config log_enabled --json)
-VALUE=$(echo $RESULT | jq -r '.log_enabled')
+VALUE=$(echo "$RESULT" | jq -r '.log_enabled')
 if [ $VALUE == "false" ]; then
   echo "OK"
 else

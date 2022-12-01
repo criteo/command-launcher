@@ -76,16 +76,22 @@ type RemoteRepository interface {
 	// until the filter returns true
 	QueryLatestVersion(packageName string, filter PackageInfoFilterFunc) (string, error)
 
-	// Get the package info of the latest avaliable version
+	// Get the package info of the latest available version
 	LatestPackageInfo(packageName string) (*PackageInfo, error)
 
-	// Get the lastest package info according to a filter function
+	// Get the latest package info according to a filter function
 	// this function will pass the package to the filter from the latest version to the oldest one
 	// until the filter returns true
 	QueryLatestPackageInfo(packageName string, filter PackageInfoFilterFunc) (*PackageInfo, error)
 
 	// Download the package of the command with specific version
 	Package(packageName string, packageVersion string) (command.Package, error)
+
+	// get the package information of a given version
+	PackageInfo(packageName string, packageVersion string) (*PackageInfo, error)
+
+	// Verify package: support two verifications: checksum and signature
+	Verify(pkg command.Package, verifyChecksum, verifySignature bool) (bool, error)
 }
 
 type PackageInfoFilterFunc func(pkgInfo *PackageInfo) bool

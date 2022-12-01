@@ -1,5 +1,5 @@
 ---
-title: "Variable"
+title: "Variable in manifest"
 description: "Use variables in manifest.mf file"
 lead: "Use variables in manifest.mf file"
 date: 2022-10-02T21:36:35+02:00
@@ -54,6 +54,22 @@ You can reference them in form of `{{.Variable}}`. For example:
 
 The executable on linux will be a script called `script.sh` located in the bin folder of the package. On windows, the executable will be a script called `script.bat`.
 
+## If Else
+
+One common scenario is to have different path or file name according to different OS. You can use condition (if-else) in the fields that accept variables. For example:
+
+```json
+"cmds": [
+  {
+    "name": "variable-demo",
+    "type": "executable",
+    "executable": "{{.PackageDir}}/bin/script{{if eq .Os \"windows\"}}.ps1{{else}}.sh{{end}}",
+  }
+]
+```
+
+The executable on linux will be a script called `script.sh` located in the bin folder of the package. On windows, the executable will be a script called `script.ps1`.
+
 ## Advanced usage of variables
 
-See golang [text/template](https://pkg.go.dev/text/template) for advanced usage (ex, if else)
+See golang [text/template](https://pkg.go.dev/text/template) for advanced usage.

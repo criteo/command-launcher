@@ -73,8 +73,11 @@ func (u *SelfUpdater) Update() error {
 		return err
 	}
 	if err = u.doSelfUpdate(downloadUrl); err != nil {
-		console.Error("update failed: %s\n", err)
-		return err
+		// fallback to legacy self update
+		if err = u.legacySelfUpdate(); err != nil {
+			console.Error("update failed: %s\n", err)
+			return err
+		}
 	}
 
 	return nil
@@ -146,4 +149,33 @@ func (u *SelfUpdater) binaryFileName(version string) string {
 		return fmt.Sprintf("%s.exe", downloadFileName)
 	}
 	return downloadFileName
+}
+
+// deprecated. Keep it here for backward compatibility, will be removed in 1.8.0
+func (u *SelfUpdater) legacySelfUpdate() error {
+	legacyUrl, err := u.legacyLatestDownloadUrl()
+	if err != nil {
+		return err
+	}
+	if err := u.doSelfUpdate(legacyUrl); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *SelfUpdater) legacyLatestDownloadUrl() (string, error) {
+	updateUrl, err := url.Parse(u.SelfUpdateRootUrl)
+	if err != nil {
+		return "", err
+	}
+
+	updateUrl.Path = path.Join(updateUrl.Path, "current", runtime.GOOS, runtime.GOARCH, u.binaryFileNameWithoutVersion())
+	return updateUrl.String(), nil
+}
+
+func (u *SelfUpdater) binaryFileNameWithoutVersion() string {
+	if runtime.GOOS == "windows" {
+		return fmt.Sprintf("%s.exe", u.BinaryName)
+	}
+	return u.BinaryName
 }

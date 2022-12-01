@@ -20,12 +20,12 @@ const (
 	USERNAME    = "USERNAME"
 	PASSWORD    = "PASSWORD"
 	LOG_LEVEL   = "LOG_LEVEL"
-	LOGIN_TOKEN = "LOGIN_TOKEN"
+	AUTH_TOKEN  = "AUTH_TOKEN"
 	DEBUG_FLAGS = "DEBUG_FLAGS"
 )
 
 var AvailableConsents = []string{
-	USERNAME, PASSWORD, LOGIN_TOKEN, LOG_LEVEL, DEBUG_FLAGS,
+	USERNAME, PASSWORD, AUTH_TOKEN, LOG_LEVEL, DEBUG_FLAGS,
 }
 
 // GetConsents function returns the user consent of a particular command
