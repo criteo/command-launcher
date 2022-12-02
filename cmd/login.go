@@ -40,10 +40,10 @@ func AddLoginCmd(rootCmd *cobra.Command, appCtx context.LauncherContext, loginHo
 		Long: fmt.Sprintf(`
 Login to use services.
 
-You can specify the your password from:
-1. command option --password (-p)
-2. environment variable %s
-3. from command line input
+You can specify your password from:
+1. command option: --password (-p)
+2. environment variable: %s
+3. command line input
 
 The credential will be stored in your system vault.`, appCtx.PasswordEnvVar()),
 		RunE: func(cmd *cobra.Command, args []string) error {
