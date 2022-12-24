@@ -9,15 +9,15 @@ import (
 
 	"github.com/criteo/command-launcher/cmd/consent"
 	"github.com/criteo/command-launcher/cmd/metrics"
-	"github.com/criteo/command-launcher/cmd/remote"
-	"github.com/criteo/command-launcher/cmd/repository"
 	"github.com/criteo/command-launcher/cmd/updater"
-	"github.com/criteo/command-launcher/cmd/user"
 	"github.com/criteo/command-launcher/internal/command"
 	"github.com/criteo/command-launcher/internal/config"
 	"github.com/criteo/command-launcher/internal/console"
 	ctx "github.com/criteo/command-launcher/internal/context"
 	"github.com/criteo/command-launcher/internal/helper"
+	"github.com/criteo/command-launcher/internal/remote"
+	"github.com/criteo/command-launcher/internal/repository"
+	"github.com/criteo/command-launcher/internal/user"
 
 	log "github.com/sirupsen/logrus"
 

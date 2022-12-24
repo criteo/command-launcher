@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/criteo/command-launcher/cmd/remote"
 	"github.com/criteo/command-launcher/internal/helper"
+	"github.com/criteo/command-launcher/internal/remote"
 	"github.com/stretchr/testify/assert"
 )
 

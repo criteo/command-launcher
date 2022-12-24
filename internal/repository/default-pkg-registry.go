@@ -27,8 +27,8 @@ further information when necessary to reduce the startup time
 */
 type defaultRegistry struct {
 	packages       map[string]command.PackageManifest
-	groupCmds      map[string]command.Command // key is in form of [group]_[cmd name] ex. "_hotfix"
-	executableCmds map[string]command.Command // key is in form of [group]_[cmd name] ex. "hotfix_create"
+	groupCmds      map[string]command.Command // key is in form of [group]#[cmd name] ex. "#hotfix"
+	executableCmds map[string]command.Command // key is in form of [group]#[cmd name] ex. "hotfix#create"
 	systemCmds     map[string]command.Command // key is the predefined system command name
 }
 

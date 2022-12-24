@@ -8,9 +8,9 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/criteo/command-launcher/cmd/user"
 	"github.com/criteo/command-launcher/internal/console"
 	"github.com/criteo/command-launcher/internal/helper"
+	"github.com/criteo/command-launcher/internal/user"
 	"github.com/inconshreveable/go-update"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
