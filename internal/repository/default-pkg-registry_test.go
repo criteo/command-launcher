@@ -48,7 +48,7 @@ func Test_defaultRegistry_Add(t *testing.T) {
 	nbOfPkgs := 10
 	nbOfCmds := 5
 
-	reg, err := newDefaultRegistry()
+	reg, err := newDefaultRegistry("default")
 	assert.Nil(t, err)
 	err = generateTestRegistry(reg, nbOfPkgs, nbOfCmds)
 	assert.Nil(t, err)
@@ -67,7 +67,7 @@ func Test_defaultRegistry_Remove(t *testing.T) {
 	nbOfPkgs := 2
 	nbOfCmds := 3
 
-	reg, err := newDefaultRegistry()
+	reg, err := newDefaultRegistry("default")
 	assert.Nil(t, err)
 	err = generateTestRegistry(reg, nbOfPkgs, nbOfCmds)
 	assert.Nil(t, err)
@@ -95,7 +95,7 @@ func Test_defaultRegistry_Update(t *testing.T) {
 	nbOfPkgs := 5
 	nbOfCmds := 3
 
-	reg, err := newDefaultRegistry()
+	reg, err := newDefaultRegistry("default")
 	assert.Nil(t, err)
 	err = generateTestRegistry(reg, nbOfPkgs, nbOfCmds)
 	assert.Nil(t, err)
@@ -119,7 +119,7 @@ func Test_defaultRegistry_Query(t *testing.T) {
 	nbOfPkgs := 10
 	nbOfCmds := 5
 
-	reg, err := newDefaultRegistry()
+	reg, err := newDefaultRegistry("default")
 	assert.Nil(t, err)
 	err = generateTestRegistry(reg, nbOfPkgs, nbOfCmds)
 	assert.Nil(t, err)

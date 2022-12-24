@@ -36,6 +36,8 @@ func (mf *defaultPackageManifest) Commands() []command.Command {
 
 type defaultPackage struct {
 	Manifest command.PackageManifest
+	// store the registry id, indicates which registry/repository that the package belongs to
+	registryID string
 }
 
 func (pkg *defaultPackage) Name() string {
@@ -48,6 +50,10 @@ func (pkg *defaultPackage) Version() string {
 
 func (pkg *defaultPackage) Commands() []command.Command {
 	return pkg.Manifest.Commands()
+}
+
+func (pkg *defaultPackage) RegistryID() string {
+	return pkg.registryID
 }
 
 func ReadManifest(file fs.File) (command.PackageManifest, error) {

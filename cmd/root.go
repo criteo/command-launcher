@@ -144,7 +144,7 @@ func initCmdUpdater() {
 }
 
 func initApp() repository.PackageRepository {
-	repo, err := repository.CreateLocalRepository(viper.GetString(config.LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY), nil)
+	repo, err := repository.CreateLocalRepository("default", viper.GetString(config.LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY), nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -157,7 +157,7 @@ func initApp() repository.PackageRepository {
 
 	rootCtxt.localRepo = repo
 
-	if dropinRepo, err := repository.CreateLocalRepository(viper.GetString(config.DROPIN_FOLDER_KEY), nil); err == nil {
+	if dropinRepo, err := repository.CreateLocalRepository("dropin", viper.GetString(config.DROPIN_FOLDER_KEY), nil); err == nil {
 		rootCtxt.dropinRepo = dropinRepo
 	}
 

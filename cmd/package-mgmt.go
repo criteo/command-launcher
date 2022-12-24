@@ -7,12 +7,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/criteo/command-launcher/cmd/pkg"
 	"github.com/criteo/command-launcher/internal/command"
 	"github.com/criteo/command-launcher/internal/config"
 	"github.com/criteo/command-launcher/internal/console"
 	"github.com/criteo/command-launcher/internal/context"
 	"github.com/criteo/command-launcher/internal/helper"
+	"github.com/criteo/command-launcher/internal/pkg"
 	"github.com/criteo/command-launcher/internal/remote"
 	"github.com/criteo/command-launcher/internal/repository"
 	"github.com/spf13/cobra"

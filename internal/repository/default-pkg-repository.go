@@ -14,12 +14,14 @@ const (
 )
 
 type defaultPackageRepository struct {
+	ID       string
 	RepoDir  string
 	registry Registry
 }
 
-func newDefaultPackageRepository(repoDirname string, reg Registry) *defaultPackageRepository {
+func newDefaultPackageRepository(id string, repoDirname string, reg Registry) *defaultPackageRepository {
 	return &defaultPackageRepository{
+		ID:       id,
 		RepoDir:  repoDirname,
 		registry: reg,
 	}

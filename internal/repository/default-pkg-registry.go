@@ -7,9 +7,9 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/criteo/command-launcher/cmd/pkg"
 	"github.com/criteo/command-launcher/internal/command"
 	"github.com/criteo/command-launcher/internal/config"
+	"github.com/criteo/command-launcher/internal/pkg"
 	"github.com/spf13/viper"
 )
 
@@ -26,14 +26,16 @@ Further improvements could store registry as indexes, and laze load
 further information when necessary to reduce the startup time
 */
 type defaultRegistry struct {
+	id             string
 	packages       map[string]command.PackageManifest
 	groupCmds      map[string]command.Command // key is in form of [group]#[cmd name] ex. "#hotfix"
 	executableCmds map[string]command.Command // key is in form of [group]#[cmd name] ex. "hotfix#create"
 	systemCmds     map[string]command.Command // key is the predefined system command name
 }
 
-func newDefaultRegistry() (Registry, error) {
+func newDefaultRegistry(id string) (Registry, error) {
 	reg := defaultRegistry{
+		id:             id,
 		packages:       make(map[string]command.PackageManifest),
 		groupCmds:      make(map[string]command.Command),
 		executableCmds: make(map[string]command.Command),
@@ -64,6 +66,7 @@ func (reg *defaultRegistry) Load(repoDir string) error {
 					reg.packages[manifest.Name()] = manifest
 					for _, cmd := range manifest.Commands() {
 						cmd.SetPackageDir(filepath.Join(repoDir, f.Name()))
+						cmd.SetNamespace(reg.id, manifest.Name())
 						reg.registerCmd(manifest, cmd, sysPkgName != "" && sysPkgName == manifest.Name())
 					}
 				}
@@ -128,12 +131,9 @@ func (reg *defaultRegistry) AllCommands() []command.Command {
 
 func (reg *defaultRegistry) GroupCommands() []command.Command {
 	cmds := make([]command.Command, 0)
-
 	for _, v := range reg.groupCmds {
-		//groupCmd := v
 		cmds = append(cmds, v)
 	}
-
 	return cmds
 }
 
@@ -153,12 +153,9 @@ func (reg *defaultRegistry) SystemMetricsCommand() command.Command {
 
 func (reg *defaultRegistry) ExecutableCommands() []command.Command {
 	cmds := make([]command.Command, 0)
-
 	for _, v := range reg.executableCmds {
-		//exeCmd := v
 		cmds = append(cmds, v)
 	}
-
 	return cmds
 }
 
@@ -172,6 +169,7 @@ func (reg *defaultRegistry) extractCmds(repoDir string) {
 		if pkg.Commands() != nil {
 			for _, cmd := range pkg.Commands() {
 				cmd.SetPackageDir(filepath.Join(repoDir, pkg.Name()))
+				cmd.SetNamespace(reg.id, pkg.Name())
 				reg.registerCmd(pkg, cmd, sysPkgName != "" && pkg.Name() == sysPkgName)
 			}
 		}

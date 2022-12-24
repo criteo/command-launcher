@@ -49,6 +49,11 @@ An additional "category" field is reserved in case we have too much first level 
 we can use it to category them in the cdt help output.
 */
 type DefaultCommand struct {
+	CmdID                 string
+	CmdPackageName        string
+	CmdRegistryID         string
+	CmdGroupAlias         string
+	CmdNameAlias          string
 	CmdName               string         `json:"name" yaml:"name"`
 	CmdCategory           string         `json:"category" yaml:"category"`
 	CmdType               string         `json:"type" yaml:"type"`
@@ -73,6 +78,12 @@ type DefaultCommand struct {
 
 func NewDefaultCommandFromCopy(cmd Command, pkgDir string) *DefaultCommand {
 	return &DefaultCommand{
+		CmdID:          cmd.ID(),
+		CmdPackageName: cmd.PackageName(),
+		CmdRegistryID:  cmd.RegistryID(),
+		CmdGroupAlias:  cmd.GroupAlias(),
+		CmdNameAlias:   cmd.NameAlias(),
+
 		CmdName:               cmd.Name(),
 		CmdCategory:           cmd.Category(),
 		CmdType:               cmd.Type(),
@@ -169,6 +180,48 @@ func (cmd *DefaultCommand) executeArrayCmd(envVars []string, cmdArray []string, 
 	cmd.interpolateArray(&validArgs)
 	// Should we interpolate the argumments too???
 	return helper.CallExternalWithOutput(envVars, wd, cmd.interpolate(validCmd), append(validArgs, args...)...)
+}
+
+func (cmd *DefaultCommand) ID() string {
+	return cmd.CmdID
+}
+
+func (cmd *DefaultCommand) PackageName() string {
+	return cmd.CmdPackageName
+}
+
+func (cmd *DefaultCommand) RegistryID() string {
+	return cmd.CmdRegistryID
+}
+
+func (cmd *DefaultCommand) GroupAlias() string {
+	return cmd.CmdGroupAlias
+}
+
+func (cmd *DefaultCommand) NameAlias() string {
+	return cmd.CmdNameAlias
+}
+
+func (cmd DefaultCommand) GroupOrAlias() string {
+	if cmd.CmdGroupAlias == "" {
+		return cmd.CmdGroup
+	}
+	return cmd.CmdGroupAlias
+}
+
+func (cmd DefaultCommand) NameOrAlias() string {
+	if cmd.CmdNameAlias == "" {
+		return cmd.CmdName
+	}
+	return cmd.CmdNameAlias
+}
+
+func (cmd *DefaultCommand) FullGroup() string {
+	return fmt.Sprintf("%s@%s@%s", cmd.CmdGroup, cmd.CmdPackageName, cmd.CmdRegistryID)
+}
+
+func (cmd *DefaultCommand) FullName() string {
+	return fmt.Sprintf("%s@%s@%s@%s", cmd.CmdName, cmd.CmdGroup, cmd.CmdPackageName, cmd.CmdRegistryID)
 }
 
 func (cmd *DefaultCommand) Name() string {
@@ -281,6 +334,20 @@ func (cmd *DefaultCommand) PackageDir() string {
 
 func (cmd *DefaultCommand) SetPackageDir(pkgDir string) {
 	cmd.PkgDir = pkgDir
+}
+
+func (cmd *DefaultCommand) SetNamespace(regId string, pkgName string) {
+	cmd.CmdRegistryID = regId
+	cmd.CmdPackageName = pkgName
+	cmd.CmdID = fmt.Sprintf("%s:%s:%s:%s", regId, pkgName, cmd.Group(), cmd.Name())
+}
+
+func (cmd *DefaultCommand) SetGroupAlias(alias string) {
+	cmd.CmdGroupAlias = alias
+}
+
+func (cmd *DefaultCommand) SetNameAlias(alias string) {
+	cmd.CmdNameAlias = alias
 }
 
 func (cmd *DefaultCommand) copyArray(src []string) []string {
