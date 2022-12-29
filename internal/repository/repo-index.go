@@ -2,12 +2,12 @@ package repository
 
 import "github.com/criteo/command-launcher/internal/command"
 
-type Registry interface {
+type RepoIndex interface {
 	/* write interfaces */
 	Load(repoDir string) error
-	Add(pkg command.PackageManifest, repoDir string) error
+	Add(pkg command.PackageManifest, repoDir string, pkgDirName string) error
 	Remove(pkgName string, repoDir string) error
-	Update(pkg command.PackageManifest, repoDir string) error
+	Update(pkg command.PackageManifest, repoDir string, pkgDirName string) error
 
 	/* read interfaces */
 	AllPackages() []command.PackageManifest
@@ -17,5 +17,5 @@ type Registry interface {
 	SystemLoginCommand() command.Command
 	SystemMetricsCommand() command.Command
 	Package(name string) (command.PackageManifest, error)
-	Command(group string, name string) (command.Command, error)
+	Command(pkg string, group string, name string) (command.Command, error)
 }

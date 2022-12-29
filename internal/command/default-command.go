@@ -51,9 +51,9 @@ we can use it to category them in the cdt help output.
 type DefaultCommand struct {
 	CmdID                 string
 	CmdPackageName        string
-	CmdRegistryID         string
-	CmdGroupAlias         string
-	CmdNameAlias          string
+	CmdRepositoryID       string
+	CmdRuntimeGroup       string
+	CmdRuntimeName        string
 	CmdName               string         `json:"name" yaml:"name"`
 	CmdCategory           string         `json:"category" yaml:"category"`
 	CmdType               string         `json:"type" yaml:"type"`
@@ -78,11 +78,11 @@ type DefaultCommand struct {
 
 func NewDefaultCommandFromCopy(cmd Command, pkgDir string) *DefaultCommand {
 	return &DefaultCommand{
-		CmdID:          cmd.ID(),
-		CmdPackageName: cmd.PackageName(),
-		CmdRegistryID:  cmd.RegistryID(),
-		CmdGroupAlias:  cmd.GroupAlias(),
-		CmdNameAlias:   cmd.NameAlias(),
+		CmdID:           cmd.ID(),
+		CmdPackageName:  cmd.PackageName(),
+		CmdRepositoryID: cmd.RepositoryID(),
+		CmdRuntimeGroup: cmd.RuntimeGroup(),
+		CmdRuntimeName:  cmd.RuntimeName(),
 
 		CmdName:               cmd.Name(),
 		CmdCategory:           cmd.Category(),
@@ -104,6 +104,13 @@ func NewDefaultCommandFromCopy(cmd Command, pkgDir string) *DefaultCommand {
 		CmdRequestedResources: cmd.RequestedResources(),
 		PkgDir:                pkgDir,
 	}
+}
+
+func CmdID(repo, pkg, group, name string) string {
+	return fmt.Sprintf("%s>%s>%s>%s", repo, pkg, group, name)
+}
+func CmdReverseID(repo, pkg, group, name string) string {
+	return fmt.Sprintf("%s@%s@%s@%s", name, group, pkg, repo)
 }
 
 func (cmd *DefaultCommand) Execute(envVars []string, args ...string) (int, error) {
@@ -183,45 +190,41 @@ func (cmd *DefaultCommand) executeArrayCmd(envVars []string, cmdArray []string, 
 }
 
 func (cmd *DefaultCommand) ID() string {
-	return cmd.CmdID
+	return CmdID(cmd.CmdRepositoryID, cmd.CmdPackageName, cmd.CmdGroup, cmd.CmdName)
 }
 
 func (cmd *DefaultCommand) PackageName() string {
 	return cmd.CmdPackageName
 }
 
-func (cmd *DefaultCommand) RegistryID() string {
-	return cmd.CmdRegistryID
+func (cmd *DefaultCommand) RepositoryID() string {
+	return cmd.CmdRepositoryID
 }
 
-func (cmd *DefaultCommand) GroupAlias() string {
-	return cmd.CmdGroupAlias
-}
-
-func (cmd *DefaultCommand) NameAlias() string {
-	return cmd.CmdNameAlias
-}
-
-func (cmd DefaultCommand) GroupOrAlias() string {
-	if cmd.CmdGroupAlias == "" {
+func (cmd *DefaultCommand) RuntimeGroup() string {
+	if cmd.CmdRuntimeGroup == "" {
 		return cmd.CmdGroup
 	}
-	return cmd.CmdGroupAlias
+	return cmd.CmdRuntimeGroup
 }
 
-func (cmd DefaultCommand) NameOrAlias() string {
-	if cmd.CmdNameAlias == "" {
+func (cmd *DefaultCommand) RuntimeName() string {
+	if cmd.CmdRuntimeName == "" {
 		return cmd.CmdName
 	}
-	return cmd.CmdNameAlias
+	return cmd.CmdRuntimeName
 }
 
+// Full group name in form of group name @ [empty] @ package @ repo
+// Read as a group command named [name] in root group (empty) from package [package] managed by repo [repo]
 func (cmd *DefaultCommand) FullGroup() string {
-	return fmt.Sprintf("%s@%s@%s", cmd.CmdGroup, cmd.CmdPackageName, cmd.CmdRegistryID)
+	return CmdReverseID(cmd.CmdRepositoryID, cmd.CmdPackageName, "", cmd.CmdGroup)
 }
 
+// Full command name in form of name @ group @ package @ repo
+// Read as a command named [name] in group [group] from package [package] managed by repo [repo]
 func (cmd *DefaultCommand) FullName() string {
-	return fmt.Sprintf("%s@%s@%s@%s", cmd.CmdName, cmd.CmdGroup, cmd.CmdPackageName, cmd.CmdRegistryID)
+	return CmdReverseID(cmd.CmdRepositoryID, cmd.CmdPackageName, cmd.CmdGroup, cmd.CmdName)
 }
 
 func (cmd *DefaultCommand) Name() string {
@@ -336,18 +339,18 @@ func (cmd *DefaultCommand) SetPackageDir(pkgDir string) {
 	cmd.PkgDir = pkgDir
 }
 
-func (cmd *DefaultCommand) SetNamespace(regId string, pkgName string) {
-	cmd.CmdRegistryID = regId
+func (cmd *DefaultCommand) SetNamespace(repoId string, pkgName string) {
+	cmd.CmdRepositoryID = repoId
 	cmd.CmdPackageName = pkgName
-	cmd.CmdID = fmt.Sprintf("%s:%s:%s:%s", regId, pkgName, cmd.Group(), cmd.Name())
+	cmd.CmdID = fmt.Sprintf("%s:%s:%s:%s", repoId, pkgName, cmd.Group(), cmd.Name())
 }
 
-func (cmd *DefaultCommand) SetGroupAlias(alias string) {
-	cmd.CmdGroupAlias = alias
+func (cmd *DefaultCommand) SetRuntimeGroup(name string) {
+	cmd.CmdRuntimeGroup = name
 }
 
-func (cmd *DefaultCommand) SetNameAlias(alias string) {
-	cmd.CmdNameAlias = alias
+func (cmd *DefaultCommand) SetRuntimeName(name string) {
+	cmd.CmdRuntimeName = name
 }
 
 func (cmd *DefaultCommand) copyArray(src []string) []string {

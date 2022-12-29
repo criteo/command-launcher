@@ -6,6 +6,8 @@ import (
 )
 
 type Backend interface {
+	// Load all managed repositories
+	Reload() error
 	// Find a command with its group name and command name.
 	// For the root level executable command, the group is empty string.
 	// For the group command, the name is empty
@@ -36,4 +38,7 @@ type Backend interface {
 
 	// Return dropin local repsository
 	DropinRepository() repository.PackageRepository
+
+	// Print out the command resolution details
+	Debug()
 }

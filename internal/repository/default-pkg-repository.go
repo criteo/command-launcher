@@ -10,20 +10,20 @@ import (
 )
 
 const (
-	FILE_REGISTRY = "registry.json"
+	FILE_REGISTRY = "repoIndex.json"
 )
 
 type defaultPackageRepository struct {
-	ID       string
-	RepoDir  string
-	registry Registry
+	ID        string
+	RepoDir   string
+	repoIndex RepoIndex
 }
 
-func newDefaultPackageRepository(id string, repoDirname string, reg Registry) *defaultPackageRepository {
+func newDefaultPackageRepository(id string, repoDirname string, index RepoIndex) *defaultPackageRepository {
 	return &defaultPackageRepository{
-		ID:       id,
-		RepoDir:  repoDirname,
-		registry: reg,
+		ID:        id,
+		RepoDir:   repoDirname,
+		repoIndex: index,
 	}
 }
 
@@ -36,13 +36,13 @@ func (repo *defaultPackageRepository) load() error {
 		}
 	}
 
-	if err = repo.registry.Load(repo.RepoDir); err != nil {
+	if err = repo.repoIndex.Load(repo.RepoDir); err != nil {
 		return fmt.Errorf("cannot load the packages: %v", err)
 	}
 
 	log.Debugf("Commands loaded: %v", func() []string {
 		names := []string{}
-		for _, cmd := range repo.registry.AllCommands() {
+		for _, cmd := range repo.repoIndex.AllCommands() {
 			name := fmt.Sprintf("%s.%s", cmd.Group(), cmd.Name())
 			names = append(names, name)
 		}
@@ -68,7 +68,7 @@ func (repo *defaultPackageRepository) Install(pkg command.Package) error {
 		return fmt.Errorf("cannot install the command package %s: %v", pkg.Name(), err)
 	}
 
-	err = repo.registry.Add(pkg, repo.RepoDir)
+	err = repo.repoIndex.Add(pkg, repo.RepoDir, pkg.Name())
 	if err != nil {
 		return fmt.Errorf("cannot add the command package %s: %v", pkg.Name(), err)
 	}
@@ -77,7 +77,7 @@ func (repo *defaultPackageRepository) Install(pkg command.Package) error {
 }
 
 func (repo *defaultPackageRepository) Uninstall(name string) error {
-	err := repo.registry.Remove(name, repo.RepoDir)
+	err := repo.repoIndex.Remove(name, repo.RepoDir)
 	if err != nil {
 		return fmt.Errorf("cannot remove the command %s: %v", name, err)
 	}
@@ -100,34 +100,34 @@ func (repo *defaultPackageRepository) Update(pkg command.Package) error {
 }
 
 func (repo *defaultPackageRepository) InstalledPackages() []command.PackageManifest {
-	return repo.registry.AllPackages()
+	return repo.repoIndex.AllPackages()
 }
 
 func (repo *defaultPackageRepository) InstalledCommands() []command.Command {
-	return repo.registry.AllCommands()
+	return repo.repoIndex.AllCommands()
 }
 
 func (repo *defaultPackageRepository) InstalledGroupCommands() []command.Command {
-	return repo.registry.GroupCommands()
+	return repo.repoIndex.GroupCommands()
 }
 
 func (repo *defaultPackageRepository) InstalledExecutableCommands() []command.Command {
-	return repo.registry.ExecutableCommands()
+	return repo.repoIndex.ExecutableCommands()
 }
 
 func (repo *defaultPackageRepository) InstalledSystemCommands() SystemCommands {
 	return SystemCommands{
-		Login:   repo.registry.SystemLoginCommand(),
-		Metrics: repo.registry.SystemMetricsCommand(),
+		Login:   repo.repoIndex.SystemLoginCommand(),
+		Metrics: repo.repoIndex.SystemMetricsCommand(),
 	}
 }
 
 func (repo *defaultPackageRepository) Package(name string) (command.PackageManifest, error) {
-	return repo.registry.Package(name)
+	return repo.repoIndex.Package(name)
 }
 
-func (repo *defaultPackageRepository) Command(group string, name string) (command.Command, error) {
-	cmd, err := repo.registry.Command(group, name)
+func (repo *defaultPackageRepository) Command(pkg string, group string, name string) (command.Command, error) {
+	cmd, err := repo.repoIndex.Command(pkg, group, name)
 	if err != nil {
 		return nil, fmt.Errorf("cannot find the command %s", name)
 	}

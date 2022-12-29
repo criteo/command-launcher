@@ -46,7 +46,7 @@ type Command interface {
 	CommandManifest
 
 	// the id of the reigstry that the command belongs to
-	RegistryID() string
+	RepositoryID() string
 	// the package name that the command belongs to
 	PackageName() string
 	// the full ID of the command: registry:package:group:name
@@ -55,14 +55,10 @@ type Command interface {
 	FullGroup() string
 	// the full command name: registry:package:group:name
 	FullName() string
-	// the group alias
-	GroupAlias() string
-	// the name alias
-	NameAlias() string
-	// the alias of the command group or the group itself
-	GroupOrAlias() string
-	// the alias of the command name or the name itself
-	NameOrAlias() string
+	// the runtime group of the command
+	RuntimeGroup() string
+	// the runtime name of the command
+	RuntimeName() string
 	// the package directory
 	PackageDir() string
 
@@ -82,9 +78,9 @@ type Command interface {
 
 	SetPackageDir(pkgDir string)
 
-	SetGroupAlias(alias string)
+	SetRuntimeGroup(alias string)
 
-	SetNameAlias(alias string)
+	SetRuntimeName(alias string)
 }
 
 type PackageManifest interface {
@@ -98,8 +94,8 @@ type PackageManifest interface {
 type Package interface {
 	PackageManifest
 
-	// registry ID: default, reg1, reg2, ..., and dropin
-	RegistryID() string
+	// repository ID: dropin, default, repo1, repo2, ...
+	RepositoryID() string
 
 	// verify the sha256 checksum
 	VerifyChecksum(checksum string) (bool, error)

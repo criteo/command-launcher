@@ -1,20 +1,17 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 
-	"github.com/criteo/command-launcher/cmd/consent"
 	"github.com/criteo/command-launcher/cmd/metrics"
 	"github.com/criteo/command-launcher/cmd/updater"
+	"github.com/criteo/command-launcher/internal/backend"
 	"github.com/criteo/command-launcher/internal/command"
 	"github.com/criteo/command-launcher/internal/config"
-	"github.com/criteo/command-launcher/internal/console"
 	ctx "github.com/criteo/command-launcher/internal/context"
-	"github.com/criteo/command-launcher/internal/helper"
+	"github.com/criteo/command-launcher/internal/frontend"
 	"github.com/criteo/command-launcher/internal/remote"
 	"github.com/criteo/command-launcher/internal/repository"
 	"github.com/criteo/command-launcher/internal/user"
@@ -22,7 +19,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
@@ -31,9 +27,13 @@ const (
 )
 
 type rootContext struct {
-	appCtx      ctx.LauncherContext
-	localRepo   repository.PackageRepository
-	dropinRepo  repository.PackageRepository
+	appCtx   ctx.LauncherContext
+	frontend frontend.Frontend
+	backend  backend.Backend
+
+	localRepo  repository.PackageRepository
+	dropinRepo repository.PackageRepository
+
 	selfUpdater updater.SelfUpdater
 	cmdUpdater  updater.CmdUpdater
 	user        user.User
@@ -41,10 +41,57 @@ type rootContext struct {
 }
 
 var (
-	rootCmd      *cobra.Command
-	rootCtxt     = rootContext{}
-	rootExitCode = 0
+	rootCmd  *cobra.Command
+	rootCtxt = rootContext{}
 )
+
+func InitCommands(appName string, appLongName string, version string, buildNum string) {
+	rootCmd = createRootCmd(appName, appLongName)
+	initApp(appName, version, buildNum)
+}
+
+func createRootCmd(appName string, appLongName string) *cobra.Command {
+	return &cobra.Command{
+		Use:   appName,
+		Short: fmt.Sprintf("%s - A command launcher 🚀 made with <3", appLongName),
+		Long: fmt.Sprintf(`
+%s - A command launcher 🚀 made with <3
+
+Happy Coding!
+
+Example:
+  %s --help
+`, appLongName, appName),
+		PersistentPreRun: preRun,
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) == 0 {
+				cmd.Help()
+			}
+		},
+		PersistentPostRun: postRun,
+		SilenceUsage:      true,
+	}
+}
+
+func initApp(appName string, appVersion string, buildNum string) {
+	log.SetLevel(log.FatalLevel)
+	rootCtxt.appCtx = ctx.InitContext(appName, appVersion, buildNum)
+	config.LoadConfig(rootCtxt.appCtx)
+	config.InitLog(rootCtxt.appCtx.AppName())
+
+	initUser()
+	initBackend()
+	addBuiltinCommands()
+	initFrontend()
+}
+
+// We have to add the ctrl+C
+func Execute() {
+	if err := rootCmd.Execute(); err != nil {
+		os.Exit(1)
+	}
+	os.Exit(frontend.RootExitCode)
+}
 
 func preRun(cmd *cobra.Command, args []string) {
 	if selfUpdateEnabled(cmd, args) {
@@ -76,7 +123,7 @@ func postRun(cmd *cobra.Command, args []string) {
 	}
 
 	if metricsEnabled(cmd, args) {
-		err := rootCtxt.metrics.Send(rootExitCode, cmd.Context().Err())
+		err := rootCtxt.metrics.Send(frontend.RootExitCode, cmd.Context().Err())
 		if err != nil {
 			log.Errorln("Metrics usage ♾️ sending has failed")
 		}
@@ -143,25 +190,31 @@ func initCmdUpdater() {
 	}
 }
 
-func initApp() repository.PackageRepository {
-	repo, err := repository.CreateLocalRepository("default", viper.GetString(config.LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY), nil)
-	if err != nil {
-		log.Fatal(err)
-	}
+func initBackend() repository.PackageRepository {
+	rootCtxt.backend, _ = backend.NewDefaultBackend(
+		config.AppDir(),
+		viper.GetString(config.DROPIN_FOLDER_KEY),
+		viper.GetString(config.LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY),
+	)
+	rootCtxt.localRepo = rootCtxt.backend.DefaultRepository()
+	rootCtxt.dropinRepo = rootCtxt.backend.DropinRepository()
 
-	installed := repo.InstalledPackages()
+	installed := rootCtxt.localRepo.InstalledPackages()
 	if len(installed) == 0 {
 		log.Info("Initialization...")
-		installCommands(repo)
+		installCommands(rootCtxt.localRepo)
+		// reload again
+		rootCtxt.backend.Reload()
 	}
 
-	rootCtxt.localRepo = repo
+	return rootCtxt.localRepo
+}
 
-	if dropinRepo, err := repository.CreateLocalRepository("dropin", viper.GetString(config.DROPIN_FOLDER_KEY), nil); err == nil {
-		rootCtxt.dropinRepo = dropinRepo
-	}
+func initFrontend() {
+	frontend := frontend.NewDefaultFrontend(rootCtxt.appCtx, rootCmd, rootCtxt.backend)
+	rootCtxt.frontend = frontend
 
-	return repo
+	frontend.AddUserCommands()
 }
 
 func cmdAndSubCmd(cmd *cobra.Command) (string, string) {
@@ -254,416 +307,6 @@ func addBuiltinCommands() {
 	AddPackageCmd(rootCmd, rootCtxt.appCtx)
 }
 
-func addLocalCommands() {
-	addCommands(rootCtxt.localRepo.InstalledGroupCommands(), rootCtxt.localRepo.InstalledExecutableCommands())
-}
-
-func addDropinCommands() {
-	addCommands(rootCtxt.dropinRepo.InstalledGroupCommands(), rootCtxt.dropinRepo.InstalledExecutableCommands())
-}
-
-func addCommands(groups []command.Command, executables []command.Command) {
-	// first add group commands
-	groupCmds := map[string]*cobra.Command{}
-	for _, v := range groups {
-		group := v.Group()
-		name := v.Name()
-		usage := strings.TrimSpace(fmt.Sprintf("%s %s",
-			v.Name(),
-			strings.TrimSpace(strings.Trim(v.ArgsUsage(), v.Name())),
-		))
-		requiredFlags := v.RequiredFlags()
-		requestedResources := v.RequestedResources()
-		cmd := &cobra.Command{
-			DisableFlagParsing: true,
-			Use:                usage,
-			Example:            formatExamples(v.Examples()),
-			Short:              v.ShortDescription(),
-			Long:               v.LongDescription(),
-			Run: func(cmd *cobra.Command, args []string) {
-				consents, err := consent.GetConsents(group, name, requestedResources, viper.GetBool(config.ENABLE_USER_CONSENT_KEY))
-				if err != nil {
-					log.Warnf("failed to get user consent: %v", err)
-				}
-				exitCode, err := executeCommand(group, name, args, []string{}, consents)
-				if err != nil && err.Error() == EXECUTABLE_NOT_DEFINED {
-					cmd.Help()
-				}
-				rootExitCode = exitCode
-			},
-		}
-		for _, flag := range requiredFlags {
-			addFlagToCmd(cmd, flag)
-		}
-		groupCmds[v.Name()] = cmd
-		rootCmd.AddCommand(cmd)
-	}
-
-	// add executable commands
-	for _, v := range executables {
-		group := v.Group()
-		name := v.Name()
-		usage := strings.TrimSpace(fmt.Sprintf("%s %s",
-			v.Name(),
-			strings.TrimSpace(strings.Trim(v.ArgsUsage(), v.Name())),
-		))
-		requiredFlags := v.RequiredFlags()
-		validArgs := v.ValidArgs()
-		validArgsCmd := v.ValidArgsCmd()
-		checkFlags := v.CheckFlags()
-		requestedResources := v.RequestedResources()
-		// flagValuesCmd := v.FlagValuesCmd()
-		cmd := &cobra.Command{
-			DisableFlagParsing: true,
-			Use:                usage,
-			Example:            formatExamples(v.Examples()),
-			Short:              v.ShortDescription(),
-			Long:               v.LongDescription(),
-			Run: func(c *cobra.Command, args []string) {
-				consents, err := consent.GetConsents(group, name, requestedResources, viper.GetBool(config.ENABLE_USER_CONSENT_KEY))
-				if err != nil {
-					log.Warnf("failed to get user consent: %v", err)
-				}
-
-				envVars, code, shouldQuit := parseArgsToEnvVars(c, args, checkFlags)
-				if shouldQuit {
-					rootExitCode = code
-					return
-				}
-
-				// TODO: in order to support flag value auto completion, we need to set DisableFlagParsing: false
-				// when setting disable flagParsing to false, the parent command will parse the flags
-				// so the args pass to the subcommand will not include the flags
-				// we need to restore the flags into args here
-				// considering the complexity here, we will cover it later
-				if exitCode, err := executeCommand(group, name, args, envVars, consents); err != nil {
-					rootExitCode = exitCode
-				}
-			},
-		}
-
-		// TODO: uncomment to enable the flag value auto-completion
-		/*
-			cmd.SetHelpFunc(func(c *cobra.Command, args []string) {
-				err := executeCommand(group, name, args)
-				if err != nil {
-					c.Help()
-				}
-			})
-		*/
-
-		for _, flag := range requiredFlags {
-			addFlagToCmd(cmd, flag)
-			// TODO: enable flag parsing in cdt command to enable the flag value auto-completion.
-			// for now comment out this code as it will impact the flag parsing for the subcommand
-			// need to work it later
-			/*
-				cmd.RegisterFlagCompletionFunc(flagName, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-					// call external command for flag value completon
-					if len(flagValuesCmd) > 0 {
-						flagValuesCmdArgs := append([]string{flagName}, args...)
-						output, err := executeFlagValuesOfCommand(group, name, flagValuesCmdArgs)
-						if err != nil {
-							return []string{}, cobra.ShellCompDirectiveNoFileComp
-						}
-						parts := strings.Split(output, "\n")
-						if len(parts) > 0 {
-							if strings.HasPrefix(parts[0], "#") { // skip the first control line, for further controls
-								return parts[1:], cobra.ShellCompDirectiveNoFileComp
-							}
-							return parts, cobra.ShellCompDirectiveNoFileComp
-						}
-					}
-					return []string{}, cobra.ShellCompDirectiveNoFileComp
-				})
-			*/
-		}
-
-		cmd.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-			if len(validArgsCmd) > 0 {
-				output, err := executeValidArgsOfCommand(group, name, args)
-				if err != nil {
-					return []string{}, cobra.ShellCompDirectiveNoFileComp
-				}
-				parts := strings.Split(output, "\n")
-				if len(parts) > 0 {
-					if strings.HasPrefix(parts[0], "#") { // skip the first control line, for further controls
-						// the first line starting with # is the control line, it controls the completion behavior when the return body is empty
-						shellDirective := cobra.ShellCompDirectiveNoFileComp
-						switch strings.TrimSpace(strings.TrimLeft(parts[0], "#")) {
-						case "dir-completion-only":
-							shellDirective = cobra.ShellCompDirectiveFilterDirs
-						case "default":
-							shellDirective = cobra.ShellCompDirectiveDefault
-						case "no-file-completion":
-							shellDirective = cobra.ShellCompDirectiveNoFileComp
-						}
-						return parts[1:], shellDirective
-					}
-					return parts, cobra.ShellCompDirectiveNoFileComp
-				}
-			}
-			if len(validArgs) > 0 {
-				return validArgs, cobra.ShellCompDirectiveNoFileComp
-			}
-			return []string{}, cobra.ShellCompDirectiveDefault
-		}
-
-		if v.Group() == "" {
-			rootCmd.AddCommand(cmd)
-		} else {
-			if group, exists := groupCmds[v.Group()]; exists {
-				group.AddCommand(cmd)
-			} else {
-				log.Errorf("cannot install cmd %s in group %s: group not found", v.Name(), v.Group())
-			}
-		}
-
-	}
-}
-
-// parse args and inject environment vars
-// return the environment vars, and if we should exit
-func parseArgsToEnvVars(c *cobra.Command, args []string, checkFlags bool) ([]string, int, bool) {
-	var envVars []string = []string{}
-	var envTable map[string]string = map[string]string{}
-
-	log.Debugf("checkFlags=%t", checkFlags)
-	if checkFlags {
-		var err error = nil
-		envVarPrefix := strings.ToUpper(rootCtxt.appCtx.AppName())
-		envVars, envTable, err = parseCmdArgsToEnv(c, args, envVarPrefix)
-		if err != nil {
-			console.Error("Failed to parse arguments: %v", err)
-			// set exit code to 1, and should quit
-			return envVars, 1, true
-		}
-		if h, exist := envTable[fmt.Sprintf("%s_FLAG_HELP", envVarPrefix)]; exist && h == "true" {
-			c.Help()
-			// show help and should quit
-			return envVars, 0, true
-		}
-	}
-	log.Debugf("flag & args environments: %v", envVars)
-
-	return envVars, 0, false
-}
-
-func formatExamples(examples []command.ExampleEntry) string {
-	if examples == nil || len(examples) == 0 {
-		return ""
-	}
-
-	output := []string{}
-
-	for _, v := range examples {
-		output = append(output, fmt.Sprintf(`  # %s
-  %s
-`, v.Scenario, v.Command))
-	}
-
-	return strings.Join(output, "\n")
-}
-
-func getExecutableCommand(group, name string) (command.Command, error) {
-	/* first check dropin repository, if not found, check the local repo
-	this will allow the dropin command override remote version for testing
-	*/
-	iCmd, err := rootCtxt.dropinRepo.Command(group, name)
-	if err != nil {
-		return rootCtxt.localRepo.Command(group, name)
-	}
-	return iCmd, err
-}
-
-// execute a cdt command
-func executeCommand(group, name string, args []string, initialEnvCtx []string, consent []string) (int, error) {
-	iCmd, err := getExecutableCommand(group, name)
-	if err != nil {
-		return 1, err
-	}
-	if iCmd.Executable() == "" {
-		return 1, errors.New(EXECUTABLE_NOT_DEFINED)
-	}
-
-	envCtx := getCmdEnvContext(initialEnvCtx, consent)
-	exitCode, err := iCmd.Execute(envCtx, args...)
-	if err != nil {
-		return exitCode, err
-	}
-
-	return 0, nil
-}
-
-// execute the valid args command of the cdt command
-func executeValidArgsOfCommand(group, name string, args []string) (string, error) {
-	iCmd, err := getExecutableCommand(group, name)
-	if err != nil {
-		return "", err
-	}
-
-	envCtx := getCmdEnvContext([]string{}, []string{})
-
-	_, output, err := iCmd.ExecuteValidArgsCmd(envCtx, args...)
-	if err != nil {
-		return "", err
-	}
-
-	return output, nil
-}
-
-// execute the flag values command of the cdt command
-func executeFlagValuesOfCommand(group, name string, args []string) (string, error) {
-	iCmd, err := getExecutableCommand(group, name)
-	if err != nil {
-		return "", err
-	}
-
-	envCtx := getCmdEnvContext([]string{}, []string{})
-
-	_, output, err := iCmd.ExecuteFlagValuesCmd(envCtx, args...)
-	if err != nil {
-		return "", err
-	}
-
-	return output, nil
-}
-
-func addFlagToCmd(cmd *cobra.Command, flag string) {
-	flagName, flagShort, flagDesc, flagType, defaultValue := parseFlagDefinition(flag)
-	switch flagType {
-	case "bool":
-		// always use false as the default for the bool type
-		cmd.Flags().BoolP(flagName, flagShort, false, flagDesc)
-	default:
-		cmd.Flags().StringP(flagName, flagShort, defaultValue, flagDesc)
-	}
-}
-
-func parseFlagDefinition(line string) (string, string, string, string, string) {
-	flagParts := strings.Split(line, "\t")
-	name := strings.TrimSpace(flagParts[0])
-	short := ""
-	description := ""
-	flagType := "string"
-	defaultValue := ""
-	if len(flagParts) == 2 {
-		description = strings.TrimSpace(flagParts[1])
-	}
-	if len(flagParts) > 2 {
-		short = strings.TrimSpace(flagParts[1])
-		description = strings.TrimSpace(flagParts[2])
-	}
-	if len(flagParts) > 3 {
-		flagType = strings.TrimSpace(flagParts[3])
-	}
-	if len(flagParts) > 4 {
-		defaultValue = strings.TrimSpace(flagParts[4])
-	}
-
-	return name, short, description, flagType, defaultValue
-}
-
-func getCmdEnvContext(envVars []string, consents []string) []string {
-	vars := append([]string{}, envVars...)
-
-	for _, item := range consents {
-		switch item {
-		case consent.USERNAME:
-			username, err := helper.GetUsername()
-			if err != nil {
-				username = ""
-			}
-			if username != "" {
-				vars = append(vars, fmt.Sprintf("%s=%s", rootCtxt.appCtx.UsernameEnvVar(), username))
-			}
-		case consent.PASSWORD:
-			password, err := helper.GetPassword()
-			if err != nil {
-				password = ""
-			}
-			if password != "" {
-				vars = append(vars, fmt.Sprintf("%s=%s", rootCtxt.appCtx.PasswordEnvVar(), password))
-			}
-		case consent.AUTH_TOKEN:
-			token, err := helper.GetAuthToken()
-			if err != nil {
-				token = ""
-			}
-			if token != "" {
-				vars = append(vars, fmt.Sprintf("%s=%s", rootCtxt.appCtx.AuthTokenEnvVar(), token))
-			}
-		case consent.LOG_LEVEL:
-			// append log level from configuration
-			logLevel := viper.GetString(config.LOG_LEVEL_KEY)
-			vars = append(vars, fmt.Sprintf("%s=%s",
-				rootCtxt.appCtx.LogLevelEnvVar(),
-				logLevel,
-			))
-		case consent.DEBUG_FLAGS:
-			// append debug flags from configuration
-			debugFlags := os.Getenv(rootCtxt.appCtx.DebugFlagsEnvVar())
-			vars = append(vars, fmt.Sprintf("%s=%s,%s",
-				rootCtxt.appCtx.DebugFlagsEnvVar(),
-				debugFlags,
-				viper.GetString(config.DEBUG_FLAGS_KEY),
-			))
-		}
-	}
-
-	// Enable variable with prefix [binary_name] and COLA
-	// TODO: remove it when in version 1.8 all variables are migrated to COLA prefix
-	outputVars := []string{}
-	for _, v := range vars {
-		prefix := fmt.Sprintf("%s_", strings.ToUpper(rootCtxt.appCtx.AppName()))
-		if strings.HasPrefix(v, prefix) && prefix != "COLA_" {
-			outputVars = append(outputVars, strings.Replace(v, prefix, "COLA_", 1))
-		}
-		outputVars = append(outputVars, v)
-	}
-
-	return outputVars
-}
-
-func parseCmdArgsToEnv(c *cobra.Command, args []string, envVarPrefix string) ([]string, map[string]string, error) {
-	envVars := []string{}
-	envTable := map[string]string{}
-	if err := c.LocalFlags().Parse(args); err != nil {
-		return envVars, envTable, err
-	}
-	c.LocalFlags().VisitAll(func(flag *pflag.Flag) {
-		n := strings.ReplaceAll(strings.ToUpper(flag.Name), "-", "_")
-		v := flag.Value.String()
-		k := fmt.Sprintf("%s_FLAG_%s", envVarPrefix, n)
-		envVars = append(envVars,
-			fmt.Sprintf(
-				"%s=%s",
-				k, v,
-			),
-		)
-		envTable[k] = v
-	})
-	for idx, arg := range c.LocalFlags().Args() {
-		k := fmt.Sprintf("%s_ARG_%s", envVarPrefix, strconv.Itoa(idx+1))
-		envVars = append(envVars, fmt.Sprintf("%s=%s", k, arg))
-		envTable[k] = arg
-	}
-	return envVars, envTable, nil
-}
-
-func initContext(appName string, appVersion string, buildNum string) {
-	log.SetLevel(log.FatalLevel)
-	rootCtxt.appCtx = ctx.InitContext(appName, appVersion, buildNum)
-	config.LoadConfig(rootCtxt.appCtx)
-	config.InitLog(rootCtxt.appCtx.AppName())
-
-	initUser()
-	initApp()
-	addBuiltinCommands()
-	addLocalCommands()
-	addDropinCommands()
-}
-
 func getSystemCommand(name string) command.Command {
 	sysCmds := rootCtxt.localRepo.InstalledSystemCommands()
 	switch name {
@@ -673,40 +316,4 @@ func getSystemCommand(name string) command.Command {
 		return sysCmds.Metrics
 	}
 	return nil
-}
-
-func createRootCmd(appName string, appLongName string) *cobra.Command {
-	return &cobra.Command{
-		Use:   appName,
-		Short: fmt.Sprintf("%s - A command launcher 🚀 made with <3", appLongName),
-		Long: fmt.Sprintf(`
-%s - A command launcher 🚀 made with <3
-
-Happy Coding!
-
-Example:
-  %s --help
-`, appLongName, appName),
-		PersistentPreRun: preRun,
-		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) == 0 {
-				cmd.Help()
-			}
-		},
-		PersistentPostRun: postRun,
-		SilenceUsage:      true,
-	}
-}
-
-func InitCommands(appName string, appLongName string, version string, buildNum string) {
-	rootCmd = createRootCmd(appName, appLongName)
-	initContext(appName, version, buildNum)
-}
-
-// We have to add the ctrl+C
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		os.Exit(1)
-	}
-	os.Exit(rootExitCode)
 }

@@ -25,10 +25,11 @@ type DefaultBackend struct {
 	repos    []repository.PackageRepository
 
 	cmdsCache      map[string]command.Command
-	groupCmds      map[string]command.Command
-	executableCmds map[string]command.Command
+	groupCmds      []command.Command
+	executableCmds []command.Command
 
-	alias map[string]string
+	userAlias map[string]string
+	tmpAlias  map[string]string
 }
 
 const DROPIN_REPO_INDEX = 0
@@ -38,19 +39,33 @@ const DROPIN_REPO_ID = "dropin"
 
 // Create a new default backend with multiple local repository directories
 // When any of these repositories failed to load, an error is returned.
-func NewDefaultBackend(appHomeDir string, dropinRepoDir string, defaultRepoDir string, additionalRepoDirs ...string) (*DefaultBackend, error) {
+func NewDefaultBackend(appHomeDir string, dropinRepoDir string, defaultRepoDir string, additionalRepoDirs ...string) (Backend, error) {
 	backend := &DefaultBackend{
-		homeDir:   appHomeDir,
-		repoDirs:  append([]string{dropinRepoDir, defaultRepoDir}, additionalRepoDirs...),
-		repos:     []repository.PackageRepository{},
-		cmdsCache: map[string]command.Command{},
-		alias:     map[string]string{},
+		// input properties
+		homeDir:  appHomeDir,
+		repoDirs: append([]string{dropinRepoDir, defaultRepoDir}, additionalRepoDirs...),
+
+		// data need to be reset during reload
+		repos:          []repository.PackageRepository{},
+		cmdsCache:      map[string]command.Command{},
+		groupCmds:      []command.Command{},
+		executableCmds: []command.Command{},
+		userAlias:      map[string]string{},
+		tmpAlias:       map[string]string{},
 	}
-	err := backend.load()
+	err := backend.Reload()
+	// backend.Debug()
 	return backend, err
 }
 
-func (backend *DefaultBackend) load() error {
+func (backend *DefaultBackend) Reload() error {
+	backend.repos = []repository.PackageRepository{}
+	backend.cmdsCache = make(map[string]command.Command)
+	backend.groupCmds = []command.Command{}
+	backend.executableCmds = []command.Command{}
+	backend.userAlias = make(map[string]string)
+	backend.tmpAlias = make(map[string]string)
+
 	err := backend.loadRepos()
 	backend.loadAlias()
 	backend.extractCmds()
@@ -100,10 +115,10 @@ func (backend *DefaultBackend) loadAlias() error {
 			return fmt.Errorf("cannot read the alias file (%s)", err)
 		}
 
-		err = yaml.Unmarshal(payload, backend.alias)
+		err = yaml.Unmarshal(payload, backend.userAlias)
 
 		if err != nil {
-			backend.alias = map[string]string{}
+			backend.userAlias = map[string]string{}
 			return fmt.Errorf("cannot read the manifest content, it is neither a valid JSON nor YAML (%s)", err)
 		}
 		return nil
@@ -112,48 +127,75 @@ func (backend *DefaultBackend) loadAlias() error {
 	}
 }
 
+func (backend *DefaultBackend) setRuntimeByAlias(cmd command.Command) {
+	// first check runtime filter
+	if alias, ok := backend.tmpAlias[cmd.FullGroup()]; ok {
+		cmd.SetRuntimeGroup(alias)
+	}
+	if alias, ok := backend.tmpAlias[cmd.FullName()]; ok {
+		cmd.SetRuntimeName(alias)
+	}
+	// override any tmp filer if it defined by user
+	if alias, ok := backend.userAlias[cmd.FullGroup()]; ok {
+		cmd.SetRuntimeGroup(alias)
+	}
+	if alias, ok := backend.userAlias[cmd.FullName()]; ok {
+		cmd.SetRuntimeName(alias)
+	}
+}
+
 func (backend *DefaultBackend) extractCmds() {
 	for _, repo := range backend.repos {
-		cmds := repo.InstalledCommands()
+		// first extract group commands
+		cmds := repo.InstalledGroupCommands()
 		for _, cmd := range cmds {
-			if alias, ok := backend.alias[cmd.FullGroup()]; ok {
-				cmd.SetGroupAlias(alias)
-			}
-			if alias, ok := backend.alias[cmd.FullName()]; ok {
-				cmd.SetNameAlias(alias)
+			backend.setRuntimeByAlias(cmd)
+
+			key := getCmdSearchKey(cmd)
+			if _, exist := backend.cmdsCache[key]; exist {
+				// conflict
+				cmd.SetRuntimeName(cmd.FullName())
+				backend.tmpAlias[cmd.FullName()] = cmd.FullName()
+				key = getCmdSearchKey(cmd)
 			}
 
-			if _, exist := backend.cmdsCache[getCmdSearchKey(cmd)]; exist {
+			backend.cmdsCache[key] = cmd
+			backend.groupCmds = append(backend.groupCmds, cmd)
+		}
+
+		// now extract executable commands
+		cmds = repo.InstalledExecutableCommands()
+		for _, cmd := range cmds {
+			backend.setRuntimeByAlias(cmd)
+
+			key := getCmdSearchKey(cmd)
+			if _, exist := backend.cmdsCache[key]; exist {
 				// conflict
-				if cmd.Type() == "group" {
-					cmd.SetGroupAlias(cmd.FullGroup())
-				} else if cmd.Type() == "executable" {
-					if cmd.Group() == "" {
-						cmd.SetNameAlias(cmd.FullName())
-					} else {
-						cmd.SetGroupAlias(cmd.FullGroup())
-					}
+				if cmd.Group() == "" {
+					cmd.SetRuntimeName(cmd.FullName())
+					backend.tmpAlias[cmd.FullName()] = cmd.FullName()
+				} else {
+					cmd.SetRuntimeGroup(cmd.FullGroup())
+					backend.tmpAlias[cmd.FullGroup()] = cmd.FullGroup()
 				}
 			}
 
-			key := getCmdSearchKey(cmd)
+			key = getCmdSearchKey(cmd)
 			backend.cmdsCache[key] = cmd
-			switch cmd.Type() {
-			case "group":
-				backend.groupCmds[key] = cmd
-			case "executable":
-				backend.executableCmds[key] = cmd
-			}
+			backend.executableCmds = append(backend.executableCmds, cmd)
 		}
+
+		// system commands
+		// TODO:
 	}
 }
 
 func getCmdSearchKey(cmd command.Command) string {
 	switch cmd.Type() {
 	case "group":
-		return fmt.Sprintf("#%s", cmd.GroupOrAlias())
+		return fmt.Sprintf("#%s", cmd.RuntimeName())
 	case "executable":
-		return fmt.Sprintf("%s#%s", cmd.GroupOrAlias(), cmd.NameOrAlias())
+		return fmt.Sprintf("%s#%s", cmd.RuntimeGroup(), cmd.RuntimeName())
 	case "system":
 		return cmd.Name()
 	}
@@ -172,19 +214,11 @@ func (backend *DefaultBackend) FindCommand(group string, name string) (command.C
 }
 
 func (backend DefaultBackend) GroupCommands() []command.Command {
-	cmds := make([]command.Command, 0)
-	for _, v := range backend.groupCmds {
-		cmds = append(cmds, v)
-	}
-	return cmds
+	return backend.groupCmds
 }
 
 func (backend DefaultBackend) ExecutableCommands() []command.Command {
-	cmds := make([]command.Command, 0)
-	for _, v := range backend.executableCmds {
-		cmds = append(cmds, v)
-	}
-	return cmds
+	return backend.executableCmds
 }
 
 func (backend *DefaultBackend) RenameCommand(cmd command.Command, new_name string) error {
@@ -194,12 +228,12 @@ func (backend *DefaultBackend) RenameCommand(cmd command.Command, new_name strin
 
 	switch cmd.Type() {
 	case "group":
-		backend.alias[cmd.FullGroup()] = new_name
+		backend.userAlias[cmd.FullGroup()] = new_name
 	case "executable":
-		backend.alias[cmd.FullName()] = new_name
+		backend.userAlias[cmd.FullName()] = new_name
 	}
 
-	payload, err := json.Marshal(backend.alias)
+	payload, err := json.Marshal(backend.userAlias)
 	if err != nil {
 		return fmt.Errorf("can't encode alias in json: %v", err)
 	}
@@ -225,4 +259,16 @@ func (backend DefaultBackend) DropinRepository() repository.PackageRepository {
 
 func (backend DefaultBackend) AllRepositories() []repository.PackageRepository {
 	return backend.repos
+}
+
+func (backend DefaultBackend) Debug() {
+	for _, c := range backend.groupCmds {
+		fmt.Printf("%-30s %-30s %s\n", c.RuntimeGroup(), c.RuntimeName(), c.ID())
+	}
+	for _, c := range backend.executableCmds {
+		fmt.Printf("%-30s %-30s %s\n", c.RuntimeGroup(), c.RuntimeName(), c.ID())
+	}
+	for k, c := range backend.cmdsCache {
+		fmt.Printf("%-30s %-30s\n", k, c.ID())
+	}
 }

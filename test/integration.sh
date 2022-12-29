@@ -5,6 +5,8 @@ SCRIPT_DIR=${SCRIPT_DIR:-$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/
 SCRIPT_DIR=${SCRIPT_DIR//\\//}
 echo "integration test directory: $SCRIPT_DIR"
 
+KEEP_OUTPUT=${KEEP_OUTPUT:-"no"}
+
 EXIT_CODE=0
 TEST_COUNT=0
 FAILURE_COUNT=0
@@ -91,8 +93,12 @@ fi
 ##
 # remove the output folder
 ##
-echo "clean up"
-rm -rf $OUTPUT_DIR
+if [ $KEEP_OUTPUT == "yes" ]; then
+  echo "KEEP_OUTPUT = yes, skip clean up"
+else
+  echo "clean up"
+  rm -rf $OUTPUT_DIR
+fi
 
 echo ""
 echo "Total test suits $TEST_COUNT, failure $FAILURE_COUNT"
