@@ -18,6 +18,8 @@ type Backend interface {
 	// It maps the (group, name) to (registry/repository, package, group, name)
 	FindCommand(group string, name string) (command.Command, error)
 
+	FindCommandByFullName(fullName string) (command.Command, error)
+
 	// Get all group commands
 	GroupCommands() []command.Command
 

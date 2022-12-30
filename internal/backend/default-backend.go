@@ -37,6 +37,8 @@ const DEFAULT_REPO_INDEX = 1
 const DEFAULT_REPO_ID = "default"
 const DROPIN_REPO_ID = "dropin"
 
+const RENAME_FILE_NAME = "rename.json"
+
 // Create a new default backend with multiple local repository directories
 // When any of these repositories failed to load, an error is returned.
 func NewDefaultBackend(homeDir string, dropinSource *PackageSource, defaultSource *PackageSource, additionalSources ...*PackageSource) (Backend, error) {
@@ -100,21 +102,21 @@ func (backend *DefaultBackend) loadRepos() error {
 }
 
 func (backend *DefaultBackend) loadAlias() error {
-	if aliasFile, err := os.Open(filepath.Join(backend.homeDir, "alias.json")); err == nil {
-		defer aliasFile.Close()
+	if renameFile, err := os.Open(filepath.Join(backend.homeDir, RENAME_FILE_NAME)); err == nil {
+		defer renameFile.Close()
 		if err != nil {
-			return fmt.Errorf("no such alias file found (%s)", err)
+			return fmt.Errorf("no such rename file found (%s)", err)
 		}
 
-		stat, err := aliasFile.Stat()
+		stat, err := renameFile.Stat()
 		if err != nil {
-			return fmt.Errorf("cannot read alias file (%s)", err)
+			return fmt.Errorf("cannot read rename file (%s)", err)
 		}
 
 		var payload = make([]byte, stat.Size())
-		nb, err := aliasFile.Read(payload)
+		nb, err := renameFile.Read(payload)
 		if err != nil && err != io.EOF || nb != int(stat.Size()) {
-			return fmt.Errorf("cannot read the alias file (%s)", err)
+			return fmt.Errorf("cannot read the rename file (%s)", err)
 		}
 
 		err = yaml.Unmarshal(payload, backend.userAlias)
@@ -131,18 +133,18 @@ func (backend *DefaultBackend) loadAlias() error {
 
 func (backend *DefaultBackend) setRuntimeByAlias(cmd command.Command) {
 	// first check runtime filter
-	if alias, ok := backend.tmpAlias[cmd.FullGroup()]; ok {
-		cmd.SetRuntimeGroup(alias)
+	if rename, ok := backend.tmpAlias[cmd.FullGroup()]; ok {
+		cmd.SetRuntimeGroup(rename)
 	}
-	if alias, ok := backend.tmpAlias[cmd.FullName()]; ok {
-		cmd.SetRuntimeName(alias)
+	if rename, ok := backend.tmpAlias[cmd.FullName()]; ok {
+		cmd.SetRuntimeName(rename)
 	}
 	// override any tmp filer if it defined by user
-	if alias, ok := backend.userAlias[cmd.FullGroup()]; ok {
-		cmd.SetRuntimeGroup(alias)
+	if rename, ok := backend.userAlias[cmd.FullGroup()]; ok {
+		cmd.SetRuntimeGroup(rename)
 	}
-	if alias, ok := backend.userAlias[cmd.FullName()]; ok {
-		cmd.SetRuntimeName(alias)
+	if rename, ok := backend.userAlias[cmd.FullName()]; ok {
+		cmd.SetRuntimeName(rename)
 	}
 }
 
@@ -219,6 +221,15 @@ func (backend *DefaultBackend) FindCommand(group string, name string) (command.C
 	return cmd, nil
 }
 
+func (backend DefaultBackend) FindCommandByFullName(fullName string) (command.Command, error) {
+	for _, c := range backend.cmdsCache {
+		if c.FullName() == fullName {
+			return c, nil
+		}
+	}
+	return nil, fmt.Errorf("Not found")
+}
+
 func (backend DefaultBackend) GroupCommands() []command.Command {
 	return backend.groupCmds
 }
@@ -240,24 +251,21 @@ func (backend DefaultBackend) SystemCommand(name string) command.Command {
 
 func (backend *DefaultBackend) RenameCommand(cmd command.Command, new_name string) error {
 	if new_name == "" {
-		return fmt.Errorf("can't create an empty string alias")
-	}
-
-	switch cmd.Type() {
-	case "group":
-		backend.userAlias[cmd.FullGroup()] = new_name
-	case "executable":
+		if _, ok := backend.userAlias[cmd.FullName()]; ok {
+			delete(backend.userAlias, cmd.FullName())
+		}
+	} else {
 		backend.userAlias[cmd.FullName()] = new_name
 	}
 
 	payload, err := json.Marshal(backend.userAlias)
 	if err != nil {
-		return fmt.Errorf("can't encode alias in json: %v", err)
+		return fmt.Errorf("can't encode rename in json: %v", err)
 	}
 
-	err = os.WriteFile(filepath.Join(backend.homeDir, "alias.json"), payload, 0755)
+	err = os.WriteFile(filepath.Join(backend.homeDir, RENAME_FILE_NAME), payload, 0755)
 	if err != nil {
-		return fmt.Errorf("can't write alias filen: %v", err)
+		return fmt.Errorf("can't write rename filen: %v", err)
 	}
 	return nil
 }
