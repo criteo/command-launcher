@@ -30,6 +30,9 @@ type Backend interface {
 	// Find a system command by its name
 	FindSystemCommand(name string) (command.Command, error)
 
+	// Get all packages sources managed by this backend
+	AllPackageSources() []*PackageSource
+
 	// Return all repositories or an empty slice
 	AllRepositories() []repository.PackageRepository
 

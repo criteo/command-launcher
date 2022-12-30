@@ -14,15 +14,15 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// DefaultBackend supports multiple local repositories
+// DefaultBackend supports multiple managed repositories and 1 dropin repository
 // It contains:
 // - 1 dropin local repository - index 0
 // - 1 default managed repository - index 1
 // - n additional managed repository - index 2 ..
 type DefaultBackend struct {
-	homeDir  string
-	repoDirs []string
-	repos    []repository.PackageRepository
+	homeDir string
+	sources []*PackageSource
+	// repos   []repository.PackageRepository
 
 	cmdsCache      map[string]command.Command
 	groupCmds      []command.Command
@@ -39,14 +39,13 @@ const DROPIN_REPO_ID = "dropin"
 
 // Create a new default backend with multiple local repository directories
 // When any of these repositories failed to load, an error is returned.
-func NewDefaultBackend(appHomeDir string, dropinRepoDir string, defaultRepoDir string, additionalRepoDirs ...string) (Backend, error) {
+func NewDefaultBackend(homeDir string, dropinSource *PackageSource, defaultSource *PackageSource, additionalSources ...*PackageSource) (Backend, error) {
 	backend := &DefaultBackend{
 		// input properties
-		homeDir:  appHomeDir,
-		repoDirs: append([]string{dropinRepoDir, defaultRepoDir}, additionalRepoDirs...),
+		homeDir: homeDir,
+		sources: append([]*PackageSource{dropinSource, defaultSource}, additionalSources...),
 
 		// data need to be reset during reload
-		repos:          []repository.PackageRepository{},
 		cmdsCache:      map[string]command.Command{},
 		groupCmds:      []command.Command{},
 		executableCmds: []command.Command{},
@@ -54,12 +53,13 @@ func NewDefaultBackend(appHomeDir string, dropinRepoDir string, defaultRepoDir s
 		tmpAlias:       map[string]string{},
 	}
 	err := backend.Reload()
-	// backend.Debug()
 	return backend, err
 }
 
 func (backend *DefaultBackend) Reload() error {
-	backend.repos = []repository.PackageRepository{}
+	for _, s := range backend.sources {
+		s.Repo = nil
+	}
 	backend.cmdsCache = make(map[string]command.Command)
 	backend.groupCmds = []command.Command{}
 	backend.executableCmds = []command.Command{}
@@ -74,7 +74,8 @@ func (backend *DefaultBackend) Reload() error {
 
 func (backend *DefaultBackend) loadRepos() error {
 	failures := []string{}
-	for i, repoDir := range backend.repoDirs {
+	for i, src := range backend.sources {
+		repoDir := src.RepoDir
 		repoID := ""
 		switch i {
 		case DROPIN_REPO_INDEX:
@@ -87,8 +88,9 @@ func (backend *DefaultBackend) loadRepos() error {
 		repo, err := repository.CreateLocalRepository(repoID, repoDir, nil)
 		if err != nil {
 			failures = append(failures, err.Error())
+			src.Failure = err
 		} else {
-			backend.repos = append(backend.repos, repo)
+			src.Repo = repo
 		}
 	}
 	if len(failures) > 0 {
@@ -145,7 +147,11 @@ func (backend *DefaultBackend) setRuntimeByAlias(cmd command.Command) {
 }
 
 func (backend *DefaultBackend) extractCmds() {
-	for _, repo := range backend.repos {
+	for _, src := range backend.sources {
+		repo := src.Repo
+		if repo == nil {
+			continue
+		}
 		// first extract group commands
 		cmds := repo.InstalledGroupCommands()
 		for _, cmd := range cmds {
@@ -250,15 +256,23 @@ func (backend *DefaultBackend) FindSystemCommand(name string) (command.Command, 
 }
 
 func (backend DefaultBackend) DefaultRepository() repository.PackageRepository {
-	return backend.repos[DEFAULT_REPO_INDEX]
+	return backend.sources[DEFAULT_REPO_INDEX].Repo
 }
 
 func (backend DefaultBackend) DropinRepository() repository.PackageRepository {
-	return backend.repos[DROPIN_REPO_INDEX]
+	return backend.sources[DROPIN_REPO_INDEX].Repo
+}
+
+func (backend DefaultBackend) AllPackageSources() []*PackageSource {
+	return backend.sources
 }
 
 func (backend DefaultBackend) AllRepositories() []repository.PackageRepository {
-	return backend.repos
+	repos := []repository.PackageRepository{}
+	for _, src := range backend.sources {
+		repos = append(repos, src.Repo)
+	}
+	return repos
 }
 
 func (backend DefaultBackend) Debug() {

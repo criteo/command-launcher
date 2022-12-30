@@ -6,14 +6,13 @@ import (
 	"strings"
 
 	"github.com/criteo/command-launcher/cmd/metrics"
-	"github.com/criteo/command-launcher/cmd/updater"
 	"github.com/criteo/command-launcher/internal/backend"
 	"github.com/criteo/command-launcher/internal/command"
 	"github.com/criteo/command-launcher/internal/config"
 	ctx "github.com/criteo/command-launcher/internal/context"
 	"github.com/criteo/command-launcher/internal/frontend"
-	"github.com/criteo/command-launcher/internal/remote"
 	"github.com/criteo/command-launcher/internal/repository"
+	"github.com/criteo/command-launcher/internal/updater"
 	"github.com/criteo/command-launcher/internal/user"
 
 	log "github.com/sirupsen/logrus"
@@ -35,7 +34,7 @@ type rootContext struct {
 	dropinRepo repository.PackageRepository
 
 	selfUpdater updater.SelfUpdater
-	cmdUpdater  updater.CmdUpdater
+	cmdUpdaters []*updater.CmdUpdater
 	user        user.User
 	metrics     metrics.Metrics
 }
@@ -79,8 +78,11 @@ func initApp(appName string, appVersion string, buildNum string) {
 	config.LoadConfig(rootCtxt.appCtx)
 	config.InitLog(rootCtxt.appCtx.AppName())
 
+	rootCtxt.cmdUpdaters = make([]*updater.CmdUpdater, 0)
+
 	initUser()
 	initBackend()
+
 	addBuiltinCommands()
 	initFrontend()
 }
@@ -101,7 +103,9 @@ func preRun(cmd *cobra.Command, args []string) {
 
 	if cmdUpdateEnabled(cmd, args) {
 		initCmdUpdater()
-		rootCtxt.cmdUpdater.CheckUpdateAsync()
+		for _, updater := range rootCtxt.cmdUpdaters {
+			updater.CheckUpdateAsync()
+		}
 	}
 
 	graphite := metrics.NewGraphiteMetricsCollector(viper.GetString(config.METRIC_GRAPHITE_HOST_KEY))
@@ -115,7 +119,9 @@ func preRun(cmd *cobra.Command, args []string) {
 
 func postRun(cmd *cobra.Command, args []string) {
 	if cmdUpdateEnabled(cmd, args) {
-		rootCtxt.cmdUpdater.Update()
+		for _, updater := range rootCtxt.cmdUpdaters {
+			updater.Update()
+		}
 	}
 
 	if selfUpdateEnabled(cmd, args) {
@@ -178,32 +184,55 @@ func initSelfUpdater() {
 }
 
 func initCmdUpdater() {
-	rootCtxt.cmdUpdater = updater.CmdUpdater{
-		LocalRepo:            rootCtxt.localRepo,
-		CmdRepositoryBaseUrl: viper.GetString(config.COMMAND_REPOSITORY_BASE_URL_KEY),
-		User:                 rootCtxt.user,
-		Timeout:              viper.GetDuration(config.SELF_UPDATE_TIMEOUT_KEY),
-		EnableCI:             viper.GetBool(config.CI_ENABLED_KEY),
-		PackageLockFile:      viper.GetString(config.PACKAGE_LOCK_FILE_KEY),
-		VerifyChecksum:       viper.GetBool(config.VERIFY_PACKAGE_CHECKSUM_KEY),
-		VerifySignature:      viper.GetBool(config.VERIFY_PACKAGE_SIGNATURE_KEY),
+	for _, source := range rootCtxt.backend.AllPackageSources() {
+		updater := source.InitUpdater(
+			&rootCtxt.user,
+			viper.GetDuration(config.SELF_UPDATE_TIMEOUT_KEY),
+			viper.GetBool(config.CI_ENABLED_KEY),
+			viper.GetString(config.PACKAGE_LOCK_FILE_KEY),
+			viper.GetBool(config.VERIFY_PACKAGE_CHECKSUM_KEY),
+			viper.GetBool(config.VERIFY_PACKAGE_SIGNATURE_KEY),
+		)
+		if updater != nil {
+			rootCtxt.cmdUpdaters = append(rootCtxt.cmdUpdaters, updater)
+		}
 	}
 }
 
 func initBackend() repository.PackageRepository {
+	// TODO: load additional sources from config
 	rootCtxt.backend, _ = backend.NewDefaultBackend(
 		config.AppDir(),
-		viper.GetString(config.DROPIN_FOLDER_KEY),
-		viper.GetString(config.LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY),
+		backend.NewDropinSource(viper.GetString(config.DROPIN_FOLDER_KEY)),
+		backend.NewManagedSource(
+			viper.GetString(config.LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY),
+			viper.GetString(config.COMMAND_REPOSITORY_BASE_URL_KEY),
+			true,
+			backend.SYNC_POLICY_ALWAYS,
+		),
 	)
+
 	rootCtxt.localRepo = rootCtxt.backend.DefaultRepository()
 	rootCtxt.dropinRepo = rootCtxt.backend.DropinRepository()
 
-	installed := rootCtxt.localRepo.InstalledPackages()
-	if len(installed) == 0 {
+	// installed := rootCtxt.localRepo.InstalledPackages()
+	// if len(installed) == 0 {
+	// 	log.Info("Initialization...")
+	// 	installCommands(rootCtxt.localRepo)
+	// 	// reload again
+	// 	rootCtxt.backend.Reload()
+	// }
+	toBeInitiated := []*backend.PackageSource{}
+	for _, s := range rootCtxt.backend.AllPackageSources() {
+		if s.EnableSync && !s.IsInstalled() {
+			toBeInitiated = append(toBeInitiated, s)
+		}
+	}
+	if len(toBeInitiated) > 0 {
 		log.Info("Initialization...")
-		installCommands(rootCtxt.localRepo)
-		// reload again
+		for _, s := range toBeInitiated {
+			s.InitialInstallCommands(&rootCtxt.user)
+		}
 		rootCtxt.backend.Reload()
 	}
 
@@ -233,69 +262,6 @@ func cmdAndSubCmd(cmd *cobra.Command) (string, string) {
 		return chain[1], "default"
 	}
 	return "default", "default"
-}
-
-func installCommands(repo repository.PackageRepository) error {
-	remote := remote.CreateRemoteRepository(viper.GetString(config.COMMAND_REPOSITORY_BASE_URL_KEY))
-	errors := make([]string, 0)
-
-	// check locked packages if ci is enabled
-	lockedPackages := map[string]string{}
-	if viper.GetBool(config.CI_ENABLED_KEY) {
-		pkgs, err := rootCtxt.cmdUpdater.LoadLockedPackages(viper.GetString(config.PACKAGE_LOCK_FILE_KEY))
-		if err == nil {
-			lockedPackages = pkgs
-		}
-	}
-
-	if pkgs, err := remote.PackageNames(); err == nil {
-		for _, pkgName := range pkgs {
-			pkgVersion := "unspecified"
-			if lockedVersion, ok := lockedPackages[pkgName]; ok {
-				pkgVersion = lockedVersion
-			} else {
-				latest, err := remote.LatestPackageInfo(pkgName)
-				if err != nil {
-					log.Error(err)
-					errors = append(errors, fmt.Sprintf("cannot get the latest version of the package %s: %v", latest.Name, err))
-					continue
-				}
-				if !rootCtxt.user.InPartition(latest.StartPartition, latest.EndPartition) {
-					log.Infof("Skip installing package %s, user not in partition (%d %d)\n", latest.Name, latest.StartPartition, latest.EndPartition)
-					continue
-				}
-				pkgVersion = latest.Version
-			}
-
-			pkg, err := remote.Package(pkgName, pkgVersion)
-			if err != nil {
-				log.Error(err)
-				errors = append(errors, fmt.Sprintf("cannot get the package %s: %v", pkgName, err))
-				continue
-			}
-			if ok, err := remote.Verify(pkg,
-				viper.GetBool(config.VERIFY_PACKAGE_CHECKSUM_KEY),
-				viper.GetBool(config.VERIFY_PACKAGE_SIGNATURE_KEY),
-			); !ok || err != nil {
-				log.Error(err)
-				errors = append(errors, fmt.Sprintf("failed to verify package %s, skip it: %v", pkgName, err))
-				continue
-			}
-			err = repo.Install(pkg)
-			if err != nil {
-				errors = append(errors, fmt.Sprintf("cannot install the package %s: %v", pkgName, err))
-				continue
-			}
-		}
-	} else {
-		errors = append(errors, fmt.Sprintf("cannot get remote packages: %v", err))
-	}
-
-	if len(errors) > 0 {
-		return fmt.Errorf("install failed for the following reasons: [%s]", strings.Join(errors, ", "))
-	}
-
-	return nil
 }
 
 func addBuiltinCommands() {
