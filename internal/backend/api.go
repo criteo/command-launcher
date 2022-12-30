@@ -24,6 +24,9 @@ type Backend interface {
 	// Get all executable commands
 	ExecutableCommands() []command.Command
 
+	// Get system command by name
+	SystemCommand(name string) command.Command
+
 	// Rename a command with a new name
 	RenameCommand(cmd command.Command, new_name string) error
 

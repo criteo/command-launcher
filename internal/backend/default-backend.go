@@ -227,6 +227,17 @@ func (backend DefaultBackend) ExecutableCommands() []command.Command {
 	return backend.executableCmds
 }
 
+func (backend DefaultBackend) SystemCommand(name string) command.Command {
+	sysCmds := backend.DefaultRepository().InstalledSystemCommands()
+	switch name {
+	case repository.SYSTEM_LOGIN_COMMAND:
+		return sysCmds.Login
+	case repository.SYSTEM_METRICS_COMMAND:
+		return sysCmds.Metrics
+	}
+	return nil
+}
+
 func (backend *DefaultBackend) RenameCommand(cmd command.Command, new_name string) error {
 	if new_name == "" {
 		return fmt.Errorf("can't create an empty string alias")

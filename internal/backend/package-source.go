@@ -30,6 +30,7 @@ type PackageSource struct {
 	RemoteRegistryURL string
 	SyncPolicy        string
 	EnableSync        bool
+	IsManaged         bool
 
 	Repo    repository.PackageRepository
 	Failure error
@@ -43,6 +44,7 @@ func NewDropinSource(repoDir string) *PackageSource {
 		RemoteBaseURL:     "",
 		RemoteRegistryURL: "",
 		EnableSync:        false,
+		IsManaged:         false,
 		SyncPolicy:        SYNC_POLICY_NEVER,
 	}
 }
@@ -53,6 +55,7 @@ func NewManagedSource(repoDir, remoteBaseURL string, enableSync bool, syncPolicy
 		RemoteBaseURL:     remoteBaseURL,
 		RemoteRegistryURL: fmt.Sprintf("%s/index.json", remoteBaseURL),
 		EnableSync:        enableSync,
+		IsManaged:         true,
 		SyncPolicy:        SYNC_POLICY_ALWAYS,
 	}
 }

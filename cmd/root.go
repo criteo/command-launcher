@@ -7,7 +7,6 @@ import (
 
 	"github.com/criteo/command-launcher/cmd/metrics"
 	"github.com/criteo/command-launcher/internal/backend"
-	"github.com/criteo/command-launcher/internal/command"
 	"github.com/criteo/command-launcher/internal/config"
 	ctx "github.com/criteo/command-launcher/internal/context"
 	"github.com/criteo/command-launcher/internal/frontend"
@@ -29,9 +28,6 @@ type rootContext struct {
 	appCtx   ctx.LauncherContext
 	frontend frontend.Frontend
 	backend  backend.Backend
-
-	localRepo  repository.PackageRepository
-	dropinRepo repository.PackageRepository
 
 	selfUpdater updater.SelfUpdater
 	cmdUpdaters []*updater.CmdUpdater
@@ -110,7 +106,7 @@ func preRun(cmd *cobra.Command, args []string) {
 
 	graphite := metrics.NewGraphiteMetricsCollector(viper.GetString(config.METRIC_GRAPHITE_HOST_KEY))
 	extensible := metrics.NewExtensibleMetricsCollector(
-		getSystemCommand(repository.SYSTEM_METRICS_COMMAND),
+		rootCtxt.backend.SystemCommand(repository.SYSTEM_METRICS_COMMAND),
 	)
 	rootCtxt.metrics = metrics.NewCompositeMetricsCollector(graphite, extensible)
 	subcmd, subsubcmd := cmdAndSubCmd(cmd)
@@ -199,7 +195,7 @@ func initCmdUpdater() {
 	}
 }
 
-func initBackend() repository.PackageRepository {
+func initBackend() {
 	// TODO: load additional sources from config
 	rootCtxt.backend, _ = backend.NewDefaultBackend(
 		config.AppDir(),
@@ -212,16 +208,6 @@ func initBackend() repository.PackageRepository {
 		),
 	)
 
-	rootCtxt.localRepo = rootCtxt.backend.DefaultRepository()
-	rootCtxt.dropinRepo = rootCtxt.backend.DropinRepository()
-
-	// installed := rootCtxt.localRepo.InstalledPackages()
-	// if len(installed) == 0 {
-	// 	log.Info("Initialization...")
-	// 	installCommands(rootCtxt.localRepo)
-	// 	// reload again
-	// 	rootCtxt.backend.Reload()
-	// }
 	toBeInitiated := []*backend.PackageSource{}
 	for _, s := range rootCtxt.backend.AllPackageSources() {
 		if s.EnableSync && !s.IsInstalled() {
@@ -235,8 +221,6 @@ func initBackend() repository.PackageRepository {
 		}
 		rootCtxt.backend.Reload()
 	}
-
-	return rootCtxt.localRepo
 }
 
 func initFrontend() {
@@ -267,19 +251,8 @@ func cmdAndSubCmd(cmd *cobra.Command) (string, string) {
 func addBuiltinCommands() {
 	AddVersionCmd(rootCmd, rootCtxt.appCtx)
 	AddConfigCmd(rootCmd, rootCtxt.appCtx)
-	AddLoginCmd(rootCmd, rootCtxt.appCtx, getSystemCommand(repository.SYSTEM_LOGIN_COMMAND))
-	AddUpdateCmd(rootCmd, rootCtxt.appCtx, rootCtxt.localRepo)
+	AddLoginCmd(rootCmd, rootCtxt.appCtx, rootCtxt.backend.SystemCommand(repository.SYSTEM_LOGIN_COMMAND))
+	AddUpdateCmd(rootCmd, rootCtxt.appCtx, rootCtxt.backend.DefaultRepository())
 	AddCompletionCmd(rootCmd, rootCtxt.appCtx)
 	AddPackageCmd(rootCmd, rootCtxt.appCtx)
-}
-
-func getSystemCommand(name string) command.Command {
-	sysCmds := rootCtxt.localRepo.InstalledSystemCommands()
-	switch name {
-	case repository.SYSTEM_LOGIN_COMMAND:
-		return sysCmds.Login
-	case repository.SYSTEM_METRICS_COMMAND:
-		return sysCmds.Metrics
-	}
-	return nil
 }

@@ -52,6 +52,10 @@ func (repo *defaultPackageRepository) load() error {
 	return nil
 }
 
+func (repo defaultPackageRepository) Name() string {
+	return repo.ID
+}
+
 func (repo *defaultPackageRepository) Install(pkg command.Package) error {
 	if pkg.Name() == "" {
 		return fmt.Errorf("invalid package manifest: empty package name, please make sure manifest.mf contains a 'pkgName'")

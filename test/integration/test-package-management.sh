@@ -23,12 +23,12 @@ RESULT=$($OUTPUT_DIR/cl)
 echo "> test list all packages"
 RESULT=$($CL_PATH list)
 
-echo "* should contain local packages section"
-echo "$RESULT" | grep -q "=== Local Repository ==="
+echo "* should contain managed packages section"
+echo "$RESULT" | grep -q "=== Managed Repository: Default ==="
 if [ $? -eq 0 ]; then
   echo "OK"
 else
-  echo "KO - should have Local Repository section"
+  echo "KO - should have Default Managed Repository section"
   exit 1
 fi
 
@@ -95,7 +95,7 @@ echo "> test list --local command"
 RESULT=$($CL_PATH list --local)
 
 echo "* should contain local packages section"
-echo "$RESULT" | grep -q "=== Local Repository ==="
+echo "$RESULT" | grep -q "=== Managed Repository: Default ==="
 if [ $? -eq 0 ]; then
   echo "OK"
 else
@@ -197,7 +197,7 @@ else
 fi
 
 echo "* should contain remote section"
-echo "$RESULT" | grep -q "=== Remote Repository ==="
+echo "$RESULT" | grep -q "=== Remote Registry: Default ==="
 if [ $? -eq 0 ]; then
   echo "OK"
 else

@@ -46,19 +46,27 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			if packageFlags.local {
-				printPackages(rootCtxt.localRepo, "local repository", packageFlags.includeCmd)
+				for _, s := range rootCtxt.backend.AllPackageSources() {
+					if s.IsManaged && s.Repo != nil {
+						printPackages(s.Repo, fmt.Sprintf("managed repository: %s", s.Repo.Name()), packageFlags.includeCmd)
+					}
+				}
 			}
 
 			if packageFlags.dropin {
-				printPackages(rootCtxt.dropinRepo, "dropin repository", packageFlags.includeCmd)
+				printPackages(rootCtxt.backend.DropinRepository(), "dropin repository", packageFlags.includeCmd)
 			}
 
 			if packageFlags.remote {
-				remote := remote.CreateRemoteRepository(viper.GetString(config.COMMAND_REPOSITORY_BASE_URL_KEY))
-				if packages, err := remote.All(); err == nil {
-					printPackageInfos(packages, "remote repository")
-				} else {
-					console.Warn("Cannot load the remote repository: %v", err)
+				for _, s := range rootCtxt.backend.AllPackageSources() {
+					if s.IsManaged {
+						remote := remote.CreateRemoteRepository(s.RemoteBaseURL)
+						if packages, err := remote.All(); err == nil {
+							printPackageInfos(packages, fmt.Sprintf("remote registry: %s", s.Repo.Name()))
+						} else {
+							console.Warn("Cannot load the remote registry: %v", err)
+						}
+					}
 				}
 			}
 		},
@@ -120,8 +128,8 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 
 func packageNameValidatonFunc(includeLocal bool, includeDropin bool, includeRemote bool) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
 	return func(c *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		localPkgs := rootCtxt.localRepo.InstalledPackages()
-		dropinPkgs := rootCtxt.dropinRepo.InstalledPackages()
+		localPkgs := rootCtxt.backend.DefaultRepository().InstalledPackages()
+		dropinPkgs := rootCtxt.backend.DropinRepository().InstalledPackages()
 
 		pkgTable := map[string]string{}
 
@@ -281,7 +289,7 @@ func findPackageFolder(pkgName string) (string, error) {
 	}
 
 	var pkgMf command.PackageManifest
-	for _, pkg := range rootCtxt.dropinRepo.InstalledPackages() {
+	for _, pkg := range rootCtxt.backend.DropinRepository().InstalledPackages() {
 		if pkg.Name() == pkgName {
 			pkgMf = pkg
 			break
