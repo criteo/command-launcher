@@ -23,6 +23,7 @@ const (
 )
 
 type PackageSource struct {
+	Name              string
 	RepoDir           string
 	RemoteBaseURL     string
 	RemoteRegistryURL string
@@ -37,6 +38,7 @@ type PackageSource struct {
 
 func NewDropinSource(repoDir string) *PackageSource {
 	return &PackageSource{
+		Name:              "dropin",
 		RepoDir:           repoDir,
 		RemoteBaseURL:     "",
 		RemoteRegistryURL: "",
@@ -45,8 +47,9 @@ func NewDropinSource(repoDir string) *PackageSource {
 	}
 }
 
-func NewManagedSource(repoDir, remoteBaseURL string, syncPolicy string) *PackageSource {
+func NewManagedSource(name, repoDir, remoteBaseURL string, syncPolicy string) *PackageSource {
 	return &PackageSource{
+		Name:              name,
 		RepoDir:           repoDir,
 		RemoteBaseURL:     remoteBaseURL,
 		RemoteRegistryURL: fmt.Sprintf("%s/index.json", remoteBaseURL),

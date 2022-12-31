@@ -200,6 +200,7 @@ func initBackend() {
 	extraSources := []*backend.PackageSource{}
 	for _, remote := range remotes {
 		extraSources = append(extraSources, backend.NewManagedSource(
+			remote.Name,
 			remote.RepositoryDir,
 			remote.RemoteBaseUrl,
 			remote.SyncPolicy,
@@ -210,6 +211,7 @@ func initBackend() {
 		config.AppDir(),
 		backend.NewDropinSource(viper.GetString(config.DROPIN_FOLDER_KEY)),
 		backend.NewManagedSource(
+			"default",
 			viper.GetString(config.LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY),
 			viper.GetString(config.COMMAND_REPOSITORY_BASE_URL_KEY),
 			backend.SYNC_POLICY_ALWAYS,

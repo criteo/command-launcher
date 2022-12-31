@@ -22,7 +22,6 @@ import (
 type DefaultBackend struct {
 	homeDir string
 	sources []*PackageSource
-	// repos   []repository.PackageRepository
 
 	cmdsCache      map[string]command.Command
 	groupCmds      []command.Command
@@ -76,18 +75,9 @@ func (backend *DefaultBackend) Reload() error {
 
 func (backend *DefaultBackend) loadRepos() error {
 	failures := []string{}
-	for i, src := range backend.sources {
+	for _, src := range backend.sources {
 		repoDir := src.RepoDir
-		repoID := ""
-		switch i {
-		case DROPIN_REPO_INDEX:
-			repoID = DROPIN_REPO_ID
-		case DEFAULT_REPO_INDEX:
-			repoID = DEFAULT_REPO_ID
-		default:
-			repoID = fmt.Sprintf("repo%d", i-1)
-		}
-		repo, err := repository.CreateLocalRepository(repoID, repoDir, nil)
+		repo, err := repository.CreateLocalRepository(src.Name, repoDir, nil)
 		if err != nil {
 			failures = append(failures, err.Error())
 			src.Failure = err
