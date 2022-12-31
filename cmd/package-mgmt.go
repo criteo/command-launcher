@@ -33,6 +33,17 @@ var (
 )
 
 func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
+	packageCmd := &cobra.Command{
+		Use:   "package",
+		Short: "Manage command launcher packages",
+		Long:  "Manage command launcher packages",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				cmd.Help()
+			}
+			return nil
+		},
+	}
 	packageListCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List installed packages and commands",
@@ -121,9 +132,10 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 		ValidArgsFunction: packageNameValidatonFunc(false, true, false),
 	}
 
-	rootCmd.AddCommand(packageListCmd)
-	rootCmd.AddCommand(packageInstallCmd)
-	rootCmd.AddCommand(packageDeleteCmd)
+	packageCmd.AddCommand(packageListCmd)
+	packageCmd.AddCommand(packageInstallCmd)
+	packageCmd.AddCommand(packageDeleteCmd)
+	rootCmd.AddCommand(packageCmd)
 }
 
 func packageNameValidatonFunc(includeLocal bool, includeDropin bool, includeRemote bool) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {

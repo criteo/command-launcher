@@ -5,12 +5,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/criteo/command-launcher/internal/config"
 	"github.com/criteo/command-launcher/internal/remote"
 	"github.com/criteo/command-launcher/internal/repository"
 	"github.com/criteo/command-launcher/internal/updater"
 	"github.com/criteo/command-launcher/internal/user"
-	"github.com/spf13/viper"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -29,7 +27,6 @@ type PackageSource struct {
 	RemoteBaseURL     string
 	RemoteRegistryURL string
 	SyncPolicy        string
-	EnableSync        bool
 	IsManaged         bool
 
 	Repo    repository.PackageRepository
@@ -43,25 +40,23 @@ func NewDropinSource(repoDir string) *PackageSource {
 		RepoDir:           repoDir,
 		RemoteBaseURL:     "",
 		RemoteRegistryURL: "",
-		EnableSync:        false,
 		IsManaged:         false,
 		SyncPolicy:        SYNC_POLICY_NEVER,
 	}
 }
 
-func NewManagedSource(repoDir, remoteBaseURL string, enableSync bool, syncPolicy string) *PackageSource {
+func NewManagedSource(repoDir, remoteBaseURL string, syncPolicy string) *PackageSource {
 	return &PackageSource{
 		RepoDir:           repoDir,
 		RemoteBaseURL:     remoteBaseURL,
 		RemoteRegistryURL: fmt.Sprintf("%s/index.json", remoteBaseURL),
-		EnableSync:        enableSync,
 		IsManaged:         true,
 		SyncPolicy:        SYNC_POLICY_ALWAYS,
 	}
 }
 
 func (src *PackageSource) InitUpdater(user *user.User, timeout time.Duration, enableCI bool, lockFile string, verifyChecksum bool, verifySignature bool) *updater.CmdUpdater {
-	if !src.EnableSync {
+	if src.SyncPolicy == SYNC_POLICY_NEVER {
 		return nil
 	}
 	src.Updater = &updater.CmdUpdater{
@@ -85,14 +80,14 @@ func (src PackageSource) IsInstalled() bool {
 	return len(src.Repo.InstalledCommands()) > 0
 }
 
-func (src *PackageSource) InitialInstallCommands(user *user.User) error {
+func (src *PackageSource) InitialInstallCommands(user *user.User, enableCI bool, lockFilePath string, verifyChecksum bool, verifySignature bool) error {
 	remote := remote.CreateRemoteRepository(src.RemoteBaseURL)
 	errors := make([]string, 0)
 
 	// check locked packages if ci is enabled
 	lockedPackages := map[string]string{}
-	if viper.GetBool(config.CI_ENABLED_KEY) {
-		pkgs, err := src.Updater.LoadLockedPackages(viper.GetString(config.PACKAGE_LOCK_FILE_KEY))
+	if enableCI {
+		pkgs, err := src.Updater.LoadLockedPackages(lockFilePath)
 		if err == nil {
 			lockedPackages = pkgs
 		}
@@ -124,8 +119,8 @@ func (src *PackageSource) InitialInstallCommands(user *user.User) error {
 				continue
 			}
 			if ok, err := remote.Verify(pkg,
-				viper.GetBool(config.VERIFY_PACKAGE_CHECKSUM_KEY),
-				viper.GetBool(config.VERIFY_PACKAGE_SIGNATURE_KEY),
+				verifyChecksum,
+				verifySignature,
 			); !ok || err != nil {
 				log.Error(err)
 				errors = append(errors, fmt.Sprintf("failed to verify package %s, skip it: %v", pkgName, err))

@@ -36,7 +36,7 @@ fi
 # fi
 
 echo "> test delete command auto completion"
-RESULT=$($CL_PATH __complete delete " ")
+RESULT=$($CL_PATH __complete package delete " ")
 echo "$RESULT" | grep -q "bonjour"
 if [ $? -eq 0 ]; then
   echo "OK"

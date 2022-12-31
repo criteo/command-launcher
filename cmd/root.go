@@ -196,28 +196,42 @@ func initCmdUpdater() {
 }
 
 func initBackend() {
-	// TODO: load additional sources from config
+	remotes, _ := config.Remotes()
+	extraSources := []*backend.PackageSource{}
+	for _, remote := range remotes {
+		extraSources = append(extraSources, backend.NewManagedSource(
+			remote.RepositoryDir,
+			remote.RemoteBaseUrl,
+			remote.SyncPolicy,
+		))
+	}
+
 	rootCtxt.backend, _ = backend.NewDefaultBackend(
 		config.AppDir(),
 		backend.NewDropinSource(viper.GetString(config.DROPIN_FOLDER_KEY)),
 		backend.NewManagedSource(
 			viper.GetString(config.LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY),
 			viper.GetString(config.COMMAND_REPOSITORY_BASE_URL_KEY),
-			true,
 			backend.SYNC_POLICY_ALWAYS,
 		),
+		extraSources...,
 	)
 
 	toBeInitiated := []*backend.PackageSource{}
 	for _, s := range rootCtxt.backend.AllPackageSources() {
-		if s.EnableSync && !s.IsInstalled() {
+		if s.SyncPolicy != backend.SYNC_POLICY_NEVER && !s.IsInstalled() {
 			toBeInitiated = append(toBeInitiated, s)
 		}
 	}
 	if len(toBeInitiated) > 0 {
 		log.Info("Initialization...")
 		for _, s := range toBeInitiated {
-			s.InitialInstallCommands(&rootCtxt.user)
+			s.InitialInstallCommands(&rootCtxt.user,
+				viper.GetBool(config.CI_ENABLED_KEY),
+				viper.GetString(config.PACKAGE_LOCK_FILE_KEY),
+				viper.GetBool(config.VERIFY_PACKAGE_CHECKSUM_KEY),
+				viper.GetBool(config.VERIFY_PACKAGE_SIGNATURE_KEY),
+			)
 		}
 		rootCtxt.backend.Reload()
 	}
@@ -256,4 +270,5 @@ func addBuiltinCommands() {
 	AddCompletionCmd(rootCmd, rootCtxt.appCtx)
 	AddPackageCmd(rootCmd, rootCtxt.appCtx)
 	AddRenameCmd(rootCmd, rootCtxt.appCtx, rootCtxt.backend)
+	AddRemoteCmd(rootCmd, rootCtxt.appCtx, rootCtxt.backend)
 }

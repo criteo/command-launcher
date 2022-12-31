@@ -111,6 +111,8 @@ func setDefaultConfig() {
 
 	viper.SetDefault(VERIFY_PACKAGE_CHECKSUM_KEY, false)
 	viper.SetDefault(VERIFY_PACKAGE_SIGNATURE_KEY, false)
+
+	viper.SetDefault(EXTRA_REMOTES_KEY, []map[string]string{})
 }
 
 func initDefaultConfigFile() {
