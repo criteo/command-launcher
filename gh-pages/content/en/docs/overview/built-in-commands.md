@@ -116,4 +116,3 @@ Delete a remote registry by its name.
 ```shell
 cola delete myregistry
 ```
-
