@@ -94,18 +94,20 @@ To use these credentials see [Manage resources](../resources)
 
 At the end of each command launcher execution, the `__metrics__` system hook will be triggered. The following arguments will be passed to `__metrics__` system command in order:
 
-1. command name,
-2. sub command name, or "default" if no subcommand
-3. user partition
-4. command exit code
-5. command execution duration in nano seconds
-6. error message or "nil" if no error
-7. command start timestamp in seconds
+1. repository/registry name (see remote command)
+2. package name
+3. command group name, or "default" if no group
+4. command name
+5. user partition
+6. command exit code
+7. command execution duration in nano seconds
+8. error message or "nil" if no error
+9. command start timestamp in seconds
 
 Here is an example:
 
 ```shell
-__metrics__ cola-example hello 2 0 5000000 nil 1668363339
+__metrics__ default example cola-example hello 2 0 5000000 nil 1668363339
 ```
 
 > Note: the `__metrics__` hook will be called at the end of each command launcher call, please make sure it ends fast to reduce the footprint

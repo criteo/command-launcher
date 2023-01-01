@@ -144,7 +144,7 @@ func AddRemote(name, repoDir, remoteBaseUrl string, syncPolicy string) error {
 	if syncPolicy != "never" && syncPolicy != "hourly" &&
 		syncPolicy != "daily" && syncPolicy != "weekly" &&
 		syncPolicy != "monthly" && syncPolicy != "always" {
-		syncPolicy = "daily"
+		syncPolicy = "always"
 	}
 
 	for _, remote := range remotes {

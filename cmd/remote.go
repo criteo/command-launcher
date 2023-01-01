@@ -32,7 +32,7 @@ func AddRemoteCmd(rootCmd *cobra.Command, appCtx context.LauncherContext, back b
 		RunE: func(cmd *cobra.Command, args []string) error {
 			allRemotes := getAllRemotes()
 			for _, v := range allRemotes {
-				fmt.Printf("%s : %s\n", v.Name, v.RemoteBaseUrl)
+				fmt.Printf("%-15s : %s\n", v.Name, v.RemoteBaseUrl)
 			}
 			return nil
 		},
@@ -88,7 +88,7 @@ func AddRemoteCmd(rootCmd *cobra.Command, appCtx context.LauncherContext, back b
 				return fmt.Errorf("can't add remote named 'default', it is a reserved remote name")
 			}
 			repoDir := filepath.Join(config.AppDir(), args[0])
-			if err := config.AddRemote(args[0], repoDir, args[1], "daily"); err != nil {
+			if err := config.AddRemote(args[0], repoDir, args[1], "always"); err != nil {
 				return err
 			}
 			if err := viper.WriteConfig(); err != nil {
