@@ -26,7 +26,8 @@ fi
 
 echo "* should contain default remote registry"
 RESULT=$($CL_PATH remote list)
-echo "$RESULT" | grep -q "default : https://raw.githubusercontent.com/criteo/command-launcher/main/examples/remote-repo"
+echo "$RESULT"
+echo "$RESULT" | grep -q "default         : https://raw.githubusercontent.com/criteo/command-launcher/main/examples/remote-repo"
 if [ $? -eq 0 ]; then
   # ok
   echo "OK"
@@ -41,7 +42,7 @@ RESULT=$($CL_PATH remote add extra1 https://raw.githubusercontent.com/criteo/com
 RESULT=$($CL_PATH remote list)
 
 echo "* should contain default remote registry"
-echo "$RESULT" | grep -q "default : https://raw.githubusercontent.com/criteo/command-launcher/main/examples/remote-repo"
+echo "$RESULT" | grep -q "default         : https://raw.githubusercontent.com/criteo/command-launcher/main/examples/remote-repo"
 if [ $? -eq 0 ]; then
   # ok
   echo "OK"
@@ -51,7 +52,7 @@ else
 fi
 
 echo "* should contain extra remote registry"
-echo "$RESULT" | grep -q "extra1 : https://raw.githubusercontent.com/criteo/command-launcher/main/test/remote-repo"
+echo "$RESULT" | grep -q "extra1          : https://raw.githubusercontent.com/criteo/command-launcher/main/test/remote-repo"
 if [ $? -eq 0 ]; then
   # ok
   echo "OK"
@@ -106,7 +107,7 @@ fi
 echo "> test delete extra remote registry"
 RESULT=$($CL_PATH remote delete extra1)
 RESULT=$($CL_PATH remote list)
-echo "$RESULT" | grep -q "default : https://raw.githubusercontent.com/criteo/command-launcher/main/examples/remote-repo"
+echo "$RESULT" | grep -q "default         : https://raw.githubusercontent.com/criteo/command-launcher/main/examples/remote-repo"
 if [ $? -eq 0 ]; then
   # ok
   echo "OK"
@@ -116,7 +117,7 @@ else
 fi
 
 echo "* should NOT contain default remote registry"
-echo "$RESULT" | grep -q "extra1 : https://raw.githubusercontent.com/criteo/command-launcher/main/test/remote-repo"
+echo "$RESULT" | grep -q "extra1          : https://raw.githubusercontent.com/criteo/command-launcher/main/test/remote-repo"
 if [ $? -eq 0 ]; then
   echo "KO - should NOT contain extra remote registry"
   exit 1
