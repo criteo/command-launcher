@@ -109,8 +109,8 @@ func preRun(cmd *cobra.Command, args []string) {
 		rootCtxt.backend.SystemCommand(repository.SYSTEM_METRICS_COMMAND),
 	)
 	rootCtxt.metrics = metrics.NewCompositeMetricsCollector(graphite, extensible)
-	subcmd, subsubcmd := cmdAndSubCmd(cmd)
-	rootCtxt.metrics.Collect(rootCtxt.user.Partition, subcmd, subsubcmd)
+	repo, pkg, group, name := cmdAndSubCmd(cmd)
+	rootCtxt.metrics.Collect(rootCtxt.user.Partition, repo, pkg, group, name)
 }
 
 func postRun(cmd *cobra.Command, args []string) {
@@ -246,7 +246,8 @@ func initFrontend() {
 	frontend.AddUserCommands()
 }
 
-func cmdAndSubCmd(cmd *cobra.Command) (string, string) {
+// return the repo, the package, the group, and the name of the command
+func cmdAndSubCmd(cmd *cobra.Command) (string, string, string, string) {
 	chain := []string{}
 
 	parent := cmd
@@ -256,12 +257,26 @@ func cmdAndSubCmd(cmd *cobra.Command) (string, string) {
 		parent = parent.Parent()
 	}
 
+	group := ""
+	name := ""
+
 	if len(chain) >= 3 {
-		return chain[1], chain[2]
+		group, name = chain[1], chain[2]
 	} else if len(chain) == 2 {
-		return chain[1], "default"
+		group, name = "", chain[1]
 	}
-	return "default", "default"
+
+	// get the internal command from the group and name
+	iCmd, err := rootCtxt.backend.FindCommand(group, name)
+	if err != nil {
+		return "default", "default", "default", "default"
+	}
+
+	if group == "" {
+		return iCmd.RepositoryID(), iCmd.PackageName(), "default", iCmd.Name()
+	}
+
+	return iCmd.RepositoryID(), iCmd.PackageName(), iCmd.Group(), iCmd.Name()
 }
 
 func addBuiltinCommands() {

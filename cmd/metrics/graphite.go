@@ -14,6 +14,7 @@ const (
 
 type graphiteMetrics struct {
 	graphiteHost   string
+	PkgName        string
 	CmdName        string
 	SubCmdName     string
 	StartTimestamp time.Time
@@ -26,13 +27,14 @@ func NewGraphiteMetricsCollector(host string) Metrics {
 	}
 }
 
-func (metrics *graphiteMetrics) Collect(uid uint8, cmd string, subCmd string) error {
-	if cmd == "" {
+func (metrics *graphiteMetrics) Collect(uid uint8, repo, pkg, group, name string) error {
+	if group == "" {
 		return fmt.Errorf("unknown command")
 	}
 
-	metrics.CmdName = cmd
-	metrics.SubCmdName = subCmd
+	metrics.PkgName = pkg
+	metrics.CmdName = group
+	metrics.SubCmdName = name
 	metrics.StartTimestamp = time.Now()
 	metrics.UserPartition = uid
 
@@ -63,5 +65,5 @@ func (metrics *graphiteMetrics) Send(cmdExitCode int, cmdError error) error {
 }
 
 func (metrics *graphiteMetrics) prefix() string {
-	return fmt.Sprintf("devtools.cdt.%s.%s.%d", metrics.CmdName, metrics.SubCmdName, metrics.UserPartition)
+	return fmt.Sprintf("devtools.cdt.%s.%s.%s.%d", metrics.PkgName, metrics.CmdName, metrics.SubCmdName, metrics.UserPartition)
 }
