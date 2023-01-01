@@ -238,6 +238,8 @@ func (self *defaultFrontend) executeCommand(group, name string, args []string, i
 	}
 
 	envCtx := self.getCmdEnvContext(initialEnvCtx, consent)
+	envCtx = append(envCtx, fmt.Sprintf("%s=%s", self.appCtx.CmdPackageDirEnvVar(), iCmd.PackageDir()))
+
 	exitCode, err := iCmd.Execute(envCtx, args...)
 	if err != nil {
 		return exitCode, err
