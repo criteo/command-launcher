@@ -74,7 +74,53 @@ else
   exit 1
 fi
 
+echo "> test rename to reserved command"
+RESULT=$($CL_PATH rename bonjour@@bonjour@dropin package 2>&1)
+echo "$RESULT" | grep -s 'package is a reserved command'
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should not rename to a reserved command"
+  exit 1
+fi
 
+RESULT=$($CL_PATH)
+echo "$RESULT"
+echo "$RESULT" | grep 'bonjour'
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should still have 'bonjour' command"
+  exit 1
+fi
+
+
+echo "> test rename sub command"
+RESULT=$($CL_PATH rename saybonjour@greeting@bonjour@dropin sayhi 2>&1)
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - rename should return 0"
+  exit 1
+fi
+
+RESULT=$($CL_PATH greeting -h)
+echo "$RESULT" | grep 'sayhi'
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should have sayhi subcommand"
+  exit 1
+fi
+
+RESULT=$($CL_PATH greeting sayhi 2>&1)
+echo "$RESULT" | grep 'bonjour!'
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should be able to call 'greeting bonjour' from renamed command"
+  exit 1
+fi
 
 
 

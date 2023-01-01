@@ -5,6 +5,18 @@ import (
 	"github.com/criteo/command-launcher/internal/repository"
 )
 
+var RESERVED_CMD_SEARCH_KEY map[string]bool = map[string]bool{
+	"#login":      true,
+	"#package":    true,
+	"#remote":     true,
+	"#update":     true,
+	"#rename":     true,
+	"#config":     true,
+	"#version":    true,
+	"#help":       true,
+	"#completion": true,
+}
+
 type Backend interface {
 	// Load all managed repositories
 	Reload() error

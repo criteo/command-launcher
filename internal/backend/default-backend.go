@@ -76,8 +76,7 @@ func (backend *DefaultBackend) Reload() error {
 func (backend *DefaultBackend) loadRepos() error {
 	failures := []string{}
 	for _, src := range backend.sources {
-		repoDir := src.RepoDir
-		repo, err := repository.CreateLocalRepository(src.Name, repoDir, nil)
+		repo, err := repository.CreateLocalRepository(src.Name, src.RepoDir, nil)
 		if err != nil {
 			failures = append(failures, err.Error())
 			src.Failure = err
@@ -150,7 +149,7 @@ func (backend *DefaultBackend) extractCmds() {
 			backend.setRuntimeByAlias(cmd)
 
 			key := getCmdSearchKey(cmd)
-			if _, exist := backend.cmdsCache[key]; exist {
+			if _, exist := backend.cmdsCache[key]; exist || isReservedCmd(key) {
 				// conflict
 				cmd.SetRuntimeName(cmd.FullName())
 				backend.tmpAlias[cmd.FullName()] = cmd.FullName()
@@ -167,7 +166,7 @@ func (backend *DefaultBackend) extractCmds() {
 			backend.setRuntimeByAlias(cmd)
 
 			key := getCmdSearchKey(cmd)
-			if _, exist := backend.cmdsCache[key]; exist {
+			if _, exist := backend.cmdsCache[key]; exist || isReservedCmd(key) {
 				// conflict
 				if cmd.Group() == "" {
 					cmd.SetRuntimeName(cmd.FullName())
@@ -182,9 +181,6 @@ func (backend *DefaultBackend) extractCmds() {
 			backend.cmdsCache[key] = cmd
 			backend.executableCmds = append(backend.executableCmds, cmd)
 		}
-
-		// system commands
-		// TODO:
 	}
 }
 
@@ -198,6 +194,11 @@ func getCmdSearchKey(cmd command.Command) string {
 		return cmd.Name()
 	}
 	return ""
+}
+
+func isReservedCmd(searchKey string) bool {
+	_, exist := RESERVED_CMD_SEARCH_KEY[searchKey]
+	return exist
 }
 
 /* Implement the Backend interface */
@@ -240,6 +241,10 @@ func (backend DefaultBackend) SystemCommand(name string) command.Command {
 }
 
 func (backend *DefaultBackend) RenameCommand(cmd command.Command, new_name string) error {
+	if cmd.Group() == "" && isReservedCmd(fmt.Sprintf("#%s", new_name)) {
+		return fmt.Errorf("%s is a reserved command name, can't rename a top level command to it", new_name)
+	}
+
 	if new_name == "" {
 		if _, ok := backend.userAlias[cmd.FullName()]; ok {
 			delete(backend.userAlias, cmd.FullName())
