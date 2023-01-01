@@ -20,7 +20,8 @@
         1. repository/registry name (see remote command)
         2. package name
         3. command group name, or “default” if no group
-        4. command. user partition
+        4. command name
+        5. user partition
         6. command exit code
         7. command execution duration in nano seconds
         8. error message or “nil” if no error
