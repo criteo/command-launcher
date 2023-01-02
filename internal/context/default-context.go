@@ -78,6 +78,10 @@ func (ctx *defaultContext) RemoteConfigurationUrlEnvVar() string {
 	return ctx.envVarName("REMOTE_CONFIG_URL")
 }
 
+func (ctx *defaultContext) CmdPackageDirEnvVar() string {
+	return ctx.envVarName("PACKAGE_DIR")
+}
+
 func (ctx *defaultContext) envVarName(name string) string {
 	return fmt.Sprintf("%s_%s", ctx.prefix(), name)
 }

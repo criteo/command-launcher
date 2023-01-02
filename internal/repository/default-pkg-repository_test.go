@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/criteo/command-launcher/cmd/remote"
 	"github.com/criteo/command-launcher/internal/helper"
+	"github.com/criteo/command-launcher/internal/remote"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -43,13 +43,13 @@ func TestLocalRepository(t *testing.T) {
 		}
 	}`, localRepoPath, "ls-0.0.2"))
 
-	reg, err := newJsonRegistry(filepath.Join(localRepoPath, "registry.json"))
+	reg, err := newJsonRepoIndex("dropin", filepath.Join(localRepoPath, "registry.json"))
 	assert.Nil(t, err)
 
-	localRepo, err := CreateLocalRepository(localRepoPath, reg)
+	localRepo, err := CreateLocalRepository("default", localRepoPath, reg)
 	assert.Nil(t, err)
 
-	ls, err := localRepo.Command("", "ls")
+	ls, err := localRepo.Command("ls", "", "ls")
 	assert.Nil(t, err)
 	assert.Equal(t, "ls", ls.Name())
 	assert.Equal(t, "executable", ls.Type())
@@ -96,10 +96,10 @@ func TestInstallCommand(t *testing.T) {
 	err = os.Mkdir(localRepoPath, 0755)
 	assert.Nil(t, err)
 
-	reg, err := newJsonRegistry(filepath.Join(localRepoPath, "registry.json"))
+	reg, err := newJsonRepoIndex("dropin", filepath.Join(localRepoPath, "registry.json"))
 	assert.Nil(t, err)
 
-	localRepo, err := CreateLocalRepository(localRepoPath, reg)
+	localRepo, err := CreateLocalRepository("default", localRepoPath, reg)
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(localRepo.InstalledCommands()))
 
@@ -147,10 +147,10 @@ func Test_Load(t *testing.T) {
 		fmt.Println("Absolute:", pathname)
 	}
 
-	reg, err := newDefaultRegistry()
+	reg, err := newDefaultRepoIndex("default")
 	assert.Nil(t, err)
 
-	repo, err := CreateLocalRepository(pathname, reg)
+	repo, err := CreateLocalRepository("default", pathname, reg)
 	assert.Nil(t, err)
 
 	assert.Equal(t, 1, len(repo.InstalledGroupCommands()))
@@ -166,10 +166,10 @@ func Test_Load_Unexist_Folder(t *testing.T) {
 		fmt.Println("Absolute:", pathname)
 	}
 
-	reg, err := newDefaultRegistry()
+	reg, err := newDefaultRepoIndex("default")
 	assert.Nil(t, err)
 
-	repo, err := CreateLocalRepository(pathname, reg)
+	repo, err := CreateLocalRepository("default", pathname, reg)
 	assert.Nil(t, err)
 
 	assert.Equal(t, 0, len(repo.InstalledGroupCommands()))
@@ -182,10 +182,10 @@ func Test_Load_Malformat_Manifest(t *testing.T) {
 		fmt.Println("Absolute:", pathname)
 	}
 
-	reg, err := newDefaultRegistry()
+	reg, err := newDefaultRepoIndex("default")
 	assert.Nil(t, err)
 
-	repo, err := CreateLocalRepository(pathname, reg)
+	repo, err := CreateLocalRepository("default", pathname, reg)
 	assert.Nil(t, err)
 
 	assert.Equal(t, 0, len(repo.InstalledGroupCommands()))
@@ -199,10 +199,10 @@ func Test_Load_Multiple_Pkgs(t *testing.T) {
 		fmt.Println("Absolute:", pathname)
 	}
 
-	reg, err := newDefaultRegistry()
+	reg, err := newDefaultRepoIndex("default")
 	assert.Nil(t, err)
 
-	repo, err := CreateLocalRepository(pathname, reg)
+	repo, err := CreateLocalRepository("default", pathname, reg)
 	assert.Nil(t, err)
 
 	assert.Equal(t, 2, len(repo.InstalledGroupCommands()))
@@ -215,10 +215,10 @@ func Test_Load_Symlink(t *testing.T) {
 		fmt.Println("Absolute:", pathname)
 	}
 
-	reg, err := newDefaultRegistry()
+	reg, err := newDefaultRepoIndex("default")
 	assert.Nil(t, err)
 
-	repo, err := CreateLocalRepository(pathname, reg)
+	repo, err := CreateLocalRepository("default", pathname, reg)
 	assert.Nil(t, err)
 
 	assert.Equal(t, 1, len(repo.InstalledGroupCommands()))

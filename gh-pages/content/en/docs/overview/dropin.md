@@ -42,13 +42,13 @@ A dropin package is simply a directory with manifest.mf in it, the best way to s
 Starting from 1.7.0, you can use the built-in `install` command to install a dropin package hosted in a git repository or a zip file:
 
 ```shell
-cola install --git https://github.com/criteo/command-launcher-package-example
+cola package install --git https://github.com/criteo/command-launcher-package-example
 ```
 
 If you uploaded your package to an http server as a zip file, you can install it with `cola install --file`
 
 ```shell
-cola install --file https://github.com/criteo/command-launcher/raw/main/examples/remote-repo/command-launcher-demo-1.0.0.pkg
+cola package install --file https://github.com/criteo/command-launcher/raw/main/examples/remote-repo/command-launcher-demo-1.0.0.pkg
 ```
 
 ## How to update dropin package?

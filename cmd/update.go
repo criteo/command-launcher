@@ -3,12 +3,12 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/criteo/command-launcher/cmd/repository"
-	"github.com/criteo/command-launcher/cmd/updater"
-	"github.com/criteo/command-launcher/cmd/user"
 	"github.com/criteo/command-launcher/internal/config"
 	"github.com/criteo/command-launcher/internal/console"
 	"github.com/criteo/command-launcher/internal/context"
+	"github.com/criteo/command-launcher/internal/repository"
+	"github.com/criteo/command-launcher/internal/updater"
+	"github.com/criteo/command-launcher/internal/user"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

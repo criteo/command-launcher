@@ -24,4 +24,6 @@ type LauncherContext interface {
 	ConfigurationFileEnvVar() string
 
 	RemoteConfigurationUrlEnvVar() string
+
+	CmdPackageDirEnvVar() string
 }

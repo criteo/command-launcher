@@ -1,3 +1,34 @@
+1.8.0:
+  version: 1.8.0
+  releaseNotes: |
+    * ✨Support multiple remote registry. From version 1.8.0, you are able to define multiple remote registries. Command launcher synchronizes the commands with all these remote registries at the end of each command execution. This is useful for several scenarios: for example, supporting internal or experimental commands, different teams target their commands to different group of audience.
+    * ✨Built-in command `remote` command to mange multiple remote registries.
+        * `remote list`: list all remote registries
+        * `remote delete`: delete specific remote registry
+        * `remote add`: add a new remote registry
+    * ✨Built-in package management related commands are regrouped into `package` command:
+        * `package list`: list installed local and dropin packages and remote packages. It also provides the possibility to show the installed commands
+        * `package install`: install dropin packages from git repository or remote/local zip file
+        * `package delete`: delete installed dropin packages
+    * ✨New command name conflict resolution system: Each command now has a unique full name in form of [regitry]@[package]@[group]@[name]. When two commands register to the same group and name. One of them will be registered with its full group name.
+
+        For example, two command `hello@greeting@pkg1@repo1` and `hello@greeting@pkg2@repo2`. These two commands have the same group name and command name (greeting hello). The first one will be registered as `cola greeting hello`, the second one will be registered as command `cola greeting@@pkg2@repo2 hello`. Note: `greeting@@pkg2@repo2` is the full name of the group command `greeting` defined in pkg2 and repo2.
+    * ✨New built-in `rename` command. Now it is possible to rename both group and sub command to a different name.
+    * ✨New resource `PACKAGE_DIR`. Each command now can access its package's absolute path through the `PACKAGE_DIR` resource. This resource doesn't require user consent.
+
+    * 🔥Metrics system hook interface change. Now the metrics system hook accepts two new parameters: repo/registry name, package name. The full list of parameters:
+        1. repository/registry name (see remote command)
+        2. package name
+        3. command group name, or “default” if no group
+        4. command name
+        5. user partition
+        6. command exit code
+        7. command execution duration in nano seconds
+        8. error message or “nil” if no error
+        9. command start timestamp in seconds
+  startPartition: 0
+  endPartition: 9
+
 1.7.0:
   version: 1.7.0
   releaseNotes: |

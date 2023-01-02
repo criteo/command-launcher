@@ -96,7 +96,19 @@ func printableSettingsInOrder(settings map[string]interface{}) []string {
 
 	sort.Strings(keys)
 	for _, k := range keys {
-		sorted = append(sorted, fmt.Sprintf("%-40v: %v", k, settings[k]))
+		if k == strings.ToLower(config.EXTRA_REMOTES_KEY) {
+			remotes, _ := config.Remotes()
+			for _, remote := range remotes {
+				key := fmt.Sprintf("extra_remotes.%s.remote_base_url", remote.Name)
+				sorted = append(sorted, fmt.Sprintf("%-40v: %v", key, remote.RemoteBaseUrl))
+				key = fmt.Sprintf("extra_remotes.%s.repository_dir", remote.Name)
+				sorted = append(sorted, fmt.Sprintf("%-40v: %v", key, remote.RepositoryDir))
+				key = fmt.Sprintf("extra_remotes.%s.sync_policy", remote.Name)
+				sorted = append(sorted, fmt.Sprintf("%-40v: %v", key, remote.SyncPolicy))
+			}
+		} else {
+			sorted = append(sorted, fmt.Sprintf("%-40v: %v", k, settings[k]))
+		}
 	}
 
 	return sorted

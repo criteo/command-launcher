@@ -44,43 +44,75 @@ Check updates for command launcher and managed commands.
 
 Return command launcher version information.
 
-## list
+## package
+
+A collection of commands to manage installed packages and commands
+
+### package list
 
 List installed packages and commands
 
 ```shell
 # list local installed packages
-cola list --local
+cola package list --local
 
 # list local installed packages and commands
-cola list --local --include-cmd
+cola package list --local --include-cmd
 
 # list dropin packages
-cola list --dropin
+cola package list --dropin
 
 # list local dropin packages and commands
-cola list --dropin --include-cmd
+cola package list --dropin --include-cmd
 
 # list remote packages
-cola list --remote
+cola package list --remote
 ```
 
-## install
+### package install
 
 Install a dropin package from a git repo or from a zip file
 
 ```shell
 # install a dropin package from git repository
-cola install --git https://github.com/criteo/command-launcher-package-example
+cola package install --git https://github.com/criteo/command-launcher-package-example
 
 # install a dropin package from zip file
-cola install --file https://github.com/criteo/command-launcher/raw/main/examples/remote-repo/command-launcher-demo-1.0.0.pkg
+cola package install --file https://github.com/criteo/command-launcher/raw/main/examples/remote-repo/command-launcher-demo-1.0.0.pkg
 ```
 
-## delete
+### package delete
 
 Remove a dropin package from the package name defined in manifest
 
 ```shell
-cola delete command-launcher-example-package
+cola package delete command-launcher-example-package
+```
+
+## remote
+
+A collection of commands to manage extra remote registries
+
+### remote list
+
+List remote registries.
+
+```shell
+cola remote list
+```
+
+### remote add
+
+Add a new remote registry. Command launcher will synchronize from this remote registry once added.
+
+```shell
+cola remote add myregistry https://raw.githubusercontent.com/criteo/command-launcher/main/examples/remote-repo
+```
+
+### remote delete
+
+Delete a remote registry by its name.
+
+```shell
+cola delete myregistry
 ```

@@ -11,8 +11,10 @@ import (
 type extensibleMetrics struct {
 	hook command.Command
 
+	RepoName       string
+	PackageName    string
+	GroupName      string
 	CmdName        string
-	SubCmdName     string
 	StartTimestamp time.Time
 	UserPartition  uint8
 }
@@ -23,13 +25,15 @@ func NewExtensibleMetricsCollector(hook command.Command) Metrics {
 	}
 }
 
-func (metrics *extensibleMetrics) Collect(uid uint8, cmd string, subCmd string) error {
-	if cmd == "" {
+func (metrics *extensibleMetrics) Collect(uid uint8, repo string, pkg, group string, name string) error {
+	if group == "" {
 		return fmt.Errorf("unknown command")
 	}
 
-	metrics.CmdName = cmd
-	metrics.SubCmdName = subCmd
+	metrics.RepoName = repo
+	metrics.PackageName = pkg
+	metrics.GroupName = group
+	metrics.CmdName = name
 	metrics.StartTimestamp = time.Now()
 	metrics.UserPartition = uid
 
@@ -45,8 +49,10 @@ func (metrics *extensibleMetrics) Send(cmdExitCode int, cmdError error) error {
 		}
 		duration := time.Now().UnixNano() - metrics.StartTimestamp.UnixNano()
 		exitCode, _, err := metrics.hook.ExecuteWithOutput([]string{},
+			metrics.RepoName,
+			metrics.PackageName,
+			metrics.GroupName,
 			metrics.CmdName,
-			metrics.SubCmdName,
 			strconv.Itoa(int(metrics.UserPartition)),
 			strconv.Itoa(cmdExitCode),
 			strconv.FormatInt(duration, 10),

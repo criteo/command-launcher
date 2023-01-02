@@ -32,12 +32,23 @@ const (
 	SYSTEM_PACKAGE_PUBLIC_KEY_FILE_KEY   = "SYSTEM_PACKAGE_PUBLIC_KEY_FILE" // the public key file to verify system package
 	VERIFY_PACKAGE_CHECKSUM_KEY          = "VERIFY_PACKAGE_CHECKSUM"
 	VERIFY_PACKAGE_SIGNATURE_KEY         = "VERIFY_PACKAGE_SIGNATURE"
+	EXTRA_REMOTES_KEY                    = "EXTRA_REMOTES"
+	EXTRA_REMOTE_BASE_URL_KEY            = "REMOTE_BASE_URL"
+	EXTRA_REMOTE_REPOSITORY_DIR_KEY      = "REPOSITORY_DIR"
+	EXTRA_REMOTE_SYNC_POLICY_KEY         = "SYNC_POLICY"
 
 	// internal commands are the commands with start partition number > INTERNAL_START_PARTITION
 	INTERNAL_COMMAND_ENABLED_KEY = "INTERNAL_COMMAND_ENABLED"
 	// experimental commands are the commands with start partition number > EXPERIMENTAL_START_PARTITION
 	EXPERIMENTAL_COMMAND_ENABLED_KEY = "EXPERIMENTAL_COMMAND_ENABLED"
 )
+
+type ExtraRemote struct {
+	Name          string `mapstructure:"name" json:"name"`
+	RemoteBaseUrl string `mapstructure:"remote_base_url" json:"remote_base_url"`
+	RepositoryDir string `mapstructure:"repository_dir" json:"repository_dir"`
+	SyncPolicy    string `mapstructure:"sync_policy" json:"sync_policy"`
+}
 
 var SettingKeys []string
 
@@ -121,6 +132,63 @@ func SetSettingValue(key string, value string) error {
 	}
 
 	return fmt.Errorf("unsupported config %s", key)
+}
+
+func AddRemote(name, repoDir, remoteBaseUrl string, syncPolicy string) error {
+	remotes := []ExtraRemote{}
+	err := viper.UnmarshalKey(EXTRA_REMOTES_KEY, &remotes)
+	if err != nil {
+		return err
+	}
+
+	if syncPolicy != "never" && syncPolicy != "hourly" &&
+		syncPolicy != "daily" && syncPolicy != "weekly" &&
+		syncPolicy != "monthly" && syncPolicy != "always" {
+		syncPolicy = "always"
+	}
+
+	for _, remote := range remotes {
+		if remote.RemoteBaseUrl == remoteBaseUrl || remote.Name == name {
+			return fmt.Errorf("remote already exists")
+		}
+	}
+
+	remotes = append(remotes, ExtraRemote{
+		Name:          name,
+		RemoteBaseUrl: remoteBaseUrl,
+		RepositoryDir: repoDir,
+		SyncPolicy:    syncPolicy,
+	})
+	viper.Set(EXTRA_REMOTES_KEY, remotes)
+
+	return nil
+}
+
+func RemoveRemote(name string) error {
+	remotes := []ExtraRemote{}
+	err := viper.UnmarshalKey(EXTRA_REMOTES_KEY, &remotes)
+	if err != nil {
+		return err
+	}
+
+	new_remotes := []ExtraRemote{}
+	for _, remote := range remotes {
+		if remote.Name != name {
+			new_remotes = append(new_remotes, remote)
+		}
+	}
+
+	viper.Set(EXTRA_REMOTES_KEY, new_remotes)
+	return nil
+}
+
+func Remotes() ([]ExtraRemote, error) {
+	remotes := []ExtraRemote{}
+	err := viper.UnmarshalKey(EXTRA_REMOTES_KEY, &remotes)
+	if err != nil {
+		return remotes, err
+	}
+	return remotes, nil
 }
 
 func setBooleanConfig(key string, value string) error {

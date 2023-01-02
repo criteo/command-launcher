@@ -14,6 +14,8 @@ echo "> test download remote command"
 RESULT=$($OUTPUT_DIR/cl config command_repository_base_url https://raw.githubusercontent.com/criteo/command-launcher/${EXAMPLE_BRANCH_NAME}/examples/remote-repo)
 RESULT=$($OUTPUT_DIR/cl)
 
+echo "$RESULT"
+
 echo "$RESULT" | grep -q "hello"
 if [ $? -eq 0 ]; then
   # ok

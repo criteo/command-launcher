@@ -224,3 +224,23 @@ func TestInterpolate(t *testing.T) {
 	assert.Equal(t, "test", cmd.doInterpolate("linux", "x64", "#SCRIPT#"))
 	assert.Equal(t, "/tmp/test/root/windows/x64/test.exe", cmd.doInterpolate("windows", "x64", "#CACHE#/#OS#/#ARCH#/test#EXT#"))
 }
+
+func TestRuntimeNameAndGroup(t *testing.T) {
+	cmd := getDefaultCommand()
+
+	assert.Equal(t, cmd.Group(), cmd.RuntimeGroup(), "runtime name should be same as name by default")
+	assert.Equal(t, cmd.Name(), cmd.RuntimeName(), "runtime group should be same as group by default")
+
+	cmd.SetRuntimeGroup("new-group")
+	cmd.SetRuntimeName("new-name")
+
+	assert.Equal(t, "new-group", cmd.RuntimeGroup())
+	assert.Equal(t, "new-name", cmd.RuntimeName())
+
+	cmd.SetNamespace("test-repo", "test-package")
+	assert.Equal(t, "test@@test-package@test-repo", cmd.FullName())
+	assert.Equal(t, "@@test-package@test-repo", cmd.FullGroup())
+
+	assert.Equal(t, "test-repo>test-package>>test", cmd.ID())
+
+}

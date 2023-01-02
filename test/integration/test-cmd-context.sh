@@ -15,8 +15,6 @@ cp -R $SCRIPT_DIR/../packages-src/bonjour $CL_HOME/dropins
 
 echo "> test the command without LOG_LEVEL"
 RESULT=$($OUTPUT_DIR/cl bonjour)
-echo "$RESULT"
-
 echo "$RESULT" | grep -q "bonjour!"
 if [ $? -eq 0 ]; then
   echo "OK"
@@ -57,8 +55,6 @@ fi
 
 echo "> test default checkFlags = false, no flag and arg environment should be injected"
 RESULT=$($OUTPUT_DIR/cl bonjour --name Joe --language French world)
-echo "$RESULT"
-
 echo "$RESULT" | grep -q "Joe"
 if [ $? -eq 0 ]; then
   echo "KO - no environment variable CL_FLAG_NAME should be found"
@@ -81,5 +77,15 @@ if [ $? -eq 0 ]; then
   exit 1
 else
   echo "OK"
+fi
+
+echo "> test PACKAGE_DIR environment variable"
+RESULT=$($CL_PATH bonjour)
+echo "$RESULT" | grep "home"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should have PACKAGE_DIR environment variable"
+  exit 1
 fi
 

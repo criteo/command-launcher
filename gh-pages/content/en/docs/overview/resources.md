@@ -63,11 +63,11 @@ AUTH_TOKEN=${COLA_AUTH_TOKEN}
 
 ## Available resources
 
-| Resource Name                            | Require User Consent | Description                                             |
-|------------------------------------------|----------------------|---------------------------------------------------------|
-| USERNAME                                 | Yes                  | the username collected from `login` command             |
-| PASSWORD                                 | Yes                  | the password collected from `login` command             |
-| AUTH_TOKEN                               | Yes                  | the authentication token collected from `login` command |
-| LOG_LEVEL                                | Yes                  | the log level of command launcher                       |
-| DEBUG_FLAGS                              | Yes                  | the debug flags defined in command launcher's config    |
-| PACKAGE_DIR (will be available in 1.8.0) | No                   | the absolute path to the package directory              |
+| Resource Name | Require User Consent | Description                                             |
+|---------------|----------------------|---------------------------------------------------------|
+| USERNAME      | Yes                  | the username collected from `login` command             |
+| PASSWORD      | Yes                  | the password collected from `login` command             |
+| AUTH_TOKEN    | Yes                  | the authentication token collected from `login` command |
+| LOG_LEVEL     | Yes                  | the log level of command launcher                       |
+| DEBUG_FLAGS   | Yes                  | the debug flags defined in command launcher's config    |
+| PACKAGE_DIR   | No                   | the absolute path to the package directory              |

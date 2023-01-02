@@ -173,4 +173,15 @@ You will have different monitoring vectors for each partition, which will help y
 
 ## Monitoring
 
+Command launcher current implements a built-in graphite exporter. It reports the following metrics to graphite:
+
+1. success command execution count: `devtools.cdt.[package name].[group].[name].ok.count`
+2. success command duration: `devtools.cdt.[package name].[group].[name].ok.duration`
+3. fail command execution count: `devtools.cdt.[package name].[group].[name].ko.count`
+4. fail command duration: `devtools.cdt.[package name].[group].[name].ko.duration`
+
+You can add your custom metrics exporter by a `__metrics__` command hook in a system package, see [system package](../system-package)
+
 ## Credential Management
+
+Command launcher has a built-in login command, which will prompt the user to enter his user name and password. The default implementation will store the user name and password securely in the system credential manager. Each command can request the access to such credential in its manifest. Command launcher will ensure user consent on accessing these credentials and pass them to the underlying command through environment variables. More detail see [Manage resources](../resources)

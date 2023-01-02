@@ -21,14 +21,14 @@ RESULT=$($OUTPUT_DIR/cl)
 
 ################
 echo "> test list all packages"
-RESULT=$($CL_PATH list)
+RESULT=$($CL_PATH package list)
 
-echo "* should contain local packages section"
-echo "$RESULT" | grep -q "=== Local Repository ==="
+echo "* should contain managed packages section"
+echo "$RESULT" | grep -q "=== Managed Repository: Default ==="
 if [ $? -eq 0 ]; then
   echo "OK"
 else
-  echo "KO - should have Local Repository section"
+  echo "KO - should have Default Managed Repository section"
   exit 1
 fi
 
@@ -61,7 +61,7 @@ fi
 
 ################
 echo "> test list --dropin command"
-RESULT=$($CL_PATH list --dropin)
+RESULT=$($CL_PATH package list --dropin)
 
 echo "* should contain dropin packages section"
 echo "$RESULT" | grep -q "=== Dropin Repository ==="
@@ -92,10 +92,10 @@ fi
 
 ################
 echo "> test list --local command"
-RESULT=$($CL_PATH list --local)
+RESULT=$($CL_PATH package list --local)
 
 echo "* should contain local packages section"
-echo "$RESULT" | grep -q "=== Local Repository ==="
+echo "$RESULT" | grep -q "=== Managed Repository: Default ==="
 if [ $? -eq 0 ]; then
   echo "OK"
 else
@@ -123,7 +123,7 @@ fi
 
 ################
 echo "> test list local --include-cmd"
-RESULT=$($CL_PATH list --local --include-cmd)
+RESULT=$($CL_PATH package list --local --include-cmd)
 
 echo "* should contain package version"
 echo "$RESULT" | grep -q "1.0.0"
@@ -154,7 +154,7 @@ fi
 
 ################
 echo "> test list dropin --include-cmd"
-RESULT=$($CL_PATH list --dropin --include-cmd)
+RESULT=$($CL_PATH package list --dropin --include-cmd)
 
 echo "* should contain package version"
 echo "$RESULT" | grep -q "\- bonjour                                            1.0.0"
@@ -185,7 +185,7 @@ fi
 
 ################
 echo "> test list remote"
-RESULT=$($CL_PATH list --remote)
+RESULT=$($CL_PATH package list --remote)
 
 echo "* should contain remote package and version"
 echo "$RESULT" | grep -q "\- command-launcher-demo                              1.0.0"
@@ -197,7 +197,7 @@ else
 fi
 
 echo "* should contain remote section"
-echo "$RESULT" | grep -q "=== Remote Repository ==="
+echo "$RESULT" | grep -q "=== Remote Registry: Default ==="
 if [ $? -eq 0 ]; then
   echo "OK"
 else
@@ -207,8 +207,8 @@ fi
 
 ################
 echo "> test install git package"
-RESULT=$($CL_PATH install --git https://github.com/criteo/command-launcher-package-example)
-RESULT=$($CL_PATH list --dropin --include-cmd)
+RESULT=$($CL_PATH package install --git https://github.com/criteo/command-launcher-package-example)
+RESULT=$($CL_PATH package list --dropin --include-cmd)
 
 echo "* should contain package from git repo"
 echo "$RESULT" | grep -q "\- command-launcher-example-package                   0.0.1"
@@ -239,7 +239,7 @@ fi
 
 ################
 echo "> test delete dropin package"
-RESULT=$($CL_PATH delete command-launcher-example-package)
+RESULT=$($CL_PATH package delete command-launcher-example-package)
 if [ $? -eq 0 ]; then
   echo "OK"
 else
@@ -248,7 +248,7 @@ else
 fi
 
 echo "* should NOT contain package from git repo"
-RESULT=$($CL_PATH list --dropin --include-cmd)
+RESULT=$($CL_PATH package list --dropin --include-cmd)
 echo "$RESULT" | grep -q "\- command-launcher-example-package                   0.0.1"
 if [ $? -ne 0 ]; then
   echo "OK"
@@ -259,10 +259,10 @@ fi
 
 ################
 echo "> test install file package"
-RESULT=$($CL_PATH install --file https://github.com/criteo/command-launcher/raw/main/test/remote-repo/command-launcher-demo-2.0.0.pkg)
+RESULT=$($CL_PATH package install --file https://github.com/criteo/command-launcher/raw/main/test/remote-repo/command-launcher-demo-2.0.0.pkg)
 
 echo "* should contain 2.0.0 demo package"
-RESULT=$($CL_PATH list --dropin --include-cmd)
+RESULT=$($CL_PATH package list --dropin --include-cmd)
 echo "$RESULT" | grep -q "\- command-launcher-demo                              2.0.0"
 if [ $? -eq 0 ]; then
   echo "OK"

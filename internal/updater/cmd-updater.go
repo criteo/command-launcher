@@ -6,11 +6,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/criteo/command-launcher/cmd/remote"
-	"github.com/criteo/command-launcher/cmd/repository"
-	"github.com/criteo/command-launcher/cmd/user"
 	"github.com/criteo/command-launcher/internal/console"
 	"github.com/criteo/command-launcher/internal/helper"
+	"github.com/criteo/command-launcher/internal/remote"
+	"github.com/criteo/command-launcher/internal/repository"
+	"github.com/criteo/command-launcher/internal/user"
 
 	log "github.com/sirupsen/logrus"
 )

@@ -4,19 +4,19 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func CreateLocalRepository(repoDirname string, registry Registry) (PackageRepository, error) {
-	var reg Registry
-	if registry == nil {
+func CreateLocalRepository(id string, repoDirname string, idx RepoIndex) (PackageRepository, error) {
+	var repoIndex RepoIndex
+	if idx == nil {
 		var err error
-		reg, err = newDefaultRegistry()
+		repoIndex, err = newDefaultRepoIndex(id)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		reg = registry
+		repoIndex = idx
 	}
 
-	repo := newDefaultPackageRepository(repoDirname, reg)
+	repo := newDefaultPackageRepository(id, repoDirname, repoIndex)
 	if err := repo.load(); err != nil {
 		return nil, err
 	}

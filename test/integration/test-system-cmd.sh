@@ -129,6 +129,23 @@ else
   exit 1
 fi
 
+echo "> test metrics content"
+RESULT=$(cat $OUTPUT_DIR/../metrics.txt)
+echo "$RESULT" | grep 'default default default default'
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should have default command in metrics"
+  exit 1
+fi
+
+echo "$RESULT" | grep 'dropin bonjour default bonjour-consent'
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should have root exectuble command in metrics"
+  exit 1
+fi
 
 # cleanup
 rm -f $OUTPUT_DIR/../metrics.txt

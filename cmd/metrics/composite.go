@@ -12,10 +12,10 @@ func NewCompositeMetricsCollector(list ...Metrics) Metrics {
 	}
 }
 
-func (metrics *compositeMetrics) Collect(uid uint8, cmd string, subCmd string) error {
+func (metrics *compositeMetrics) Collect(uid uint8, repo string, pkg string, group string, name string) error {
 	errPool := []error{}
 	for _, m := range metrics.metricsList {
-		if err := m.Collect(uid, cmd, subCmd); err != nil {
+		if err := m.Collect(uid, repo, pkg, group, name); err != nil {
 			errPool = append(errPool, err)
 		}
 	}
