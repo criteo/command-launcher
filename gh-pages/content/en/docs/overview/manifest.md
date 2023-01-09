@@ -355,6 +355,22 @@ The static list of flags for your command
 
 It declares a `--human` flags with a short form: `-H`
 
+The flag definition string use `\t` to separate different fields. A complete fields can be found in the following table
+
+| field position | field name         | field description                                                                                 |
+|----------------|--------------------|---------------------------------------------------------------------------------------------------|
+| 1              | flag full name     | the full name of the flags, usually in format of x-y-z, note: no need to include `--` in the name |
+| 2              | flag short name    | optional, the short name (one letter) for the flag                                                |
+| 3              | flag description   | optional, the description of the flag name                                                        |
+| 4              | flag type          | optional, the flag type, one of string and bool. Default: string                                  |
+| 5              | flag default value | optional, the default value if not specified                                                      |
+
+Beside the complete form, it is also possible to have a short form:
+
+1. only the full name: ex. "user-name"
+2. full name + description: ex. "user-name\t the user name"
+3. full name + short name + description: ex. "user-name\t u\t the user name"
+
 ### checkFlags
 
 Whether parse and check flags before execute the command. Default: false.
