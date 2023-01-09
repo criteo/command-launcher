@@ -355,7 +355,7 @@ The static list of flags for your command
 
 It declares a `--human` flags with a short form: `-H`
 
-The flag definition string use `\t` to separate different fields. A complete fields can be found in the following table
+The flag definition string uses `\t` to separate different fields. A complete fields can be found in the following table
 
 | field position | field name         | field description                                                                                 |
 |----------------|--------------------|---------------------------------------------------------------------------------------------------|
