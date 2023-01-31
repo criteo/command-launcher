@@ -1,3 +1,10 @@
+1.8.1:
+  version: 1.8.1
+  releaseNotes: |
+    * 🐛 Fix DNS resolve issue on darwin amd64 under VPN. For Mac intel user, please download this version.
+  startPartition: 0
+  endPartition: 9
+
 1.8.0:
   version: 1.8.0
   releaseNotes: |
