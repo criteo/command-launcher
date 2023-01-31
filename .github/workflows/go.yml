@@ -21,11 +21,15 @@ jobs:
       matrix:
         arch: [amd64]
         cgo: [0]
-        os: [macos-latest, windows-latest, ubuntu-latest ]
+        os: [windows-latest, ubuntu-latest ]
         include:
           - os: macos-latest
             arch: arm64
             cgo: 1
+          - os: macos-latest
+            arch: amd64
+            cgo: 1
+
     steps:
     - uses: actions/checkout@v3
 
