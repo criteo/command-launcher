@@ -17,7 +17,7 @@
   {
     "name": "system-pkg-demo",
     "version": "0.0.1",
-    "checksum": "c17bd1ae4e60709793a774c617979176ffecfdc6cb27adb7fdb4eeccf0b5fd23",
+    "checksum": "6f584b7f1cafeb60ed0d3c22eda1470f27c28d78da4f7d6f41cf91af08d3a4cf",
     "startPartition": 0,
     "endPartition": 9
   }
