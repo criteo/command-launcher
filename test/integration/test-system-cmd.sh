@@ -30,6 +30,10 @@ NATIVE_SCRIPT_DIR=${NATIVE_SCRIPT_DIR/\/d\//D:/}
 NATIVE_SCRIPT_DIR=${NATIVE_SCRIPT_DIR/\/e\//E:/}
 NATIVE_SCRIPT_DIR=${NATIVE_SCRIPT_DIR/\/f\//F:/}
 echo $NATIVE_SCRIPT_DIR
+
+# enable package setup hook
+$CL_PATH config enable_package_setup_hook true
+
 RESULT=$($OUTPUT_DIR/cl config command_repository_base_url file://${NATIVE_SCRIPT_DIR}/../remote-repo)
 RESULT=$($CL_PATH)
 
@@ -41,6 +45,18 @@ else
   echo "KO - hello command should exist"
   exit 1
 fi
+
+
+echo "> test package setup hook"
+echo "$RESULT" | grep -q "calling setup"
+if [ $? -eq 0 ]; then
+  # ok
+  echo "OK"
+else
+  echo "KO - package setup hook should be called"
+  exit 1
+fi
+
 
 echo "> test system command should not exist"
 echo "$RESULT" | grep -q "metrics"

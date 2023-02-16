@@ -132,9 +132,36 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 		ValidArgsFunction: packageNameValidatonFunc(false, true, false),
 	}
 
+	packageSetupCmd := &cobra.Command{
+		Use:   "setup [package_name]",
+		Short: "Setup a package",
+		Long: `
+Manually setup a package.
+
+This command  will trigger the system command __setup__ defined in the package manifest.
+To enable the automatic setup during package installation, enable the configuration:
+"enable_package_setup_hook".
+`,
+		Args: cobra.ExactArgs(1),
+		Example: fmt.Sprintf(`
+  %s setup my-pkg`, appCtx.AppName()),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			for _, s := range rootCtxt.backend.AllPackageSources() {
+				for _, installedPkg := range s.Repo.InstalledPackages() {
+					if installedPkg.Name() == args[0] {
+						return pkg.ExecSetupHookFromPackage(installedPkg, "")
+					}
+				}
+			}
+			return fmt.Errorf("no package named %s found", args[0])
+		},
+		ValidArgsFunction: packageNameValidatonFunc(true, true, false),
+	}
+
 	packageCmd.AddCommand(packageListCmd)
 	packageCmd.AddCommand(packageInstallCmd)
 	packageCmd.AddCommand(packageDeleteCmd)
+	packageCmd.AddCommand(packageSetupCmd)
 	rootCmd.AddCommand(packageCmd)
 }
 

@@ -105,6 +105,9 @@ type Package interface {
 
 	// install package to a local repository
 	InstallTo(pathname string) (PackageManifest, error)
+
+	// run setup process of the package
+	RunSetup(pkgDir string) error
 }
 
 type ExampleEntry struct {

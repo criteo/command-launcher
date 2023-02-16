@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 
 	"github.com/criteo/command-launcher/internal/command"
+	"github.com/criteo/command-launcher/internal/config"
+	"github.com/spf13/viper"
 )
 
 type folderPackage struct {
@@ -37,6 +39,11 @@ func (pkg *folderPackage) InstallTo(targetDir string) (command.PackageManifest, 
 	dstDir := filepath.Join(targetDir, pkg.Manifest.Name())
 	if err := copyFolder(pkg.sourceDir, dstDir); err != nil {
 		return nil, err
+	}
+
+	if viper.GetBool(config.ENABLE_PACKAGE_SETUP_HOOK_KEY) {
+		// for now ignore the setup error
+		pkg.RunSetup(dstDir)
 	}
 
 	return pkg.Manifest, nil
