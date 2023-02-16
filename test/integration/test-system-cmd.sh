@@ -37,6 +37,8 @@ $CL_PATH config enable_package_setup_hook true
 RESULT=$($OUTPUT_DIR/cl config command_repository_base_url file://${NATIVE_SCRIPT_DIR}/../remote-repo)
 RESULT=$($CL_PATH)
 
+echo "$RESULT"
+
 echo "$RESULT" | grep -q "hello"
 if [ $? -eq 0 ]; then
   # ok
