@@ -271,3 +271,13 @@ else
   exit 1
 fi
 
+###############
+echo "> test setup package"
+RESULT=$($CL_PATH package setup command-launcher-example-package)
+echo "$RESULT" | grep -q "no setup hook found"
+if [ $? -ne 0 ]; then
+  echo "OK"
+else
+  echo "KO - should prompt no setup hook found"
+  exit 1
+fi

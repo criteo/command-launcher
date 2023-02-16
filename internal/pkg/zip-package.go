@@ -9,7 +9,9 @@ import (
 	"path/filepath"
 
 	"github.com/criteo/command-launcher/internal/command"
+	"github.com/criteo/command-launcher/internal/config"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 type zipPackage struct {
@@ -78,6 +80,11 @@ func (pkg *zipPackage) InstallTo(targetDir string) (command.PackageManifest, err
 				return nil, fmt.Errorf("file data extraction failed: %s", err)
 			}
 		}
+	}
+
+	if viper.GetBool(config.ENABLE_PACKAGE_SETUP_HOOK_KEY) {
+		// for now ignore the setup error
+		pkg.RunSetup(targetDir)
 	}
 
 	return pkg.Manifest, nil

@@ -78,6 +78,10 @@ func ReadManifest(file fs.File) (command.PackageManifest, error) {
 	return &mf, nil
 }
 
+func (pkg *defaultPackage) RunSetup(pkgDir string) error {
+	return ExecSetupHookFromPackage(pkg, pkgDir)
+}
+
 func copyFolder(srcFolder string, dstFolder string) error {
 	info, err := os.Stat(srcFolder)
 	if err != nil {
@@ -134,4 +138,21 @@ func copyFile(src string, dst string) error {
 	}
 
 	return os.Chmod(dst, srcInfo.Mode())
+}
+
+func ExecSetupHookFromPackage(pkg command.PackageManifest, pkgDir string) error {
+	for _, c := range pkg.Commands() {
+		if c.Name() == "__setup__" && c.Type() == "system" {
+			if pkgDir != "" {
+				c.SetPackageDir(pkgDir)
+			}
+			// Execute the __setup__ hook
+			_, err := c.Execute(os.Environ())
+			if err != nil {
+				return fmt.Errorf("setup hook of package %s failed to execute: %v", pkg.Name(), err)
+			}
+			return nil
+		}
+	}
+	return fmt.Errorf("no setup hook found in the package")
 }

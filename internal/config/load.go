@@ -113,6 +113,7 @@ func setDefaultConfig() {
 	viper.SetDefault(VERIFY_PACKAGE_SIGNATURE_KEY, false)
 
 	viper.SetDefault(EXTRA_REMOTES_KEY, []map[string]string{})
+	viper.SetDefault(ENABLE_PACKAGE_SETUP_HOOK_KEY, false)
 }
 
 func initDefaultConfigFile() {

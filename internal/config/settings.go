@@ -36,6 +36,7 @@ const (
 	EXTRA_REMOTE_BASE_URL_KEY            = "REMOTE_BASE_URL"
 	EXTRA_REMOTE_REPOSITORY_DIR_KEY      = "REPOSITORY_DIR"
 	EXTRA_REMOTE_SYNC_POLICY_KEY         = "SYNC_POLICY"
+	ENABLE_PACKAGE_SETUP_HOOK_KEY        = "ENABLE_PACKAGE_SETUP_HOOK"
 
 	// internal commands are the commands with start partition number > INTERNAL_START_PARTITION
 	INTERNAL_COMMAND_ENABLED_KEY = "INTERNAL_COMMAND_ENABLED"
@@ -75,6 +76,7 @@ func init() {
 		USER_CONSENT_LIFE_KEY,
 		SYSTEM_PACKAGE_KEY,
 		SYSTEM_PACKAGE_PUBLIC_KEY_FILE_KEY,
+		ENABLE_PACKAGE_SETUP_HOOK_KEY,
 	)
 }
 
@@ -128,6 +130,8 @@ func SetSettingValue(key string, value string) error {
 	case VERIFY_PACKAGE_CHECKSUM_KEY:
 		return setBooleanConfig(upperKey, value)
 	case VERIFY_PACKAGE_SIGNATURE_KEY:
+		return setBooleanConfig(upperKey, value)
+	case ENABLE_PACKAGE_SETUP_HOOK_KEY:
 		return setBooleanConfig(upperKey, value)
 	}
 
