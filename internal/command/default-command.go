@@ -68,7 +68,10 @@ type DefaultCommand struct {
 	CmdDocLink            string         `json:"docLink" yaml:"docLink"`
 	CmdValidArgs          []string       `json:"validArgs" yaml:"validArgs"`         // the valid argument options
 	CmdValidArgsCmd       []string       `json:"validArgsCmd" yaml:"validArgsCmd"`   // the command to call to get the args for autocompletion
-	CmdRequiredFlags      []string       `json:"requiredFlags" yaml:"requiredFlags"` // the required flags
+	CmdRequiredFlags      []string       `json:"requiredFlags" yaml:"requiredFlags"` // the required flags -- deprecated in 1.9.0, see flags, exclusiveFlags, and groupFlags
+	CmdFlags              []Flag         `json:"flags" yaml:"flags"`
+	CmdExclusiveFlags     [][]string     `json:"exclusiveFlags" yaml:"exclusiveFlags"`
+	CmdGroupFlags         [][]string     `json:"groupFlags" yaml:"groupFlags"`
 	CmdFlagValuesCmd      []string       `json:"flagValuesCmd" yaml:"flagValuesCmd"` // the command to call flag values for autocompletion
 	CmdCheckFlags         bool           `json:"checkFlags" yaml:"checkFlags"`       // whether parse the flags and check them before execution
 	CmdRequestedResources []string       `json:"requestedResources" yaml:"requestedResources"`
@@ -99,6 +102,9 @@ func NewDefaultCommandFromCopy(cmd Command, pkgDir string) *DefaultCommand {
 		CmdValidArgs:          cmd.ValidArgs(),
 		CmdValidArgsCmd:       cmd.ValidArgsCmd(),
 		CmdRequiredFlags:      cmd.RequiredFlags(),
+		CmdFlags:              cmd.Flags(),
+		CmdExclusiveFlags:     cmd.ExclusiveFlags(),
+		CmdGroupFlags:         cmd.GroupFlags(),
 		CmdFlagValuesCmd:      cmd.FlagValuesCmd(),
 		CmdCheckFlags:         cmd.CheckFlags(),
 		CmdRequestedResources: cmd.RequestedResources(),
@@ -318,6 +324,27 @@ func (cmd *DefaultCommand) RequiredFlags() []string {
 		return cmd.CmdRequiredFlags
 	}
 	return []string{}
+}
+
+func (cmd *DefaultCommand) Flags() []Flag {
+	if cmd.CmdFlags != nil && len(cmd.CmdFlags) > 0 {
+		return cmd.CmdFlags
+	}
+	return []Flag{}
+}
+
+func (cmd *DefaultCommand) ExclusiveFlags() [][]string {
+	if cmd.CmdExclusiveFlags == nil {
+		return [][]string{}
+	}
+	return cmd.CmdExclusiveFlags
+}
+
+func (cmd *DefaultCommand) GroupFlags() [][]string {
+	if cmd.CmdGroupFlags == nil {
+		return [][]string{}
+	}
+	return cmd.CmdGroupFlags
 }
 
 func (cmd *DefaultCommand) FlagValuesCmd() []string {

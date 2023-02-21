@@ -13,6 +13,56 @@
         "language\t l\tgreeting language"
       ],
       "checkFlags": true
+    },
+    {
+      "name": "nihao",
+      "type": "executable",
+      "short": "a commands to test flags",
+      "executable": "{{.PackageDir}}/bonjour.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}",
+      "args": [],
+      "flags": [
+        {
+          "name": "name",
+          "short": "n",
+          "desc": "greeting name",
+          "default": "world",
+          "required": true
+        },
+        {
+          "name": "language",
+          "short": "l",
+          "desc": "greeting language",
+          "default": "world"
+        },
+        {
+          "name": "json",
+          "type": "bool",
+          "desc": "output in JSON format"
+        },
+        {
+          "name": "text",
+          "type": "bool",
+          "desc": "output in PLAIN TEXT format"
+        },
+        {
+          "name": "isolated-required",
+          "type": "string",
+          "desc": "test isolated required argument",
+          "required": true
+        },
+        {
+          "name": "interactive",
+          "type": "bool",
+          "desc": "show greeting in interactive mode"
+        }
+      ],
+      "exclusiveFlags": [
+        [ "text",  "json" ]
+      ],
+      "groupFlags": [
+        [ "name",  "language" ]
+      ],
+      "checkFlags": true
     }
   ]
 }

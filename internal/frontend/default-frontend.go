@@ -68,8 +68,11 @@ func (self *defaultFrontend) addGroupCommands() {
 		))
 		requiredFlags := v.RequiredFlags()
 		requestedResources := v.RequestedResources()
+		flags := v.Flags()
+		exclusiveFlags := v.ExclusiveFlags()
+		groupFlags := v.GroupFlags()
 		cmd := &cobra.Command{
-			DisableFlagParsing: true,
+			DisableFlagParsing: true, // not enable the checkFlags feature for group command for now
 			Use:                usage,
 			Example:            formatExamples(v.Examples()),
 			Short:              v.ShortDescription(),
@@ -86,9 +89,14 @@ func (self *defaultFrontend) addGroupCommands() {
 				RootExitCode = exitCode
 			},
 		}
+		// legacy flag definition ("requiredFlags")
+		// deperacted
 		for _, flag := range requiredFlags {
 			addFlagToCmd(cmd, flag)
 		}
+		// new ways to handle flags
+		processFlags(cmd, flags, exclusiveFlags, groupFlags)
+
 		self.groupCmds[v.RuntimeName()] = cmd
 		self.rootCmd.AddCommand(cmd)
 	}
@@ -108,8 +116,11 @@ func (self *defaultFrontend) addExecutableCommands() {
 		validArgsCmd := v.ValidArgsCmd()
 		checkFlags := v.CheckFlags()
 		requestedResources := v.RequestedResources()
+		flags := v.Flags()
+		exclusiveFlags := v.ExclusiveFlags()
+		groupFlags := v.GroupFlags()
 		cmd := &cobra.Command{
-			DisableFlagParsing: true,
+			DisableFlagParsing: !checkFlags,
 			Use:                usage,
 			Example:            formatExamples(v.Examples()),
 			Short:              v.ShortDescription(),
@@ -120,21 +131,25 @@ func (self *defaultFrontend) addExecutableCommands() {
 					log.Warnf("failed to get user consent: %v", err)
 				}
 
-				envVars, code, shouldQuit := self.parseArgsToEnvVars(c, args, checkFlags)
+				envVars, originalArgs, code, shouldQuit := self.parseArgsToEnvVars(c, args, checkFlags)
 				if shouldQuit {
 					RootExitCode = code
 					return
 				}
 
-				if exitCode, err := self.executeCommand(group, name, args, envVars, consents); err != nil {
+				if exitCode, err := self.executeCommand(group, name, originalArgs, envVars, consents); err != nil {
 					RootExitCode = exitCode
 				}
 			},
 		}
 
+		// legacy flag definition ("requiredFlags")
+		// deprecated
 		for _, flag := range requiredFlags {
 			addFlagToCmd(cmd, flag)
 		}
+		// new ways to handle flags
+		processFlags(cmd, flags, exclusiveFlags, groupFlags)
 
 		cmd.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			if len(validArgsCmd) > 0 {
@@ -180,30 +195,32 @@ func (self *defaultFrontend) addExecutableCommands() {
 }
 
 // parse args and inject environment vars
-// return the environment vars, and if we should exit
-func (self *defaultFrontend) parseArgsToEnvVars(c *cobra.Command, args []string, checkFlags bool) ([]string, int, bool) {
+// if checkFlags is disabled, it simply returns the empty variables, and the args input
+// otherwise, return the environment vars, original args, exit code, and if we should exit
+func (self *defaultFrontend) parseArgsToEnvVars(c *cobra.Command, args []string, checkFlags bool) ([]string, []string, int, bool) {
 	var envVars []string = []string{}
 	var envTable map[string]string = map[string]string{}
+	var originalArgs = args
 
 	log.Debugf("checkFlags=%t", checkFlags)
 	if checkFlags {
 		var err error = nil
 		envVarPrefix := strings.ToUpper(self.appCtx.AppName())
-		envVars, envTable, err = parseCmdArgsToEnv(c, args, envVarPrefix)
+		envVars, envTable, originalArgs, err = parseCmdArgsToEnv(c, args, envVarPrefix)
 		if err != nil {
 			console.Error("Failed to parse arguments: %v", err)
 			// set exit code to 1, and should quit
-			return envVars, 1, true
+			return envVars, originalArgs, 1, true
 		}
 		if h, exist := envTable[fmt.Sprintf("%s_FLAG_HELP", envVarPrefix)]; exist && h == "true" {
 			c.Help()
 			// show help and should quit
-			return envVars, 0, true
+			return envVars, originalArgs, 0, true
 		}
 	}
 	log.Debugf("flag & args environments: %v", envVars)
 
-	return envVars, 0, false
+	return envVars, originalArgs, 0, false
 }
 
 func formatExamples(examples []command.ExampleEntry) string {
@@ -293,6 +310,50 @@ func addFlagToCmd(cmd *cobra.Command, flag string) {
 	}
 }
 
+func processFlags(cmd *cobra.Command, flags []command.Flag, exclusive [][]string, group [][]string) {
+	for _, flag := range flags {
+		switch flag.Type() {
+		case "bool":
+			defaultV, err := strconv.ParseBool(flag.Default())
+			if err != nil {
+				defaultV = false
+			}
+			cmd.Flags().BoolP(flag.Name(), flag.ShortName(), defaultV, flag.Description())
+		default:
+			cmd.Flags().StringP(flag.Name(), flag.ShortName(), flag.Default(), flag.Description())
+		}
+
+		if flag.Required() {
+			cmd.MarkFlagRequired(flag.Name())
+		}
+	}
+
+	for _, ex := range exclusive {
+		exist := true
+		for _, f := range ex {
+			if cmd.Flags().Lookup(f) == nil {
+				exist = false
+			}
+		}
+		if !exist {
+			continue
+		}
+		cmd.MarkFlagsMutuallyExclusive(ex...)
+	}
+	for _, ex := range group {
+		exist := true
+		for _, f := range ex {
+			if cmd.Flags().Lookup(f) == nil {
+				exist = false
+			}
+		}
+		if !exist {
+			continue
+		}
+		cmd.MarkFlagsRequiredTogether(ex...)
+	}
+}
+
 func parseFlagDefinition(line string) (string, string, string, string, string) {
 	flagParts := strings.Split(line, "\t")
 	name := strings.TrimSpace(flagParts[0])
@@ -378,11 +439,13 @@ func (self *defaultFrontend) getCmdEnvContext(envVars []string, consents []strin
 	return outputVars
 }
 
-func parseCmdArgsToEnv(c *cobra.Command, args []string, envVarPrefix string) ([]string, map[string]string, error) {
+// return envrionment variable list, env variable table, original args including flags
+func parseCmdArgsToEnv(c *cobra.Command, args []string, envVarPrefix string) ([]string, map[string]string, []string, error) {
 	envVars := []string{}
 	envTable := map[string]string{}
+	originalArgs := []string{}
 	if err := c.LocalFlags().Parse(args); err != nil {
-		return envVars, envTable, err
+		return envVars, envTable, args, err
 	}
 	c.LocalFlags().VisitAll(func(flag *pflag.Flag) {
 		n := strings.ReplaceAll(strings.ToUpper(flag.Name), "-", "_")
@@ -395,11 +458,32 @@ func parseCmdArgsToEnv(c *cobra.Command, args []string, envVarPrefix string) ([]
 			),
 		)
 		envTable[k] = v
+
+		switch flag.Value.Type() {
+		case "bool":
+			if flag.Value.String() == "true" {
+				originalArgs = append(originalArgs, fmt.Sprintf("--%s", flag.Name))
+			}
+		default:
+			if flag.Value.String() != "" {
+				originalArgs = append(originalArgs, fmt.Sprintf("--%s", flag.Name), flag.Value.String())
+			}
+		}
+
 	})
 	for idx, arg := range c.LocalFlags().Args() {
 		k := fmt.Sprintf("%s_ARG_%s", envVarPrefix, strconv.Itoa(idx+1))
 		envVars = append(envVars, fmt.Sprintf("%s=%s", k, arg))
 		envTable[k] = arg
 	}
-	return envVars, envTable, nil
+	// new variable for arg number
+	nargs_k := fmt.Sprintf("%s_NARGS", envVarPrefix)
+	envTable[nargs_k] = strconv.Itoa(len(c.LocalFlags().Args()))
+	envVars = append(envVars, fmt.Sprintf("%s=%s", nargs_k, envTable[nargs_k]))
+
+	// reconstruct the original command args including flags
+	parsedArgs := c.LocalFlags().Args()
+	originalArgs = append(originalArgs, parsedArgs...)
+
+	return envVars, envTable, originalArgs, nil
 }

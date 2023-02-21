@@ -35,7 +35,14 @@ type CommandManifest interface {
 
 	ValidArgsCmd() []string
 
+	// deprecated in 1.9.0, replaced by Flags()
 	RequiredFlags() []string
+
+	Flags() []Flag
+
+	ExclusiveFlags() [][]string
+
+	GroupFlags() [][]string
 
 	FlagValuesCmd() []string
 
@@ -120,4 +127,43 @@ func (example ExampleEntry) Clone() ExampleEntry {
 		Scenario: example.Scenario,
 		Command:  example.Command,
 	}
+}
+
+type Flag struct {
+	FlagName        string `json:"name" yaml:"name"`
+	FlagType        string `json:"type" yaml:"type"`
+	FlagShortName   string `json:"short" yaml:"short"`
+	FlagDescription string `json:"desc" yaml:"desc"`
+	FlagDefault     string `json:"default" yaml:"default"`
+	FlagRequired    bool   `json:"required" yaml:"required"`
+}
+
+func (f Flag) Name() string {
+	return f.FlagName
+}
+
+func (f Flag) Type() string {
+	if f.FlagType != "string" && f.FlagType != "bool" {
+		return "string"
+	}
+	return f.FlagType
+}
+
+func (f Flag) ShortName() string {
+	return f.FlagShortName
+}
+
+func (f Flag) Description() string {
+	return f.FlagDescription
+}
+
+func (f Flag) Required() bool {
+	return f.FlagRequired
+}
+
+func (f Flag) Default() string {
+	if f.FlagType == "bool" {
+		return "false"
+	}
+	return f.FlagDefault
 }
