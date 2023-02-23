@@ -439,7 +439,7 @@ func (self *defaultFrontend) getCmdEnvContext(envVars []string, consents []strin
 	return outputVars
 }
 
-// return envrionment variable list, env variable table, original args including flags
+// return environment variable list, env variable table, original args including flags
 func parseCmdArgsToEnv(c *cobra.Command, args []string, envVarPrefix string) ([]string, map[string]string, []string, error) {
 	envVars := []string{}
 	envTable := map[string]string{}
