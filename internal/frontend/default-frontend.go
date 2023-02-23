@@ -90,7 +90,7 @@ func (self *defaultFrontend) addGroupCommands() {
 			},
 		}
 		// legacy flag definition ("requiredFlags")
-		// deperacted
+		// deprecated
 		for _, flag := range requiredFlags {
 			addFlagToCmd(cmd, flag)
 		}
