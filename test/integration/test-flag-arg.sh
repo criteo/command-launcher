@@ -107,7 +107,7 @@ fi
 
 echo "> test flags"
 RESULT=$($CL_PATH nihao --name Joe --language fr World --json --isolated-required value 2>&1)
-echo "$RESULT" | grep -q "\-\-json \-\-language fr \-\-name Joe World"
+echo "$RESULT" | grep -q "\-\-isolated-required value \-\-json \-\-language fr \-\-name Joe World"
 if [ $? -eq 0 ]; then
   echo "OK"
 else
