@@ -17,7 +17,7 @@
     {
       "name": "nihao",
       "type": "executable",
-      "short": "a commands to test flags",
+      "short": "a command to test flags",
       "executable": "{{.PackageDir}}/bonjour.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}",
       "args": [],
       "flags": [
