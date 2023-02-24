@@ -79,7 +79,7 @@ func Test_ParseCmdArgToEnv(t *testing.T) {
 	cmd.Flags().BoolP("flag3", "c", false, "description")
 	cmd.Flags().BoolP("flag-with-dash", "d", false, "description")
 
-	envList, envTable, err := parseCmdArgsToEnv(cmd, []string{"--flag1", "v1", "-b", "v2", "-c", "--flag-with-dash", "arg1", "arg2"}, "CDT")
+	envList, envTable, originalArgs, err := parseCmdArgsToEnv(cmd, []string{"--flag1", "v1", "-b", "v2", "-c", "--flag-with-dash", "arg1", "arg2"}, "CDT")
 	assert.Nil(t, err)
 
 	assert.True(t, findEnv(envList, "CDT_FLAG_FLAG1", "v1"))
@@ -97,6 +97,9 @@ func Test_ParseCmdArgToEnv(t *testing.T) {
 
 	assert.Equal(t, envTable["CDT_ARG_1"], "arg1")
 	assert.Equal(t, envTable["CDT_ARG_2"], "arg2")
+
+	fmt.Println(originalArgs)
+	assert.Equal(t, len(originalArgs), 8)
 }
 
 func findEnv(envTable []string, key string, value string) bool {
