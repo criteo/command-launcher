@@ -26,7 +26,7 @@ Use `cola config [key] [value]` to set one configuration.
 
 ## completion
 
-Setup auto completion. See help to get instructions:
+setup auto completion. See help to get instructions:
 
 ```shell
 cola completion --help
@@ -89,9 +89,17 @@ Remove a dropin package from the package name defined in manifest
 cola package delete command-launcher-example-package
 ```
 
+### package setup
+
+Manually trigger the package [setup hook](../manifest/#__setup__)
+
+```shell
+cola package setup command-launcher-example-package
+```
+
 ## remote
 
-A collection of commands to manage extra remote registries
+A collection of commands to manage extra remote registries. A registry is a URI that hosts multiple packages. The list of available packages of the registry is defined in its `/index.json` endpoint.
 
 ### remote list
 
@@ -116,3 +124,42 @@ Delete a remote registry by its name.
 ```shell
 cola delete myregistry
 ```
+
+## rename
+
+### rename
+
+Rename a command into a different name
+
+To avoid command conflicts, each command has a unique full name in form of `[name]@[group]@[package]@[repository]`, for group command and root level command, it's group is empty. For example: `hello@@my-package@dropin` is the full name of the command `hello` in `my-package` package, which can be found in the `dropin` repository.
+
+Usually, such command is launched through: `cola [group] [name]`. You can rename the group and the name of the command to a different name, so that you can call it through: `cola [new group] [new name]`
+
+To rename a command to a different name, use following commands:
+
+```shell
+# To change the group name:
+cola rename [group]@@[package]@[repository] [new group]
+
+# To change the command name:
+cola rename [name]@[group]@[package]@[repository] [new name]
+```
+
+For example, you can rename the `hello` command to `bonjour` using following rename command:
+
+```shell
+cola rename hello@@my-package@dropin bonjour
+
+# now call it from cola will trigger the original hello command
+cola bonjour
+```
+
+### rename --delete
+
+To delete a renamed command name
+
+```shell
+cola rename --delete [command full name]
+```
+
+Now you have to use its original name to call the command

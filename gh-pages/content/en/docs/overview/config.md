@@ -43,6 +43,32 @@ toc: true
 | system_package_public_key_file   | string   | the public key file to verify the system package signature                                                                    |
 | verify_package_checksum          | bool     | whether to verify the package checksum during package installation                                                            |
 | verify_package_signature         | bool     | whether to verify the package signature during package installation (will be available in 1.8)                                |
+| extra_remotes                    | map      | extra remote registry configurations, see extra remote configuration  (available 1.8+)                                        |
+| enable_package_setup_hook        | bool     | call setup hook after a new version of package is installed (available 1.9+)                                                  |
+
+### extra remote configuration
+
+Each extra remote must have a unique name, it is used to identify the command as part of the command full name. The example configuration looks like the following:
+
+```json
+{
+    "extra_remotes": {
+        "remote1": {
+            "remote_base_url": "",
+            "sync_policy": "always",
+            "repository_dir": ""
+        }
+    }
+}
+```
+
+| Config Name     | Type   | Description                                                                                                    |
+|-----------------|--------|----------------------------------------------------------------------------------------------------------------|
+| remote_base_url | string | the base url of the remote repository, it must contain a `/index.json` endpoint to list all available packages |
+| sync_policy     | string | how often the repository is synched from its remote, always, hourly, daily, weekly, or monthly                 |
+| repository_dir  | string | the absolute path of the local repository folder to keep the downloaded local packages                         |
+
+> You don't need to manage these extra remote configurations by your self. Use the built-in `remote` command instead
 
 ## Change configuration
 
@@ -52,4 +78,4 @@ It is recommended to use the built-in `config` command to change the configurati
 cola config user_consent_life 24h
 ```
 
-sets the user consent life to 24 hours.
+set the user consent life to 24 hours.

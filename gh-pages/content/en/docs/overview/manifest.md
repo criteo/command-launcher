@@ -64,7 +64,10 @@ Here is an example
 | args               | no                 | the argument list to pass to the executable, command launcher arguments will be appended to the list |
 | validArgs          | no                 | the static list of options for auto-complete the arguments                                           |
 | validArgsCmd       | no                 | array of string, command to run to get the dynamic auto-complete options for arguments               |
-| requiredFlags      | no                 | the static list of options for the command flags                                                     |
+| requiredFlags      | no                 | the static list of options for the command flags (deprecated in 1.9)                                 |
+| flags              | no                 | the flag list (available in 1.9+)                                                                    |
+| exclusiveFlags     | no                 | group of exclusive flags (available in 1.9+)                                                         |
+| groupFlags         | no                 | group of grouped flags, which must be presented together (available in 1.9+)                         |
 | checkFlags         | no                 | whether check the flags defined in manifest before calling the command, default false                |
 | requestedResources | no                 | the resources that the command requested, ex, USERNAME, PASSWORD                                     |
 
@@ -325,7 +328,135 @@ When you type `[cola] city poplution [TAB]`, command launcher will run the comma
 
 More details see: [Auto-Complete](./AUTO_COMPLETE.md)
 
+### flags
+
+> Available in 1.9+
+
+Define flags (options) of the command. Each flags could have the following properties
+
+| Property | Required | Description                                                                             |
+|----------|----------|-----------------------------------------------------------------------------------------|
+| name     | yes      | flag name                                                                               |
+| short    | no       | flag short name, usually one letter                                                     |
+| desc     | no       | flag description                                                                        |
+| type     | no       | flag type, default "string", currently support "string" and bool"                       |
+| default  | no       | flag default value, only available for string type, bool flag's default is always false |
+| required | no       | boolean, is the flag required, default false                                            |
+
+**Example**
+
+```json
+{
+   "cmds": [
+    {
+      "name": "population",
+      "type": "executable",
+      "group": "city",
+      "executable": "get-city-population",
+      "args": [],
+      "validArgs": [
+        "paris",
+        "rome",
+        "london"
+      ],
+      "flags": [
+        {
+          "name": "human",
+          "short": "H",
+          "desc": "return the human readabe format",
+          "type": "bool"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### exclusiveFlags
+
+> Available in 1.9+
+
+Declare two or more flags are mutually exclusive. For example, a flag `json` that outputs JSON format will be exclusive to the flag `text`, which outputs in plain text format.
+
+**Example**
+
+```json
+{
+  "cmds": [
+    {
+      "name": "population",
+      "type": "executable",
+      "group": "city",
+      "executable": "get-city-population",
+      "args": [],
+      "validArgs": [
+        "paris",
+        "rome",
+        "london"
+      ],
+      "flags": [
+        {
+          "name": "human",
+          "short": "H",
+          "desc": "return the human readabe format",
+          "type": "bool"
+        },
+        {
+          "name": "json",
+          "short": "j",
+          "desc": "return the JSON format",
+          "type": "bool"
+        }
+      ],
+      "exclusiveFlags": [
+        [ "human", "json" ]
+      ]
+    }
+  ]
+}
+```
+
+### groupFlags
+
+> Available in 1.9+
+
+Ensure that two or more flags are presented at the same time.
+
+**Example**
+
+```json
+{
+  "cmds": [
+    {
+      "name": "population",
+      "type": "executable",
+      "group": "city",
+      "executable": "get-city-population",
+      "args": [],
+      "flags": [
+        {
+          "name": "country",
+          "short": "c",
+          "desc": "country name",
+          "required": true
+        },
+        {
+          "name": "city",
+          "short": "t",
+          "desc": "city name"
+        }
+      ],
+      "groupFlags": [
+        [ "country", "city" ]
+      ]
+    }
+  ]
+}
+```
+
 ### requiredFlags
+
+> Deprecated in 1.9, see [flags](./#flags) property
 
 The static list of flags for your command
 
@@ -375,13 +506,15 @@ Beside the complete form, it is also possible to have a short form:
 
 Whether parse and check flags before execute the command. Default: false.
 
-The `requiredFlags`, `validArgs` and `validArgsCmd` are mainly used for auto completion. Command launcher will not parse the arguments by default, it will simply pass the arguments to the callee command. In other words, in this case, it is the callee command's responsibility to parse the flags and arguments. This works fine when the command is implemented with languages that has advanced command line supports, like golang.
+The `requiredFlags` (deprecated in 1.9), `flags`, `validArgs` and `validArgsCmd` are mainly used for auto completion. Command launcher will not parse the flag and arguments by default, it will simply pass through them to the callee command. In other words, in this case, it is the callee command's responsibility to parse the flags and arguments. This works fine when the command is implemented with languages that has advanced command line supports, like golang.
 
 For some cases, arguments parsing is difficult or has less support, for example, implementing the command in shell script. Enable `checkFlags` will allow command launcher to parse the arguments and catch errors. Further more, command launcher will pass the parsed flags and arguments to the callee command through environment variables:
 
 - For flags: `COLA_FLAG_[FLAG_NAME]` ('-' is replaced with '_'). Example: flag `--user-name` is passed through environment variable `COLA_FLAG_USER_NAME`
 
-- For arguments: `COLA_ARG_[INDEX]` where the index starts from 1. Example: command `cola get-city-population France Paris` will get environment variable `COLA_ARG_1=France` and `COLA_ARG_2=Paris`
+- For arguments: `COLA_ARG_[INDEX]` where the index starts from 1. Example: command `cola get-city-population France Paris` will get environment variable `COLA_ARG_1=France` and `COLA_ARG_2=Paris`. An additional environment variable `COLA_NARGS` (available in 1.9+) is available as well to get the number of arguments.
+
+> Even checkFlags is set to `true`, command launcher will still pass through the original arguments to the callee command as well, in addition, to the original arguments, parsed flags and arguments are passed to the callee as environment variables.
 
 Another behavior change is that once `checkFlags` is enabled, the `-h` and `--help` flags are handled by command launcher. The original behavior is managed by the callee command itself.
 
@@ -404,4 +537,29 @@ The following snippet requests to access the user name and password resources.
     }
   ]
 }
+```
+
+## System commands
+
+Besides the [system command](../system-package/#system-commands) defined in a [system package](../system-package). You can define package level system command as a lifecycle hook.
+
+### \_\_setup\_\_
+
+When a package is installed, sometimes it requires some setups to make it work properly. For example, a command written in javascript could require a `npm install` to install all its dependencies. You can define a system command `__setup__` in your package as a normal command, with type `system`, it will be called when the package is installed. (You can disable this behavior, by turning the configuration `enable_package_setup_hook` to `false`). You can also manually trigger it through the built-in command: `cola package setup`
+
+> Make sure the setup hook is idempotent, when a new version is installed the setup hook will be called again.
+
+**Example**
+
+```yaml
+pkgName: package-demo
+version: 1.0.0
+cmds:
+    - name: __setup__
+      type: system
+      executable: "{{.PackageDir}}/hooks/setup-hook"
+      args: [ "predefined-arg1", "predefined-arg2" ]
+    - name: other-commands
+      type: executable
+      executable: "{{.PackageDir}}/scripts/other-cmd.sh"
 ```
