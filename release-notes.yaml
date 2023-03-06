@@ -1,3 +1,15 @@
+1.9.0:
+  version: 1.9.0
+  releaseNotes: |
+    * ✨New package level system command `__setup__`. This system hook can be triggered once a new package version is installed from the remote registry. Or manually triggered from the built-in `package setup` command.
+      * New configuration `enable_package_setup_hook` to toggle the new package setup hook during package installation
+      * New built-in command `package setup` to manually trigger the package setup system hook
+    * ✨New ways to define command flags. The newly introduced `flags` command property allows you to define the command flags with an object instead of the formatted string separated by `\t`. The `requiredFlags` property can be stilled be used to define flags, but it is marked as deprecated.
+    * ✨New `exclusiveFlags` command property to ensure that only one property can be specified among a set of flags. This property must be used together with the `checkFlags` property to delegate the command launcher for argument parsing
+    * ✨New `groupFlags` command property to ensure that all of them must be specified from the command line among a set of flags. This property must be used together with the `checkFlags` property to delegate the command launcher for argument parsing
+  startPartition: 0
+  endPartition: 9
+
 1.8.1:
   version: 1.8.1
   releaseNotes: |
