@@ -7,7 +7,7 @@ Use cola config to list all configurations.
 Use cola config [key] to get one configuration.
 Use cola config [key] [value] to set one configuration.
 completion #
-Setup auto completion. See help to get instructions:
+setup auto completion. See help to get instructions:
 cola completion --help login #
 Store your credentials securely and pass them to managed commands when requested and under your agreements. More details see: Managed resources
 update #
