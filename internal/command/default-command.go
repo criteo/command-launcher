@@ -26,7 +26,6 @@ const (
 /*
 DefaultCommand implements the command.Command interface
 
-
 There are two types of cdt command:
 1. group command
 2. executable command
@@ -167,8 +166,8 @@ func (cmd *DefaultCommand) ExecuteValidArgsCmd(envVars []string, args ...string)
 	return cmd.executeArrayCmd(envVars, cmd.CmdValidArgsCmd, args...)
 }
 
-func (cmd *DefaultCommand) ExecuteFlagValuesCmd(envVars []string, args ...string) (int, string, error) {
-	return cmd.executeArrayCmd(envVars, cmd.CmdFlagValuesCmd, args...)
+func (cmd *DefaultCommand) ExecuteFlagValuesCmd(envVars []string, flagCmd []string, args ...string) (int, string, error) {
+	return cmd.executeArrayCmd(envVars, flagCmd, args...)
 }
 
 func (cmd *DefaultCommand) executeArrayCmd(envVars []string, cmdArray []string, args ...string) (int, string, error) {
