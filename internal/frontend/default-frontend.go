@@ -94,8 +94,8 @@ func (self *defaultFrontend) addGroupCommands() {
 		for _, flag := range requiredFlags {
 			addFlagToCmd(cmd, flag)
 		}
-		// new ways to handle flags
-		processFlags(cmd, flags, exclusiveFlags, groupFlags)
+		// new ways to handle flags, first arguments "checkFlags" is always false for group command
+		self.processFlags(false, group, name, cmd, flags, exclusiveFlags, groupFlags)
 
 		self.groupCmds[v.RuntimeName()] = cmd
 		self.rootCmd.AddCommand(cmd)
@@ -149,7 +149,7 @@ func (self *defaultFrontend) addExecutableCommands() {
 			addFlagToCmd(cmd, flag)
 		}
 		// new ways to handle flags
-		processFlags(cmd, flags, exclusiveFlags, groupFlags)
+		self.processFlags(checkFlags, group, name, cmd, flags, exclusiveFlags, groupFlags)
 
 		cmd.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			if len(validArgsCmd) > 0 {
@@ -283,7 +283,7 @@ func (self *defaultFrontend) executeValidArgsOfCommand(group, name string, args 
 }
 
 // execute the flag values command of the cdt command
-func (self *defaultFrontend) executeFlagValuesOfCommand(group, name string, args []string) (string, error) {
+func (self *defaultFrontend) executeFlagValuesOfCommand(group, name string, flagCmd []string, args []string) (string, error) {
 	iCmd, err := self.getExecutableCommand(group, name)
 	if err != nil {
 		return "", err
@@ -291,7 +291,7 @@ func (self *defaultFrontend) executeFlagValuesOfCommand(group, name string, args
 
 	envCtx := self.getCmdEnvContext([]string{}, []string{})
 
-	_, output, err := iCmd.ExecuteFlagValuesCmd(envCtx, args...)
+	_, output, err := iCmd.ExecuteFlagValuesCmd(envCtx, flagCmd, args...)
 	if err != nil {
 		return "", err
 	}
@@ -310,7 +310,7 @@ func addFlagToCmd(cmd *cobra.Command, flag string) {
 	}
 }
 
-func processFlags(cmd *cobra.Command, flags []command.Flag, exclusive [][]string, group [][]string) {
+func (self *defaultFrontend) processFlags(checkFlags bool, cmdGroup, cmdName string, cmd *cobra.Command, flags []command.Flag, exclusive [][]string, group [][]string) {
 	for _, flag := range flags {
 		switch flag.Type() {
 		case "bool":
@@ -325,6 +325,41 @@ func processFlags(cmd *cobra.Command, flags []command.Flag, exclusive [][]string
 
 		if flag.Required() {
 			cmd.MarkFlagRequired(flag.Name())
+		}
+
+		// register auto completion for flag values
+		if len(flag.Values()) > 0 {
+			// static list
+			values := flag.Values()
+			cmd.RegisterFlagCompletionFunc(flag.Name(), func(c *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+				return values, cobra.ShellCompDirectiveNoFileComp
+			})
+		} else if len(flag.ValuesCmd()) > 0 {
+			// dynamic list
+			valuesCmd := flag.ValuesCmd()
+			cmd.RegisterFlagCompletionFunc(flag.Name(), func(c *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+				originalArgs := args
+				// when checkFlags is true, we need to recover the original arguments
+				if checkFlags {
+					c.LocalFlags().VisitAll(func(flag *pflag.Flag) {
+						switch flag.Value.Type() {
+						case "bool":
+							if flag.Value.String() == "true" {
+								originalArgs = append(originalArgs, fmt.Sprintf("--%s", flag.Name))
+							}
+						default:
+							if flag.Value.String() != "" {
+								originalArgs = append(originalArgs, fmt.Sprintf("--%s", flag.Name), flag.Value.String())
+							}
+						}
+					})
+				}
+				output, err := self.executeFlagValuesOfCommand(cmdGroup, cmdName, valuesCmd, originalArgs)
+				if err != nil {
+					return []string{}, cobra.ShellCompDirectiveDefault
+				}
+				return strings.Split(output, "\n"), cobra.ShellCompDirectiveNoFileComp
+			})
 		}
 	}
 
