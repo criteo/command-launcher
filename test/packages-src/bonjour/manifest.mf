@@ -12,7 +12,23 @@
       "type": "executable",
       "short": "print bonjour from command launcher",
       "executable": "{{.PackageDir}}/bonjour.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}",
-      "args": []
+      "args": [],
+      "validArgs": [ "Joe", "Mike" ],
+      "flags": [
+        {
+          "name": "lang",
+          "short": "l",
+          "desc": "greeting language",
+          "values": [ "fr", "en", "zh", "jp" ]
+        },
+        {
+          "name": "name",
+          "short": "n",
+          "desc": "greeting name",
+          "valuesCmd": [ "{{.PackageDir}}/auto-complete.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}" ]
+        }
+      ],
+      "checkFlags": true
     },
     {
       "name": "saybonjour",
@@ -20,7 +36,8 @@
       "group": "greeting",
       "short": "print bonjour from command launcher",
       "executable": "{{.PackageDir}}/bonjour.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}",
-      "args": []
+      "args": [],
+      "validArgsCmd": [ "{{.PackageDir}}/auto-complete.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}" ]
     }
 
   ]

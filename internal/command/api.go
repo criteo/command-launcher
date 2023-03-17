@@ -75,7 +75,7 @@ type Command interface {
 
 	ExecuteValidArgsCmd(envVars []string, args ...string) (int, string, error)
 
-	ExecuteFlagValuesCmd(envVars []string, args ...string) (int, string, error)
+	ExecuteFlagValuesCmd(envVars []string, flagCmd []string, args ...string) (int, string, error)
 
 	// namespace speficies the package and the registry/repository of the command
 	// there could be two commands with the same group and name in different namespace
@@ -130,12 +130,14 @@ func (example ExampleEntry) Clone() ExampleEntry {
 }
 
 type Flag struct {
-	FlagName        string `json:"name" yaml:"name"`
-	FlagType        string `json:"type" yaml:"type"`
-	FlagShortName   string `json:"short" yaml:"short"`
-	FlagDescription string `json:"desc" yaml:"desc"`
-	FlagDefault     string `json:"default" yaml:"default"`
-	FlagRequired    bool   `json:"required" yaml:"required"`
+	FlagName        string   `json:"name" yaml:"name"`
+	FlagType        string   `json:"type" yaml:"type"`
+	FlagShortName   string   `json:"short" yaml:"short"`
+	FlagDescription string   `json:"desc" yaml:"desc"`
+	FlagDefault     string   `json:"default" yaml:"default"`
+	FlagRequired    bool     `json:"required" yaml:"required"`
+	FlagValues      []string `json:"values" yaml:"values"`
+	FlagValuesCmd   []string `json:"valuesCmd" yaml:"valuesCmd"`
 }
 
 func (f Flag) Name() string {
@@ -166,4 +168,18 @@ func (f Flag) Default() string {
 		return "false"
 	}
 	return f.FlagDefault
+}
+
+func (f Flag) Values() []string {
+	if f.FlagValues != nil && len(f.FlagValues) > 0 {
+		return f.FlagValues
+	}
+	return []string{}
+}
+
+func (f Flag) ValuesCmd() []string {
+	if f.FlagValuesCmd != nil && len(f.FlagValuesCmd) > 0 {
+		return f.FlagValuesCmd
+	}
+	return []string{}
 }
