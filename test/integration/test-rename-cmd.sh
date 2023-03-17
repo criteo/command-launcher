@@ -122,7 +122,13 @@ else
   exit 1
 fi
 
-
-
-
+echo "> test list all renamed command"
+RESULT=$($CL_PATH rename --list)
+echo "$RESULT" | grep -q "sayhi               : saybonjour@greeting@bonjour@dropin"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should list all renamed command"
+  exit 1
+fi
 

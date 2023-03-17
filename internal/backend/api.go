@@ -44,6 +44,9 @@ type Backend interface {
 	// Rename a command with a new name
 	RenameCommand(cmd command.Command, new_name string) error
 
+	// Get all renamed commands
+	AllRenamedCommands() map[string]string
+
 	// Find a system command by its name
 	FindSystemCommand(name string) (command.Command, error)
 
