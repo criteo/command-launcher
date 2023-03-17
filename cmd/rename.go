@@ -12,6 +12,7 @@ import (
 
 type RenameFlags struct {
 	delete bool
+	list   bool
 }
 
 var (
@@ -42,6 +43,19 @@ To change the command name:
 			strings.ToTitle(appCtx.AppName()),
 			strings.ToTitle(appCtx.AppName())),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if renameFlags.list {
+				renamedCmds := back.AllRenamedCommands()
+				if renamedCmds == nil || len(renamedCmds) == 0 {
+					console.Highlight("No renamed command found")
+				} else {
+					fmt.Printf("%-20s  %s\n", "Name Alias", "Command Full Name")
+					for k, v := range renamedCmds {
+						fmt.Printf("%-20s: %s\n", v, k)
+					}
+				}
+				return nil
+			}
+
 			if len(args) < 2 && !renameFlags.delete {
 				cmd.Help()
 				return nil
@@ -80,5 +94,6 @@ To change the command name:
 	}
 
 	renameCmd.Flags().BoolVarP(&renameFlags.delete, "delete", "d", false, "delete renaming")
+	renameCmd.Flags().BoolVarP(&renameFlags.list, "list", "l", false, "list all renamed commands")
 	rootCmd.AddCommand(renameCmd)
 }
