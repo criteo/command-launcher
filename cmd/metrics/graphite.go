@@ -53,7 +53,7 @@ func (metrics *graphiteMetrics) Send(cmdExitCode int, cmdError error) error {
 		graphite.NewMetric("count", "1", metrics.StartTimestamp.Unix()),
 	}
 
-	if cmdError != nil {
+	if cmdError != nil || cmdExitCode != 0 {
 		graphiteMetrics = append(graphiteMetrics, graphite.NewMetric("ko", "1", metrics.StartTimestamp.Unix()))
 	} else {
 		graphiteMetrics = append(graphiteMetrics, graphite.NewMetric("ok", "1", metrics.StartTimestamp.Unix()))

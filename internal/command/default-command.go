@@ -140,10 +140,15 @@ func (cmd *DefaultCommand) Execute(envVars []string, args ...string) (int, error
 		if exitError, ok := err.(*exec.ExitError); ok {
 			log.Debug("Exit code: ", exitError.ExitCode())
 			return exitError.ExitCode(), err
+		} else {
+			exitcode := ctx.ProcessState.ExitCode()
+			return exitcode, err
 		}
 	}
-	log.Debug("Command executed successfully")
-	return 0, nil
+
+	exitcode := ctx.ProcessState.ExitCode()
+	log.Debug("Command executed successfully with exit code: ", exitcode)
+	return exitcode, nil
 }
 
 func (cmd *DefaultCommand) ExecuteWithOutput(envVars []string, args ...string) (int, string, error) {
