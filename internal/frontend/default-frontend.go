@@ -262,7 +262,7 @@ func (self *defaultFrontend) executeCommand(group, name string, args []string, i
 		return exitCode, err
 	}
 
-	return 0, nil
+	return exitCode, nil
 }
 
 // execute the valid args command of the cdt command
