@@ -16,15 +16,15 @@ domainTLD = "criteo.com"
 titleHome = "Command Launcher"
 
 ## Twitter Cards
-twitterSite = "@criteo"
-twitterCreator = "@criteo"
+twitterSite = "@CriteoEng"
+twitterCreator = "@CriteoEng"
 
 ## JSON-LD
 # schemaType = "Person"
 schemaType = "Organization"
 schemaName = "Command Launcher"
 schemaAuthor = "Criteo"
-schemaAuthorTwitter = "https://twitter.com/criteo"
+schemaAuthorTwitter = "https://twitter.com/CriteoEng"
 schemaAuthorLinkedIn = ""
 schemaAuthorGitHub = "https://github.com/criteo"
 schemaLocale = "en-US"
@@ -34,7 +34,7 @@ schemaLogoHeight = 512
 schemaImage = "command-launcher.png"
 schemaImageWidth = 1280
 schemaImageHeight = 640
-schemaTwitter = "https://twitter.com/criteo"
+schemaTwitter = "https://twitter.com/CriteoEng"
 schemaLinkedIn = ""
 schemaGitHub = "https://github.com/criteo/command-launcher"
 schemaSection = "blog"
