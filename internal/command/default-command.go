@@ -26,7 +26,6 @@ const (
 /*
 DefaultCommand implements the command.Command interface
 
-
 There are two types of cdt command:
 1. group command
 2. executable command
@@ -141,10 +140,15 @@ func (cmd *DefaultCommand) Execute(envVars []string, args ...string) (int, error
 		if exitError, ok := err.(*exec.ExitError); ok {
 			log.Debug("Exit code: ", exitError.ExitCode())
 			return exitError.ExitCode(), err
+		} else {
+			exitcode := ctx.ProcessState.ExitCode()
+			return exitcode, err
 		}
 	}
-	log.Debug("Command executed successfully")
-	return 0, nil
+
+	exitcode := ctx.ProcessState.ExitCode()
+	log.Debug("Command executed successfully with exit code: ", exitcode)
+	return exitcode, nil
 }
 
 func (cmd *DefaultCommand) ExecuteWithOutput(envVars []string, args ...string) (int, string, error) {
@@ -167,8 +171,8 @@ func (cmd *DefaultCommand) ExecuteValidArgsCmd(envVars []string, args ...string)
 	return cmd.executeArrayCmd(envVars, cmd.CmdValidArgsCmd, args...)
 }
 
-func (cmd *DefaultCommand) ExecuteFlagValuesCmd(envVars []string, args ...string) (int, string, error) {
-	return cmd.executeArrayCmd(envVars, cmd.CmdFlagValuesCmd, args...)
+func (cmd *DefaultCommand) ExecuteFlagValuesCmd(envVars []string, flagCmd []string, args ...string) (int, string, error) {
+	return cmd.executeArrayCmd(envVars, flagCmd, args...)
 }
 
 func (cmd *DefaultCommand) executeArrayCmd(envVars []string, cmdArray []string, args ...string) (int, string, error) {

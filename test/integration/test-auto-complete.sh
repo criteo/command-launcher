@@ -25,15 +25,90 @@ else
   exit 1
 fi
 
-# echo "> test package update command auto completion"
-# RESULT=$($CL_PATH __complete package update " ")
-# echo "$RESULT" | grep -q "bonjour"
-# if [ $? -eq 0 ]; then
-#   echo "OK"
-# else
-#   echo "KO - should auto-complete package names in package update command"
-#   exit 1
-# fi
+echo "> test static argument auto-complete"
+RESULT=$($CL_PATH __complete bonjour "")
+echo "$RESULT" | grep -q "Joe"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should auto-complete static arguments"
+  exit 1
+fi
+
+echo "> test dynamic argument auto-complete"
+RESULT=$($CL_PATH __complete greeting saybonjour "")
+echo "$RESULT" | grep -q "John"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should auto-complete dynamic arguments"
+  exit 1
+fi
+echo "$RESULT" | grep -q "Kate"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should auto-complete dynamic arguments"
+  exit 1
+fi
+
+echo "> test flag name auto-complete"
+RESULT=$($CL_PATH __complete bonjour -)
+echo "$RESULT" | grep -q "\-\-lang"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should auto-complete flag names"
+  exit 1
+fi
+echo "$RESULT" | grep -q "\-l"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should auto-complete short flag names"
+  exit 1
+fi
+
+echo "> test flag static value auto-complete"
+RESULT=$($CL_PATH __complete bonjour --lang "")
+echo "$RESULT" | grep -q "fr"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should auto-complete static flag values"
+  exit 1
+fi
+echo "$RESULT" | grep -q "jp"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should auto-complete static flag values"
+  exit 1
+fi
+
+echo "> test flag dynamic value auto-complete"
+RESULT=$($CL_PATH __complete bonjour bo --lang fr --name "")
+echo "$RESULT" | grep -q "bo --lang fr"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should pass original arguments to the completion command"
+  exit 1
+fi
+echo "$RESULT" | grep -q "John"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should auto-complete dynamic flag values"
+  exit 1
+fi
+echo "$RESULT" | grep -q "Kate"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should auto-complete dynamic flag values"
+  exit 1
+fi
 
 echo "> test delete command auto completion"
 RESULT=$($CL_PATH __complete package delete " ")
@@ -45,12 +120,3 @@ else
   exit 1
 fi
 
-# echo "> test package install command auto completion"
-# RESULT=$($CL_PATH __complete install " ")
-# echo "$RESULT" | grep -q "bonjour"
-# if [ $? -eq 0 ]; then
-#   echo "OK"
-# else
-#   echo "KO - should auto-complete package names in package install command"
-#   exit 1
-# fi

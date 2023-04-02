@@ -334,14 +334,16 @@ More details see: [Auto-Complete](./AUTO_COMPLETE.md)
 
 Define flags (options) of the command. Each flags could have the following properties
 
-| Property | Required | Description                                                                             |
-|----------|----------|-----------------------------------------------------------------------------------------|
-| name     | yes      | flag name                                                                               |
-| short    | no       | flag short name, usually one letter                                                     |
-| desc     | no       | flag description                                                                        |
-| type     | no       | flag type, default "string", currently support "string" and bool"                       |
-| default  | no       | flag default value, only available for string type, bool flag's default is always false |
-| required | no       | boolean, is the flag required, default false                                            |
+| Property  | Required | Description                                                                                         |
+|-----------|----------|-----------------------------------------------------------------------------------------------------|
+| name      | yes      | flag name                                                                                           |
+| short     | no       | flag short name, usually one letter                                                                 |
+| desc      | no       | flag description                                                                                    |
+| type      | no       | flag type, default "string", currently support "string" and bool"                                   |
+| default   | no       | flag default value, only available for string type, bool flag's default is always false             |
+| required  | no       | boolean, is the flag required, default false                                                        |
+| values    | no       | list of values for the flag for Auto-Complete. Available in 1.10.0+                                 |
+| valuesCmd | no       | list of string. The command to call to get available values for auto-complete. Available in 1.10.0+ |
 
 **Example**
 

@@ -265,6 +265,10 @@ func (backend *DefaultBackend) RenameCommand(cmd command.Command, new_name strin
 	return nil
 }
 
+func (backend *DefaultBackend) AllRenamedCommands() map[string]string {
+	return backend.userAlias
+}
+
 func (backend *DefaultBackend) FindSystemCommand(name string) (command.Command, error) {
 	return nil, nil
 }
