@@ -1,3 +1,12 @@
+1.10.0:
+  version: 1.10.0
+  releaseNotes: |
+    * ✨ Support auto-complete for flag values. Introduced two new flag properties `values` for static flag values and `valuesCmd` for dynamic flag values.
+    * ✨ New `--list` option in the built-in rename command to list all command alias
+    * 🐛 Fix wrong exit code reported in metrics.
+  startPartition: 0
+  endPartition: 9
+
 1.9.0:
   version: 1.9.0
   releaseNotes: |
