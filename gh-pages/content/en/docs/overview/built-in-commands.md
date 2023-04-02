@@ -163,3 +163,13 @@ cola rename --delete [command full name]
 ```
 
 Now you have to use its original name to call the command
+
+### rename --list
+
+> available in 1.10.0+
+
+To list all renamed command
+
+```shell
+cola rename --list
+```
