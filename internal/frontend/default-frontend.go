@@ -151,9 +151,24 @@ func (self *defaultFrontend) addExecutableCommands() {
 		// new ways to handle flags
 		self.processFlags(checkFlags, group, name, cmd, flags, exclusiveFlags, groupFlags)
 
-		cmd.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		cmd.ValidArgsFunction = func(c *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			if len(validArgsCmd) > 0 {
-				output, err := self.executeValidArgsOfCommand(group, name, args)
+	      var originalArgs = args
+        if checkFlags {
+					c.LocalFlags().VisitAll(func(flag *pflag.Flag) {
+						switch flag.Value.Type() {
+						case "bool":
+							if flag.Value.String() == "true" {
+								originalArgs = append(originalArgs, fmt.Sprintf("--%s", flag.Name))
+							}
+						default:
+							if flag.Value.String() != "" {
+								originalArgs = append(originalArgs, fmt.Sprintf("--%s", flag.Name), flag.Value.String())
+							}
+						}
+					})
+				}
+				output, err := self.executeValidArgsOfCommand(group, name, originalArgs)
 				if err != nil {
 					return []string{}, cobra.ShellCompDirectiveNoFileComp
 				}
