@@ -1,3 +1,10 @@
+1.10.1:
+  version: 1.10.1
+  releaseNotes: |
+    * 🐛 Fix regression: flags aren't passed to `validArgsCmd` when `checkFlags` is true.
+  startPartition: 0
+  endPartition: 9
+
 1.10.0:
   version: 1.10.0
   releaseNotes: |
