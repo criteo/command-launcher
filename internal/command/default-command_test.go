@@ -169,7 +169,7 @@ func TestConditionalScriptRender(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		assert.Equal(t, "test.bat", cmd.interpolateCmd())
 	} else {
-		assert.Equal(t, "test", cmd.interpolateCmd())
+		assert.Equal(t, "test.sh", cmd.interpolateCmd())
 	}
 }
 
@@ -191,7 +191,7 @@ func TestConditionalScriptExtensionRender(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		assert.Equal(t, "test.bat", cmd.interpolateCmd())
 	} else {
-		assert.Equal(t, "test", cmd.interpolateCmd())
+		assert.Equal(t, "test.sh", cmd.interpolateCmd())
 	}
 }
 
@@ -219,9 +219,9 @@ func TestInterpolate(t *testing.T) {
 	cmd.CmdArguments = []string{"-l", "-a", "#SCRIPT#"}
 
 	assert.Equal(t, ".bat", cmd.doInterpolate("windows", "x64", "#SCRIPT_EXT#"))
-	assert.Equal(t, "", cmd.doInterpolate("linux", "x64", "#SCRIPT_EXT#"))
+	assert.Equal(t, ".sh", cmd.doInterpolate("linux", "x64", "#SCRIPT_EXT#"))
 	assert.Equal(t, "test.bat", cmd.doInterpolate("windows", "x64", "#SCRIPT#"))
-	assert.Equal(t, "test", cmd.doInterpolate("linux", "x64", "#SCRIPT#"))
+	assert.Equal(t, "test.sh", cmd.doInterpolate("linux", "x64", "#SCRIPT#"))
 	assert.Equal(t, "/tmp/test/root/windows/x64/test.exe", cmd.doInterpolate("windows", "x64", "#CACHE#/#OS#/#ARCH#/test#EXT#"))
 }
 
