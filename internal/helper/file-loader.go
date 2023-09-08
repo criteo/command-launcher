@@ -62,6 +62,8 @@ func DownloadFileFromUrl(url string, dest string, showProgress bool) error {
 	if err != nil {
 		return fmt.Errorf("cannot get request from the server (%v)", err)
 	}
+  // Fix issues when downloading files from Github, now it requires a User-Agent header
+  req.HTTPRequest.Header.Set("User-Agent", "Command Launcher")
 
 	fmt.Println("Initializing download...")
 	resp := client.Do(req)
