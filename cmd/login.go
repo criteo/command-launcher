@@ -82,7 +82,7 @@ The credential will be stored in your system vault.`, appCtx.PasswordEnvVar()),
 			// call system login hook if defined
 			if loginHook != nil {
 				log.Debug("calling login system hook")
-				_, hookOutput, err := loginHook.ExecuteWithOutput([]string{}, username, passwd)
+				_, hookOutput, err := loginHook.ExecuteWithOutput(os.Environ(), username, passwd)
 				if err != nil {
 					return err
 				}
