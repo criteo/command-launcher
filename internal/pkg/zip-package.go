@@ -59,9 +59,17 @@ func (pkg *zipPackage) InstallTo(targetDir string) (command.PackageManifest, err
 		extractedFilePath := filepath.Join(targetDir, file.Name)
 		if file.FileInfo().IsDir() {
 			log.Println("Directory Created:", extractedFilePath)
-			err := os.MkdirAll(extractedFilePath, file.Mode())
-			if err != nil {
-				return nil, fmt.Errorf("directory extraction failed: %s", err)
+			if os.Stat(extractedFilePath); os.IsNotExist(err) {
+				// create the folder if it does not exist
+				err := os.MkdirAll(extractedFilePath, 0755)
+				if err != nil {
+					return nil, fmt.Errorf("directory extraction failed: %s", err)
+				}
+			} else {
+				// chmod to 755
+				if err := os.Chmod(extractedFilePath, 0755); err != nil {
+					return nil, fmt.Errorf("failed to chmod %s to 0755: %s", extractedFilePath, err)
+				}
 			}
 		} else {
 			log.Println("File extracted:", file.Name)
@@ -79,6 +87,17 @@ func (pkg *zipPackage) InstallTo(targetDir string) (command.PackageManifest, err
 			if err != nil {
 				return nil, fmt.Errorf("file data extraction failed: %s", err)
 			}
+
+			// TODO: for certain files, we need to grant execute permission
+			// In most of the case, when packaging the zip, the package author
+			// should put the right permission to these files.
+			// However, for some language, like Java and scala, the file permission
+			// in the zip file is not preserved. We need to grant the execute permission
+			// for these files.
+			// On the other hand, to run a jar, we don't need the jar file to be executable.
+			// So this use case is not very clear for me.
+
+			// os.Chmod(extractedFilePath, 0755)
 		}
 	}
 
