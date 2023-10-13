@@ -87,17 +87,6 @@ func (pkg *zipPackage) InstallTo(targetDir string) (command.PackageManifest, err
 			if err != nil {
 				return nil, fmt.Errorf("file data extraction failed: %s", err)
 			}
-
-			// TODO: for certain files, we need to grant execute permission
-			// In most of the case, when packaging the zip, the package author
-			// should put the right permission to these files.
-			// However, for some language, like Java and scala, the file permission
-			// in the zip file is not preserved. We need to grant the execute permission
-			// for these files.
-			// On the other hand, to run a jar, we don't need the jar file to be executable.
-			// So this use case is not very clear for me.
-
-			// os.Chmod(extractedFilePath, 0755)
 		}
 	}
 
