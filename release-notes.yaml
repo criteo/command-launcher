@@ -1,3 +1,13 @@
+1.11.0:
+  version: 1.11.0
+  releaseNotes: |
+    * 🐛 Fix 403 error when downloading package from Github
+    * ✨ Login hook now supports any key value pair to be stored as a credential. Before it is limited to username, password, and token.
+    * 🚸 Ensure folder in the package have the correct permission.
+    * ⬆️ UUpdate cobra version to 1.7.0, viper version to 1.16.0
+  startPartition: 0
+  endPartition: 9
+
 1.10.1:
   version: 1.10.1
   releaseNotes: |
