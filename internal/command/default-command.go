@@ -434,7 +434,7 @@ func (cmd *DefaultCommand) script_ext(os string) string {
 	if os == "windows" {
 		return ".bat"
 	}
-	return ""
+	return ".sh"
 }
 
 func (cmd *DefaultCommand) interpolate(text string) string {
