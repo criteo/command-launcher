@@ -153,8 +153,8 @@ func (self *defaultFrontend) addExecutableCommands() {
 
 		cmd.ValidArgsFunction = func(c *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			if len(validArgsCmd) > 0 {
-	      var originalArgs = args
-        if checkFlags {
+				var originalArgs = args
+				if checkFlags {
 					c.LocalFlags().VisitAll(func(flag *pflag.Flag) {
 						switch flag.Value.Type() {
 						case "bool":
@@ -472,6 +472,14 @@ func (self *defaultFrontend) getCmdEnvContext(envVars []string, consents []strin
 				debugFlags,
 				viper.GetString(config.DEBUG_FLAGS_KEY),
 			))
+		default:
+			value, err := helper.GetSecret(strings.ToLower(item))
+			if err != nil {
+				value = ""
+			}
+			if value != "" {
+				vars = append(vars, fmt.Sprintf("%s=%s", self.appCtx.EnvVarName(item), value))
+			}
 		}
 	}
 
