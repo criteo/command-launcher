@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -37,6 +38,8 @@ const (
 	EXTRA_REMOTE_REPOSITORY_DIR_KEY      = "REPOSITORY_DIR"
 	EXTRA_REMOTE_SYNC_POLICY_KEY         = "SYNC_POLICY"
 	ENABLE_PACKAGE_SETUP_HOOK_KEY        = "ENABLE_PACKAGE_SETUP_HOOK"
+	DAEMON_ENABLED_KEY                   = "DAEMON_ENABLED" // enable the daemon mode
+	DAEMON_PORT_KEY                      = "DAEMON_PORT"    // the port to listen to
 
 	// internal commands are the commands with start partition number > INTERNAL_START_PARTITION
 	INTERNAL_COMMAND_ENABLED_KEY = "INTERNAL_COMMAND_ENABLED"
@@ -77,6 +80,8 @@ func init() {
 		SYSTEM_PACKAGE_KEY,
 		SYSTEM_PACKAGE_PUBLIC_KEY_FILE_KEY,
 		ENABLE_PACKAGE_SETUP_HOOK_KEY,
+		DAEMON_ENABLED_KEY,
+		DAEMON_PORT_KEY,
 	)
 }
 
@@ -133,6 +138,10 @@ func SetSettingValue(key string, value string) error {
 		return setBooleanConfig(upperKey, value)
 	case ENABLE_PACKAGE_SETUP_HOOK_KEY:
 		return setBooleanConfig(upperKey, value)
+	case DAEMON_ENABLED_KEY:
+		return setBooleanConfig(upperKey, value)
+	case DAEMON_PORT_KEY:
+		return setIntegerConfig(upperKey, value)
 	}
 
 	return fmt.Errorf("unsupported config %s", key)
@@ -209,6 +218,15 @@ func setBooleanConfig(key string, value string) error {
 func setDurationConfig(key string, value string) error {
 	d, _ := time.ParseDuration(value)
 	viper.Set(key, d)
+	return nil
+}
+
+func setIntegerConfig(key string, value string) error {
+	v, err := strconv.Atoi(value)
+	if err != nil {
+		return err
+	}
+	viper.Set(key, v)
 	return nil
 }
 
