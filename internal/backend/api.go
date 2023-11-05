@@ -62,6 +62,9 @@ type Backend interface {
 	// Return dropin local repsository
 	DropinRepository() repository.PackageRepository
 
+	// start the server as daemon
+	Serve(port int) error
+
 	// Print out the command resolution details
 	Debug()
 }

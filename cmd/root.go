@@ -138,7 +138,7 @@ func isUpdatePossible(cmd *cobra.Command) bool {
 	cmdPath = strings.TrimSpace(strings.TrimPrefix(cmdPath, rootCtxt.appCtx.AppName()))
 	// exclude commands for update check
 	// for example version command, you don't want to check new update when requesting current version
-	for _, w := range []string{"version", "config", "completion", "help", "update", "__complete"} {
+	for _, w := range []string{"version", "config", "completion", "help", "update", "__complete", "serve"} {
 		if strings.HasPrefix(cmdPath, w) {
 			return false
 		}
@@ -288,4 +288,5 @@ func addBuiltinCommands() {
 	AddPackageCmd(rootCmd, rootCtxt.appCtx)
 	AddRenameCmd(rootCmd, rootCtxt.appCtx, rootCtxt.backend)
 	AddRemoteCmd(rootCmd, rootCtxt.appCtx, rootCtxt.backend)
+	AddServeCmd(rootCmd, rootCtxt.appCtx, rootCtxt.backend)
 }

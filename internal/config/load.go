@@ -116,7 +116,7 @@ func setDefaultConfig() {
 	viper.SetDefault(ENABLE_PACKAGE_SETUP_HOOK_KEY, false)
 
 	viper.SetDefault(DAEMON_ENABLED_KEY, false)
-	viper.SetDefault(DAEMON_PORT_KEY, 75009)
+	viper.SetDefault(DAEMON_PORT_KEY, 7509)
 }
 
 func initDefaultConfigFile() {
