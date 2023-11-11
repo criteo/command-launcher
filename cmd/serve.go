@@ -7,6 +7,7 @@ import (
 	"github.com/criteo/command-launcher/internal/backend"
 	"github.com/criteo/command-launcher/internal/config"
 	"github.com/criteo/command-launcher/internal/context"
+	"github.com/criteo/command-launcher/internal/server"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -30,7 +31,7 @@ func AddServeCmd(rootCmd *cobra.Command, appCtx context.LauncherContext, back ba
 				port = serveFlags.port
 			}
 			fmt.Printf("Starting server on port %d", port)
-			if err := back.Serve(port); err != nil {
+			if err := server.Serve(&back, port); err != nil {
 				fmt.Printf("Failed to start server: %s\n", err)
 				os.Exit(1)
 			}

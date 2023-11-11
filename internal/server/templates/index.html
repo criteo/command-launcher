@@ -1,0 +1,23 @@
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Command Launcher</title>
+  <link rel="stylesheet" href="https://unpkg.com/mvp.css">
+</head>
+<body>
+  <main>
+    <nav>
+      <ul>
+        <li><a href="/">Commands</a></li>
+        <li>Registries</li>
+        <li>Packages</li>
+      </ul>
+    </nav>
+    {{.Index}}
+    {{range .Commands}}
+      {{.}}
+    {{end}}
+  </main>
+  <footer>
+  </footer>
+</body>

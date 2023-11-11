@@ -1,0 +1,112 @@
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Command Launcher</title>
+  <link rel="stylesheet" href="https://unpkg.com/mvp.css">
+</head>
+<body>
+  <main>
+    <nav>
+      <ul>
+        <li><a href="/">Commands</a></li>
+        <li>Registries</li>
+        <li>Packages</li>
+      </ul>
+    </nav>
+    <article>
+      <h1>Index</h1>
+      <div>
+        <b>moab:</b>
+        <a href="#moab-init">init</a>
+        <a href="#moab-build">build</a>
+      </div>
+      <div>
+        <b>doc:</b>
+        <a href="#moab-init">html</a>
+        <a href="#moab-build">confluence</a>
+      </div>
+    </article>
+
+    <article>
+      <command>
+        <hr>
+        <h2 id="moab-init">moab init <a href="#moab-init" style="text-decoration:none">🔗</a></h2>
+        <p><sup>full name:init@moab@moab@dropin</sup><sup>package:moab</sup><sup>registry:dropin</sup></p>
+        <p>Initiate a moab workspace</p>
+        <details>
+        <summary>Examples</summary>
+        <div>
+          <h4>Initiate a java moab workspace and checkout one repository</h4>
+          <pre><samp>moab init java software-factory/example-projects</samp></pre>
+        </div>
+        </details>
+        <details>
+        <summary>Try it out</summary>
+        <form>
+          <label for="work-dir">work directory<sup>required</sup></label>
+          <label><small><em>Which directory the command will run from</em></small></label>
+          <input id="work-dir" type="text" name="work-dir" value="/Users/b.hou/.cdt">
+
+          <label for="moab-name">moab name<sup>required</sup></label>
+          <label><small><em>MOAB name: java or csharp</em></small></label>
+          <input id="moab-name" type="text" name="moab-name" value="java">
+          <label for="args">repositories</label>
+          <label><small><em>repositories to checkout</em></small></label>
+          <textarea id="args" name="args" rows="4" cols="50"></textarea>
+          <label for="exclude-ide">exclude-ide</label>
+          <label><small><em>do not prepare ide</em></small></label>
+          <input id="exclude-ide" type="checkbox" name="exclude-ide"><b>enable</b></input>
+          <br>
+          <button type="submit">Run</button>
+        </form>
+        <div>Output</div>
+        <pre><samp>
+  npm install -g @command-launcher/cli
+  another line
+  $ls -la
+  .
+  ..
+  .git
+        </samp></pre>
+        </details>
+      </command>
+      <command>
+        <hr>
+        <h2 id="moab-build">moab build</h2>
+        <p><sup>package:moab</sup><sup>registry:dropin</sup></p>
+        <p>Build all the projects in current folder</p>
+        <details>
+        <summary>Examples</summary>
+        <div>
+          <h4>Initiate a java moab workspace and checkout one repository</h4>
+          <pre><samp>moab init java software-factory/example-projects</samp></pre>
+        </div>
+        </details>
+        <details>
+        <summary>Try it out</summary>
+        <form>
+          <label for="moab-name">moab name<sup>required</sup></label>
+          <input id="moab-name" type="text" name="moab-name" value="java">
+          <label for="args">repositories</label>
+          <textarea id="args" name="args" rows="4" cols="50"></textarea>
+          <input id="exclude-ide" type="checkbox" name="exclude-ide"><b>exclude-ide</b></input>
+          <br>
+          <button type="submit">Run</button>
+        </form>
+        <div>Output</div>
+        <pre><samp>
+  npm install -g @command-launcher/cli
+  another line
+  $ls -la
+  .
+  ..
+  .git
+        </samp></pre>
+        </details>
+      </command>
+    </article>
+  </main>
+  <footer>
+  </footer>
+</body>
+</html>

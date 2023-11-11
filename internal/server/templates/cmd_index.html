@@ -1,0 +1,13 @@
+<article>
+  <h1>Index</h1>
+  {{range .Commands}}
+  <div>
+    <sup>Registry: {{.Registry}}</sup><sup>Package: {{.Package}}</sup><br><br>
+    <a href="/command/{{.FullName}}">{{.Group}} {{.Name}}</a><br>
+    {{range .SubCmds}}
+    <a href="/command/{{.FullName}}">{{.Group}} {{.Name}}</a><br>
+    {{end}}
+    <br><br>
+  </div>
+  {{end}}
+</article>
