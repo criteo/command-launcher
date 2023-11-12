@@ -3,14 +3,13 @@
   <meta charset="utf-8">
   <title>{{.Group}} {{.Name}}</title>
   <link rel="stylesheet" href="https://unpkg.com/mvp.css">
+  <script src="https://unpkg.com/htmx.org@1.9.8" integrity="sha384-rgjA7mptc2ETQqXoYC3/zJvkU7K/aP44Y+z7xQuJiVnB/422P/Ak+F/AqFR7E4Wr" crossorigin="anonymous"></script>
 </head>
 <body>
   <main>
     <nav>
       <ul>
-        <li><a href="/">Commands</a></li>
-        <li>Registries</li>
-        <li>Packages</li>
+        <li><a href="/">List of Commands</a></li>
       </ul>
     </nav>
 
@@ -20,6 +19,13 @@
         <p><sup>full name:{{.FullName}}</sup><sup>package:{{.Package}}</sup><sup>registry:{{.Registry}}</sup></p>
         <p>{{.Short}}</p>
         <details>
+        <summary>Renamed</summary>
+          {{if .HasAlias}}
+          <samp>{{.Alias}}</samp>
+          {{end}}
+        </details>
+
+        <details>
         <summary>Examples</summary>
         {{range .Examples}}
         <div>
@@ -28,16 +34,17 @@
         </div>
         {{end}}
         </details>
+
         <details>
         <summary>Try it out</summary>
-        <form>
-          <label for="work-dir">work directory<sup>required</sup></label>
+          <form hx-post="/execute/{{.FullName}}" hx-target="#output" hx-indicator="#execution-indicator">
+          <label for="__work-dir__">work directory<sup>required</sup></label>
           <label><small><em>Which directory the command will run from</em></small></label>
-          <input id="work-dir" type="text" name="work-dir" value="/Users/b.hou/.cdt">
+          <input id="__work-dir__" type="text" name="__work-dir__" value="{{.DefaultWorkDir}}">
 
-          <label for="args">arguments</label>
+          <label for="__args__">arguments</label>
           <label><small><em>additional arguments</em></small></label>
-          <textarea id="args" name="args" rows="4" cols="50"></textarea>
+          <textarea id="__args__" name="__args__" rows="4" cols="50"></textarea>
 
 
           {{range .Flags}}
@@ -55,17 +62,20 @@
 
           {{end}}
 
+          <hr>
+          <label>Output Format Options</label>
+          <label><small><em>Options to control the output format</em></small></label>
+          <input id="echo-cmd" type="checkbox" name="__echo-cmd__" checked><b>Display executed command line</b></input>
+          <input id="show-exit-code" type="checkbox" name="__show-exit-code__" checked><b>Display command exit code</b></input>
+
           <br>
           <button type="submit">Run</button>
         </form>
-        <div>Output</div>
-        <pre><samp>
-  npm install -g @command-launcher/cli
-  another line
-  $ls -la
-  .
-  ..
-  .git
+
+        <div><b>Output</b></div>
+
+        <div id="execution-indicator" class="htmx-indicator">Executing ...</div>
+        <pre><samp id="output">
         </samp></pre>
         </details>
       </command>

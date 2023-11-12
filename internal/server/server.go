@@ -20,16 +20,19 @@ var fs embed.FS
 var templates embed.FS
 
 type Command struct {
-	FullName string
-	Group    string
-	Name     string
-	Package  string
-	Registry string
-	Short    string
-	Long     string
-	Examples []command.ExampleEntry
-	Flags    []command.Flag
-	SubCmds  []*Command
+	FullName       string
+	Group          string
+	Name           string
+	Package        string
+	Registry       string
+	Short          string
+	Long           string
+	Examples       []command.ExampleEntry
+	Flags          []command.Flag
+	SubCmds        []*Command
+	DefaultWorkDir string
+	HasAlias       bool
+	Alias          string
 }
 
 type CommandIndex struct {
@@ -52,6 +55,7 @@ func Serve(backend *Backend, port int) error {
 	http.HandleFunc("/", server.CommandIndexHandler)
 	http.HandleFunc("/test", server.CommandIndexHandler)
 	http.HandleFunc("/command/", server.CommandHandler)
+	http.HandleFunc("/execute/", server.ExecuteHandler)
 	http.HandleFunc("/health", server.HealthHandler)
 
 	return http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
