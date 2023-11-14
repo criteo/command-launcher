@@ -6,6 +6,9 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/criteo/command-launcher/internal/command"
+	"github.com/criteo/command-launcher/internal/frontend"
 )
 
 func (server *Server) CommandHandler(w http.ResponseWriter, r *http.Request) {
@@ -51,11 +54,28 @@ func (server *Server) CommandHandler(w http.ResponseWriter, r *http.Request) {
 		Short:          cmd.ShortDescription(),
 		Long:           cmd.LongDescription(),
 		Examples:       cmd.Examples(),
-		Flags:          cmd.Flags(),
+		Flags:          getCmdFlags(cmd),
 		DefaultWorkDir: homeDir + "/.cdt",
 		HasAlias:       isRenamed,
 		Alias:          alias,
 	}
 
 	tmpl.Execute(w, command)
+}
+
+func getCmdFlags(cmd command.Command) []command.Flag {
+	flags := cmd.Flags()
+
+	legacyFlags := cmd.RequiredFlags()
+	for _, legacyFlag := range legacyFlags {
+		flagName, flagShort, flagDesc, flagType, defaultValue := frontend.ParseFlagDefinition(legacyFlag)
+		flags = append(flags, command.Flag{
+			FlagName:        strings.TrimLeft(flagName, "--"),
+			FlagType:        flagType,
+			FlagShortName:   flagShort,
+			FlagDescription: flagDesc,
+			FlagDefault:     defaultValue,
+		})
+	}
+	return flags
 }

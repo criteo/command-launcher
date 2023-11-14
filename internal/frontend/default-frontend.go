@@ -315,7 +315,7 @@ func (self *defaultFrontend) executeFlagValuesOfCommand(group, name string, flag
 }
 
 func addFlagToCmd(cmd *cobra.Command, flag string) {
-	flagName, flagShort, flagDesc, flagType, defaultValue := parseFlagDefinition(flag)
+	flagName, flagShort, flagDesc, flagType, defaultValue := ParseFlagDefinition(flag)
 	switch flagType {
 	case "bool":
 		// always use false as the default for the bool type

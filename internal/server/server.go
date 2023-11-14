@@ -53,7 +53,6 @@ func Serve(backend *Backend, port int) error {
 	server := Server{backend: backend}
 
 	http.HandleFunc("/", server.CommandIndexHandler)
-	http.HandleFunc("/test", server.CommandIndexHandler)
 	http.HandleFunc("/command/", server.CommandHandler)
 	http.HandleFunc("/execute/", server.ExecuteHandler)
 	http.HandleFunc("/health", server.HealthHandler)

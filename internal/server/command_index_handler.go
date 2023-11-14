@@ -19,6 +19,7 @@ func (server *Server) CommandIndexHandler(w http.ResponseWriter, r *http.Request
 		for _, pkg := range pkgs {
 			cmds := pkg.Commands()
 			for _, cmd := range cmds {
+				// exclude the system commands from the ui
 				if slices.Contains([]string{"__setup__", "__login__"}, cmd.Name()) {
 					continue
 				}
@@ -90,6 +91,8 @@ func (server *Server) CommandIndexHandler(w http.ResponseWriter, r *http.Request
 	tmpl.Execute(&tpl, CommandIndex{Commands: groups})
 
 	html_wrapper, _ := templates.ReadFile("templates/html_wrapper.html")
-	content := strings.ReplaceAll(string(html_wrapper), "#INPUT#", tpl.String())
+	content := strings.ReplaceAll(string(html_wrapper), "@TITLE@", "Command Index")
+	content = strings.ReplaceAll(content, "@INPUT@", tpl.String())
+
 	w.Write([]byte(content))
 }
