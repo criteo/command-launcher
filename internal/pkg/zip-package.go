@@ -50,47 +50,8 @@ func (pkg *zipPackage) InstallTo(targetDir string) (command.PackageManifest, err
 	zipReader, _ := zip.OpenReader(pkg.ZipFile)
 	defer zipReader.Close()
 	for _, file := range zipReader.Reader.File {
-		zippedFile, err := file.Open()
-		if err != nil {
-			return nil, fmt.Errorf("installation failed: %s", err)
-		}
-		defer zippedFile.Close()
-
-		extractedFilePath := filepath.Join(targetDir, file.Name)
-		if file.FileInfo().IsDir() {
-			log.Println("Directory Created:", extractedFilePath)
-			err := os.MkdirAll(extractedFilePath, file.Mode())
-			if err != nil {
-				return nil, fmt.Errorf("directory extraction failed: %s", err)
-			}
-
-			fileStats, err := os.Stat(extractedFilePath)
-			if err != nil {
-				return nil, fmt.Errorf("failed to stat %s: %s", extractedFilePath, err)
-			}
-			permissions := fileStats.Mode().Perm()
-			if permissions != 0o755 {
-				// chmod to 755
-				if err := os.Chmod(extractedFilePath, 0755); err != nil {
-					return nil, fmt.Errorf("failed to chmod %s to 0755: %s", extractedFilePath, err)
-				}
-			}
-		} else {
-			log.Println("File extracted:", file.Name)
-			outputFile, err := os.OpenFile(
-				extractedFilePath,
-				os.O_WRONLY|os.O_CREATE|os.O_TRUNC,
-				file.Mode(),
-			)
-			if err != nil {
-				return nil, fmt.Errorf("file extraction failed: %s", err)
-			}
-			defer outputFile.Close()
-
-			_, err = io.Copy(outputFile, zippedFile)
-			if err != nil {
-				return nil, fmt.Errorf("file data extraction failed: %s", err)
-			}
+		if err := extractZipEntry(targetDir, file); err != nil {
+			return nil, err
 		}
 	}
 
@@ -132,4 +93,51 @@ func packageChecksum(pkgFile string) ([]byte, error) {
 	}
 
 	return h.Sum(nil), nil
+}
+
+func extractZipEntry(targetDir string, file *zip.File) error {
+	zippedFile, err := file.Open()
+	if err != nil {
+		return fmt.Errorf("installation failed: %s", err)
+	}
+	defer zippedFile.Close()
+
+	extractedFilePath := filepath.Join(targetDir, file.Name)
+	if file.FileInfo().IsDir() {
+		log.Println("Directory Created:", extractedFilePath)
+		err := os.MkdirAll(extractedFilePath, file.Mode())
+		if err != nil {
+			return fmt.Errorf("directory extraction failed: %s", err)
+		}
+
+		fileStats, err := os.Stat(extractedFilePath)
+		if err != nil {
+			return fmt.Errorf("failed to stat %s: %s", extractedFilePath, err)
+		}
+		permissions := fileStats.Mode().Perm()
+		if permissions != 0o755 {
+			// chmod to 755
+			if err := os.Chmod(extractedFilePath, 0755); err != nil {
+				return fmt.Errorf("failed to chmod %s to 0755: %s", extractedFilePath, err)
+			}
+		}
+	} else {
+		log.Println("File extracted:", file.Name)
+		outputFile, err := os.OpenFile(
+			extractedFilePath,
+			os.O_WRONLY|os.O_CREATE|os.O_TRUNC,
+			file.Mode(),
+		)
+		if err != nil {
+			return fmt.Errorf("file extraction failed: %s", err)
+		}
+		defer outputFile.Close()
+
+		_, err = io.Copy(outputFile, zippedFile)
+		if err != nil {
+			return fmt.Errorf("file data extraction failed: %s", err)
+		}
+	}
+
+	return nil
 }
