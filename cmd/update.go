@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/criteo/command-launcher/internal/config"
 	"github.com/criteo/command-launcher/internal/console"
@@ -17,6 +18,7 @@ import (
 type UpdateFlags struct {
 	Package bool
 	Self    bool
+	Timeout time.Duration
 }
 
 var (
@@ -49,7 +51,7 @@ Check the update of %s and its commands.
 					SelfUpdateRootUrl: viper.GetString(config.SELF_UPDATE_BASE_URL_KEY),
 					User:              u,
 					CurrentVersion:    appCtx.AppVersion(),
-					Timeout:           viper.GetDuration(config.SELF_UPDATE_TIMEOUT_KEY),
+					Timeout:           updateFlags.Timeout,
 				}
 				selfUpdater.CheckUpdateAsync()
 				err := selfUpdater.Update()
@@ -71,7 +73,7 @@ Check the update of %s and its commands.
 					LocalRepo:            localRepo,
 					CmdRepositoryBaseUrl: viper.GetString(config.COMMAND_REPOSITORY_BASE_URL_KEY),
 					User:                 u,
-					Timeout:              viper.GetDuration(config.SELF_UPDATE_TIMEOUT_KEY),
+					Timeout:              updateFlags.Timeout,
 					EnableCI:             enableCI,
 					PackageLockFile:      packageLockFile,
 				}
@@ -94,6 +96,7 @@ Check the update of %s and its commands.
 
 	updateCmd.Flags().BoolVarP(&updateFlags.Package, "package", "p", false, "Update packages and commands")
 	updateCmd.Flags().BoolVarP(&updateFlags.Self, "self", "s", false, "Self update")
+	updateCmd.Flags().DurationVarP(&updateFlags.Timeout, "timeout", "t", 10*time.Second, "Timeout for update operations")
 
 	rootCmd.AddCommand(updateCmd)
 }
