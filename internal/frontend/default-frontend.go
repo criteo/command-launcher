@@ -173,8 +173,15 @@ func (self *defaultFrontend) addExecutableCommands() {
 					return []string{}, cobra.ShellCompDirectiveNoFileComp
 				}
 				parts := strings.Split(output, "\n")
-				if len(parts) > 0 {
-					if strings.HasPrefix(parts[0], "#") { // skip the first control line, for further controls
+				// filter the parts that starts with toComplete
+				filteredParts := []string{}
+				for idx, p := range parts {
+					if strings.HasPrefix(p, toComplete) || (idx == 0 && strings.HasPrefix(p, "#")) {
+						filteredParts = append(filteredParts, p)
+					}
+				}
+				if len(filteredParts) > 0 {
+					if strings.HasPrefix(filteredParts[0], "#") { // skip the first control line, for further controls
 						// the first line starting with # is the control line, it controls the completion behavior when the return body is empty
 						shellDirective := cobra.ShellCompDirectiveNoFileComp
 						switch strings.TrimSpace(strings.TrimLeft(parts[0], "#")) {
@@ -185,9 +192,9 @@ func (self *defaultFrontend) addExecutableCommands() {
 						case "no-file-completion":
 							shellDirective = cobra.ShellCompDirectiveNoFileComp
 						}
-						return parts[1:], shellDirective
+						return filteredParts[1:], shellDirective
 					}
-					return parts, cobra.ShellCompDirectiveNoFileComp
+					return filteredParts, cobra.ShellCompDirectiveNoFileComp
 				}
 			}
 			if len(validArgs) > 0 {
