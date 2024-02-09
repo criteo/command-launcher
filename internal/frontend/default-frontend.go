@@ -168,7 +168,7 @@ func (self *defaultFrontend) addExecutableCommands() {
 						}
 					})
 				}
-				output, err := self.executeValidArgsOfCommand(group, name, originalArgs)
+				output, err := self.executeValidArgsOfCommand(group, name, originalArgs, toComplete)
 				if err != nil {
 					return []string{}, cobra.ShellCompDirectiveNoFileComp
 				}
@@ -288,13 +288,15 @@ func (self *defaultFrontend) executeCommand(group, name string, args []string, i
 }
 
 // execute the valid args command of the cdt command
-func (self *defaultFrontend) executeValidArgsOfCommand(group, name string, args []string) (string, error) {
+func (self *defaultFrontend) executeValidArgsOfCommand(group, name string, args []string, toComplete string) (string, error) {
 	iCmd, err := self.getExecutableCommand(group, name)
 	if err != nil {
 		return "", err
 	}
 
-	envCtx := self.getCmdEnvContext([]string{}, []string{})
+	envCtx := self.getCmdEnvContext([]string{
+		fmt.Sprintf("%s=%s", self.appCtx.EnvVarName("TO_COMPLETE"), toComplete),
+	}, []string{})
 
 	_, output, err := iCmd.ExecuteValidArgsCmd(envCtx, args...)
 	if err != nil {
