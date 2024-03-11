@@ -38,7 +38,15 @@
       "executable": "{{.PackageDir}}/bonjour.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}",
       "args": [],
       "validArgsCmd": [ "{{.PackageDir}}/auto-complete.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}" ]
+    },
+    {
+      "name": "saybonjour2",
+      "type": "executable",
+      "group": "greeting",
+      "short": "print bonjour from command launcher",
+      "executable": "{{.PackageDir}}/bonjour.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}",
+      "args": [],
+      "validArgsCmd": [ "{{.PackageDir}}/auto-complete.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}" ]
     }
-
   ]
 }
