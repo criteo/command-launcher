@@ -39,6 +39,5 @@
       "args": [],
       "validArgsCmd": [ "{{.PackageDir}}/auto-complete.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}" ]
     }
-
   ]
 }

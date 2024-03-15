@@ -52,6 +52,30 @@ else
   exit 1
 fi
 
+echo "> test dynamic argument auto-complete with prefix filter"
+RESULT=$($CL_PATH __complete greeting saybonjour Jo)
+echo "$RESULT" | grep -q "John"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should auto-complete dynamic arguments"
+  exit 1
+fi
+echo "$RESULT" | grep -q "Kate"
+if [ $? -eq 0 ]; then
+  echo "KO - should only return options starts with the prefix"
+  exit 1
+else
+  echo "OK"
+fi
+echo "$RESULT" | grep -q "Jo$"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should successfully inject TO_COMPLETE envrionment variable"
+  exit 1
+fi
+
 echo "> test flag name auto-complete"
 RESULT=$($CL_PATH __complete bonjour -)
 echo "$RESULT" | grep -q "\-\-lang"
