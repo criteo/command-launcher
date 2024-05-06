@@ -1,3 +1,14 @@
+1.12.0:
+  version: 1.12.0
+  releaseNotes: |
+    * 🐛 Fix the issue that zip extraction fails due to the size of the extracted file
+    * ✨ Add new option `--timeout` to the built-in `update` command, and set the default timeout to 10 seconds
+    * ✨ Improve autocomplate performance by applying filter in command launcher
+    * ✨ Pass `[APP_NAME]_TO_COMPLETE` environment variable to the auto-complete extension command, this can be used to filter the auto-complete results in the extension command
+    * ⬆️ Update golang version to 1.22.0 on the CI
+  startPartition: 0
+  endPartition: 9
+
 1.11.1:
   version: 1.11.1
   releaseNotes: |
