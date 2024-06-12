@@ -1,3 +1,10 @@
+1.12.1:
+  version: 1.12.1
+  releaseNotes: |
+    * ✨ Add a linux ARM64 variant of command-launcher.
+  startPartition: 0
+  endPartition: 9
+
 1.12.0:
   version: 1.12.0
   releaseNotes: |
