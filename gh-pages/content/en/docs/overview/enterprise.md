@@ -159,7 +159,7 @@ The `[SELF_UPDATE_BASE_URL]` should be defined in `self_update_base_url` configu
 | windows | amd64        | yes        |
 | windows | arm64        | no         |
 | linux   | amd64        | yes        |
-| linux   | arm64        | no         |
+| linux   | arm64        | yes         |
 | darwin  | amd64        | yes        |
 | darwin  | arm64        | yes        |
 
