@@ -261,6 +261,15 @@ func formatExamples(examples []command.ExampleEntry) string {
 	return strings.Join(output, "\n")
 }
 
+func (self *defaultFrontend) getCommandName(group, name string) string {
+	tokens := []string{self.appCtx.AppName()}
+	if group != "" {
+		tokens = append(tokens, group)
+	}
+	tokens = append(tokens, name)
+	return strings.Join(tokens, " ")
+}
+
 func (self *defaultFrontend) getExecutableCommand(group, name string) (command.Command, error) {
 	iCmd, err := self.backend.FindCommand(group, name)
 	return iCmd, err
@@ -277,7 +286,10 @@ func (self *defaultFrontend) executeCommand(group, name string, args []string, i
 	}
 
 	envCtx := self.getCmdEnvContext(initialEnvCtx, consent)
+
+	// Resources that do not depend on consent:
 	envCtx = append(envCtx, fmt.Sprintf("%s=%s", self.appCtx.CmdPackageDirEnvVar(), iCmd.PackageDir()))
+	envCtx = append(envCtx, fmt.Sprintf("%s=%s", self.appCtx.CmdNameEnvVar(), self.getCommandName(group, name)))
 
 	exitCode, err := iCmd.Execute(envCtx, args...)
 	if err != nil {
