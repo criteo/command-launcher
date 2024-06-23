@@ -27,6 +27,8 @@ type LauncherContext interface {
 
 	CmdPackageDirEnvVar() string
 
+	CmdNameEnvVar() string
+
 	/* General function to get a environment variable name with prefix conventions */
 	EnvVarName(name string) string
 }
