@@ -1,12 +1,12 @@
 {
-  "pkgName": "bonjour",
+  "pkgName": "print-credentials",
   "version": "1.0.0",
   "cmds": [
     {
-      "name": "bonjour-consent",
+      "name": "print-credentials-with-consent",
       "type": "executable",
-      "short": "print bonjour from command launcher",
-      "executable": "{{.PackageDir}}/bonjour.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}",
+      "short": "print credentials from command launcher",
+      "executable": "{{.PackageDir}}/print-credentials.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}",
       "args": [],
       "requiredFlags": [
         "name\t n\t greeting name",
@@ -14,6 +14,18 @@
       ],
       "checkFlags": true,
       "requestedResources": [ "USERNAME", "PASSWORD", "AUTH_TOKEN" ]
+    },
+    {
+      "name": "print-credentials",
+      "type": "executable",
+      "short": "print credentials from command launcher",
+      "executable": "{{.PackageDir}}/print-credentials.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}",
+      "args": [],
+      "requiredFlags": [
+        "name\t n\t greeting name",
+        "language\t l\tgreeting language"
+      ],
+      "checkFlags": true
     }
   ]
 }
