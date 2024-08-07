@@ -26,13 +26,18 @@ var (
 	loginFlags = LoginFlags{}
 )
 
-func defaultUsername() string {
-	user, present := os.LookupEnv("USER")
-	if !present {
-		user, _ = os.LookupEnv("USERNAME")
+func defaultUsername(appCtx context.LauncherContext) string {
+	user, present := os.LookupEnv(appCtx.UsernameEnvVar())
+	if present {
+		return user
 	}
 
-	return user
+	user, present = os.LookupEnv("USER")
+	if present {
+		return user
+	}
+
+	return os.Getenv("USERNAME")
 }
 
 func AddLoginCmd(rootCmd *cobra.Command, appCtx context.LauncherContext, loginHook command.Command) {
@@ -53,7 +58,7 @@ The credential will be stored in your system vault.`, appCtx.PasswordEnvVar()),
 			username := loginFlags.username
 			if username == "" {
 				reader := bufio.NewReader(os.Stdin)
-				defaultUser := defaultUsername()
+				defaultUser := defaultUsername(appCtx)
 				fmt.Printf("Please enter your user name [%s]: ", defaultUser)
 				input, err := reader.ReadString('\n')
 				if err != nil {
