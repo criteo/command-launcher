@@ -73,7 +73,7 @@ fi
 echo "> test login extension without setup system package"
 echo "* should NOT use username returned from extension"
 RESULT=$($CL_PATH login -u test-user -p test-password)
-RESULT=$($CL_PATH bonjour-consent)
+RESULT=$($CL_PATH print-credentials-with-consent)
 echo "$RESULT" | grep -q "SECRET_1"
 if [ $? -ne 0 ]; then
   # ok
@@ -105,7 +105,7 @@ echo "> test login extension enabled by system package config"
 # set system package name
 RESULT=$($CL_PATH config system_package system-pkg-demo)
 $CL_PATH login -u test-user -p test-password
-RESULT=$($CL_PATH bonjour-consent)
+RESULT=$($CL_PATH print-credentials-with-consent)
 
 echo "* should use username returned from extension"
 echo "$RESULT" | grep -q "SECRET_1"
@@ -157,7 +157,7 @@ else
   exit 1
 fi
 
-echo "$RESULT" | grep 'dropin bonjour default bonjour-consent'
+echo "$RESULT" | grep 'dropin print-credentials default print-credentials-with-consent'
 if [ $? -eq 0 ]; then
   echo "OK"
 else
