@@ -89,22 +89,22 @@ else
   exit 1
 fi
 
-echo "> test COMMAND_NAME environment variable (with group)"
+echo "> test FULL_COMMAND_NAME environment variable (with group)"
 RESULT=$($CL_PATH greeting saybonjour)
 echo "$RESULT" | grep -q "^command name: cl greeting saybonjour$"
 if [ $? -eq 0 ]; then
   echo "OK"
 else
-  echo "KO - should have COMMAND_NAME environment variable"
+  echo "KO - should have FULL_COMMAND_NAME environment variable"
   exit 1
 fi
 
-echo "> test COMMAND_NAME environment variable (no group)"
+echo "> test FULL_COMMAND_NAME environment variable (no group)"
 RESULT=$($CL_PATH bonjour)
 echo "$RESULT" | grep -q "^command name: cl bonjour$"
 if [ $? -eq 0 ]; then
   echo "OK"
 else
-  echo "KO - should have COMMAND_NAME environment variable"
+  echo "KO - should have FULL_COMMAND_NAME environment variable"
   exit 1
 fi

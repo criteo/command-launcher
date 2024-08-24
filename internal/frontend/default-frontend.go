@@ -262,7 +262,7 @@ func formatExamples(examples []command.ExampleEntry) string {
 	return strings.Join(output, "\n")
 }
 
-func (self *defaultFrontend) getCommandName(group, name string) string {
+func (self *defaultFrontend) getFullCommandName(group, name string) string {
 	var programName string
 	// Attempt getting the name of the program that is currently running
 	// but fall back to the configured app name if that fails.
@@ -300,7 +300,7 @@ func (self *defaultFrontend) executeCommand(group, name string, args []string, i
 
 	// Resources that do not depend on consent:
 	envCtx = append(envCtx, fmt.Sprintf("%s=%s", self.appCtx.CmdPackageDirEnvVar(), iCmd.PackageDir()))
-	envCtx = append(envCtx, fmt.Sprintf("%s=%s", self.appCtx.CmdNameEnvVar(), self.getCommandName(group, name)))
+	envCtx = append(envCtx, fmt.Sprintf("%s=%s", self.appCtx.FullCmdNameEnvVar(), self.getFullCommandName(group, name)))
 
 	exitCode, err := iCmd.Execute(envCtx, args...)
 	if err != nil {

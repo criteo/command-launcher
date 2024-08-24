@@ -7,7 +7,7 @@ echo $CL_FLAG_LANGUAGE
 echo $CL_ARG_1
 
 echo "packge dir: $CL_PACKAGE_DIR"
-echo "command name: $CL_COMMAND_NAME"
+echo "command name: $CL_FULL_COMMAND_NAME"
 
 echo "cola flag: $COLA_FLAG_NAME"
 echo "cola flag: $COLA_FLAG_LANGUAGE"

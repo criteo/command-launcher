@@ -82,8 +82,8 @@ func (ctx *defaultContext) CmdPackageDirEnvVar() string {
 	return ctx.EnvVarName("PACKAGE_DIR")
 }
 
-func (ctx *defaultContext) CmdNameEnvVar() string {
-	return ctx.EnvVarName("COMMAND_NAME")
+func (ctx *defaultContext) FullCmdNameEnvVar() string {
+	return ctx.EnvVarName("FULL_COMMAND_NAME")
 }
 
 func (ctx *defaultContext) EnvVarName(name string) string {
