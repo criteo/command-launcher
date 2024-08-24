@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -262,7 +263,17 @@ func formatExamples(examples []command.ExampleEntry) string {
 }
 
 func (self *defaultFrontend) getCommandName(group, name string) string {
-	tokens := []string{self.appCtx.AppName()}
+	var programName string
+	// Attempt getting the name of the program that is currently running
+	// but fall back to the configured app name if that fails.
+	execPath, err := os.Executable()
+	if err != nil {
+		programName = self.appCtx.AppName()
+	} else {
+		programName = filepath.Base(execPath)
+	}
+
+	tokens := []string{programName}
 	if group != "" {
 		tokens = append(tokens, group)
 	}
