@@ -82,6 +82,10 @@ func (ctx *defaultContext) CmdPackageDirEnvVar() string {
 	return ctx.EnvVarName("PACKAGE_DIR")
 }
 
+func (ctx *defaultContext) FullCmdNameEnvVar() string {
+	return ctx.EnvVarName("FULL_COMMAND_NAME")
+}
+
 func (ctx *defaultContext) EnvVarName(name string) string {
 	return fmt.Sprintf("%s_%s", ctx.prefix(), name)
 }

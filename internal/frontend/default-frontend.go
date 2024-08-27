@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -261,6 +262,25 @@ func formatExamples(examples []command.ExampleEntry) string {
 	return strings.Join(output, "\n")
 }
 
+func (self *defaultFrontend) getFullCommandName(group, name string) string {
+	var programName string
+	// Attempt getting the name of the program that is currently running
+	// but fall back to the configured app name if that fails.
+	execPath, err := os.Executable()
+	if err != nil {
+		programName = self.appCtx.AppName()
+	} else {
+		programName = filepath.Base(execPath)
+	}
+
+	tokens := []string{programName}
+	if group != "" {
+		tokens = append(tokens, group)
+	}
+	tokens = append(tokens, name)
+	return strings.Join(tokens, " ")
+}
+
 func (self *defaultFrontend) getExecutableCommand(group, name string) (command.Command, error) {
 	iCmd, err := self.backend.FindCommand(group, name)
 	return iCmd, err
@@ -277,7 +297,10 @@ func (self *defaultFrontend) executeCommand(group, name string, args []string, i
 	}
 
 	envCtx := self.getCmdEnvContext(initialEnvCtx, consent)
+
+	// Resources that do not depend on consent:
 	envCtx = append(envCtx, fmt.Sprintf("%s=%s", self.appCtx.CmdPackageDirEnvVar(), iCmd.PackageDir()))
+	envCtx = append(envCtx, fmt.Sprintf("%s=%s", self.appCtx.FullCmdNameEnvVar(), self.getFullCommandName(group, name)))
 
 	exitCode, err := iCmd.Execute(envCtx, args...)
 	if err != nil {
