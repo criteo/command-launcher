@@ -40,3 +40,12 @@ else
   exit 1
 fi
 
+echo "> test group_help_by_registry config exist, and default true"
+RESULT=$($OUTPUT_DIR/cl config --json)
+VALUE=$(echo "$RESULT" | jq -r '.group_help_by_registry')
+if [ $VALUE == "true" ]; then
+  echo "OK"
+else
+  echo "KO - incorrect config value"
+  exit 1
+fi

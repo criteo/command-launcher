@@ -114,6 +114,9 @@ func setDefaultConfig() {
 
 	viper.SetDefault(EXTRA_REMOTES_KEY, []map[string]string{})
 	viper.SetDefault(ENABLE_PACKAGE_SETUP_HOOK_KEY, false)
+
+	// by default, group the top level command by registry in the help message
+	viper.SetDefault(GROUP_HELP_BY_REGISTRY_KEY, true)
 }
 
 func initDefaultConfigFile() {
