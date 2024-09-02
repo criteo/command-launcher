@@ -1,3 +1,18 @@
+1.13.0:
+  version: 1.13.0
+  releaseNotes: |
+    # ✨ New Features
+      * built-in login command now look for three environment variables for the default user name (in order): `${APP_NAME}_USERNAME`, `$USER`, and `$USERNAME`. The default user is also printed in the output to avoid confusion.
+      * a new resources `{APP_NAME}_FULL_COMMAND_NAME` will be passed to the managed command. This environment variable contains (separated by space):
+        * the command launcher binary name
+        * the command group name (if any)
+        * the command name
+      * a new boolean type configuration item `group_help_by_registry` to allow the user to group the top level commands by registry in the help message. The default value is true.
+    # New Contributors:
+      * @jdevera made their first contribution in PR #136
+  startPartition: 0
+  endPartition: 9
+
 1.12.1:
   version: 1.12.1
   releaseNotes: |
