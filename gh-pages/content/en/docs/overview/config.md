@@ -45,6 +45,7 @@ toc: true
 | verify_package_signature         | bool     | whether to verify the package signature during package installation (will be available in 1.8)                                |
 | extra_remotes                    | map      | extra remote registry configurations, see extra remote configuration  (available 1.8+)                                        |
 | enable_package_setup_hook        | bool     | call setup hook after a new version of package is installed (available 1.9+)                                                  |
+| group_help_by_registry           | bool     | group help by registry, default true (available 1.13+)                                                                        |
 
 ### extra remote configuration
 

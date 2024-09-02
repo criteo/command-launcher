@@ -48,3 +48,38 @@ else
   echo "KO - hello command shouldn't exist"
   exit 1
 fi
+
+##
+# test help message
+##
+
+# clean up the dropin folder
+rm -rf $CL_HOME/dropins
+mkdir -p $CL_HOME/dropins
+
+# copy the example to the dropin folder for the test
+cp -R $SCRIPT_DIR/../packages-src/bonjour $CL_HOME/dropins
+
+echo "> test group help message"
+RESULT=$($CL_PATH)
+echo "$RESULT" | grep -q "Commands from 'dropin' registry"
+if [ $? -eq 0 ]; then
+  # ok
+  echo "OK"
+else
+  echo "KO - should group help message by registry"
+  exit 1
+fi
+
+echo "> test help message without group"
+# set group_help_by_registry to false
+$CL_PATH config group_help_by_registry false
+# run command launcher to show the help message
+RESULT=$($CL_PATH)
+echo "$RESULT" | grep -q "Commands from 'dropin' registry"
+if [ $? -eq 0 ]; then
+  echo "KO - should group help message by registry"
+  exit 1
+else
+  echo "OK"
+fi

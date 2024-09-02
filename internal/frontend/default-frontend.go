@@ -39,6 +39,8 @@ type defaultFrontend struct {
 
 	groupCmds      map[string]*cobra.Command
 	executableCmds map[string]*cobra.Command
+
+	cmdCategories []*cobra.Group
 }
 
 func NewDefaultFrontend(appCtx context.LauncherContext, rootCmd *cobra.Command, backend backend.Backend) Frontend {
@@ -50,7 +52,22 @@ func NewDefaultFrontend(appCtx context.LauncherContext, rootCmd *cobra.Command, 
 		groupCmds:      make(map[string]*cobra.Command),
 		executableCmds: make(map[string]*cobra.Command),
 	}
+	// add all command categories
+	if viper.GetBool(config.GROUP_HELP_BY_REGISTRY_KEY) {
+		frontend.RegisterCommandCategory()
+	}
 	return frontend
+}
+
+func (self *defaultFrontend) RegisterCommandCategory() {
+	self.cmdCategories = []*cobra.Group{}
+	for _, source := range self.backend.AllPackageSources() {
+		self.cmdCategories = append(self.cmdCategories, &cobra.Group{
+			ID:    source.Repo.Name(),
+			Title: fmt.Sprintf("Commands from '%s' registry", source.Repo.Name()),
+		})
+	}
+	self.rootCmd.AddGroup(self.cmdCategories...)
 }
 
 func (self *defaultFrontend) AddUserCommands() {
@@ -61,6 +78,7 @@ func (self *defaultFrontend) AddUserCommands() {
 func (self *defaultFrontend) addGroupCommands() {
 	groups := self.backend.GroupCommands()
 	for _, v := range groups {
+		registryName := v.RepositoryID()
 		group := v.RuntimeGroup()
 		name := v.RuntimeName()
 		usage := strings.TrimSpace(fmt.Sprintf("%s %s",
@@ -99,6 +117,10 @@ func (self *defaultFrontend) addGroupCommands() {
 		self.processFlags(false, group, name, cmd, flags, exclusiveFlags, groupFlags)
 
 		self.groupCmds[v.RuntimeName()] = cmd
+
+		if viper.GetBool(config.GROUP_HELP_BY_REGISTRY_KEY) {
+			cmd.GroupID = registryName
+		}
 		self.rootCmd.AddCommand(cmd)
 	}
 }
@@ -106,6 +128,7 @@ func (self *defaultFrontend) addGroupCommands() {
 func (self *defaultFrontend) addExecutableCommands() {
 	executables := self.backend.ExecutableCommands()
 	for _, v := range executables {
+		registryName := v.RepositoryID()
 		group := v.RuntimeGroup()
 		name := v.RuntimeName()
 		usage := strings.TrimSpace(fmt.Sprintf("%s %s",
@@ -205,6 +228,9 @@ func (self *defaultFrontend) addExecutableCommands() {
 		}
 
 		if v.RuntimeGroup() == "" {
+			if viper.GetBool(config.GROUP_HELP_BY_REGISTRY_KEY) {
+				cmd.GroupID = registryName
+			}
 			self.rootCmd.AddCommand(cmd)
 		} else {
 			if group, exists := self.groupCmds[v.RuntimeGroup()]; exists {
