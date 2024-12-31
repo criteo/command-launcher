@@ -104,6 +104,57 @@ else
   exit 1
 fi
 
+echo "> test sync policy"
+
+echo "* should NOT have the sync.timestamp file"
+RESULT=$(ls $CL_HOME/extra1 | grep -q "sync.timestamp")
+if [ $? -eq 0 ]; then
+  echo "KO - should NOT have the sync.timestamp file"
+  exit 1
+else
+  echo "OK"
+fi
+# change the extra remote's sync policy to 'weekly'
+sed -i -e 's/always/weekly/g' $CL_HOME/config.json
+
+# now remove one package from local repository and run command launcher to sync
+$CL_PATH config command_update_enabled true
+rm -rf $CL_HOME/extra1/command-launcher-demo
+
+echo "* should install new package"
+RESULT=$($CL_PATH)
+echo "$RESULT" | grep -q "Update done! Enjoy coding!"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should install new package"
+  exit 1
+fi
+
+echo "* should have the sync.timestamp file after sync"
+RESULT=$(ls $CL_HOME/extra1 | grep -q "sync.timestamp")
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should NOT have the sync.timestamp file"
+  exit 1
+fi
+
+# now remove the package again, should not install the package again
+rm -rf $CL_HOME/extra1/command-launcher-demo
+echo "* should NOT install new package"
+RESULT=$($CL_PATH)
+echo "$RESULT" | grep -q "Update done! Enjoy coding!"
+if [ $? -eq 0 ]; then
+  echo "KO - should NOT install new package"
+  exit 1
+else
+  echo "OK"
+fi
+
+# reset the config
+$CL_PATH config command_update_enabled false
+
 echo "> test delete extra remote registry"
 RESULT=$($CL_PATH remote delete extra1)
 RESULT=$($CL_PATH remote list)
