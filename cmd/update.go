@@ -76,6 +76,7 @@ Check the update of %s and its commands.
 					Timeout:              updateFlags.Timeout,
 					EnableCI:             enableCI,
 					PackageLockFile:      packageLockFile,
+					SyncPolicy:           "always", // TODO: use constant instead of string
 				}
 				cmdUpdater.CheckUpdateAsync()
 				err := cmdUpdater.Update()
