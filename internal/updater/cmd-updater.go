@@ -292,6 +292,9 @@ func (u *CmdUpdater) reachSyncSchedule() error {
 	if u.SyncPolicy == "never" {
 		return errors.New(fmt.Sprintf("Remote '%s': Sync policy is set to never, no update will be performed", u.LocalRepo.Name()))
 	}
+	if u.SyncPolicy == "always" {
+		return nil
+	}
 	// now load the sync timestamp
 	localRepoFolder, err := u.LocalRepo.RepositoryFolder()
 	if err != nil {
