@@ -53,6 +53,9 @@ type Backend interface {
 	// Get all packages sources managed by this backend
 	AllPackageSources() []*PackageSource
 
+	// get extra package sources without counting the default and dropin
+	ExtraPackageSources() []*PackageSource
+
 	// Return all repositories or an empty slice
 	AllRepositories() []repository.PackageRepository
 
