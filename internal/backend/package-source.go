@@ -54,7 +54,7 @@ func NewManagedSource(name, repoDir, remoteBaseURL string, syncPolicy string) *P
 		RemoteBaseURL:     remoteBaseURL,
 		RemoteRegistryURL: fmt.Sprintf("%s/index.json", remoteBaseURL),
 		IsManaged:         true,
-		SyncPolicy:        SYNC_POLICY_ALWAYS,
+		SyncPolicy:        syncPolicy,
 	}
 }
 
@@ -71,6 +71,7 @@ func (src *PackageSource) InitUpdater(user *user.User, timeout time.Duration, en
 		PackageLockFile:      lockFile,
 		VerifyChecksum:       verifyChecksum,
 		VerifySignature:      verifySignature,
+		SyncPolicy:           src.SyncPolicy,
 	}
 	return src.Updater
 }

@@ -2,7 +2,10 @@ package updater
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"os"
+	"path"
 	"sync"
 	"time"
 
@@ -34,6 +37,7 @@ type CmdUpdater struct {
 	PackageLockFile      string
 	VerifyChecksum       bool
 	VerifySignature      bool
+	SyncPolicy           string
 }
 
 func (u *CmdUpdater) CheckUpdateAsync() {
@@ -56,6 +60,16 @@ func (u *CmdUpdater) Update() error {
 	}
 
 	errPool := []error{}
+
+	// check if we are following the syncPolicy
+	// TODO: for now we check the sync policy to block update during the update phase,
+	// This is no optimal, as we still check remote repository in check update async.
+	// We should move the sync policy check to the check update async, which will save
+	// time to check the remote repo in order to make the check done in the timeout period.
+	if err := u.reachSyncSchedule(); err != nil {
+		log.Info(err.Error())
+		return err
+	}
 
 	remoteRepo, err := u.getRemoteRepository()
 	if err != nil {
@@ -138,6 +152,12 @@ func (u *CmdUpdater) Update() error {
 	}
 
 	if len(errPool) == 0 {
+		// update the sync timestamp
+		err := u.UpdateSyncTimestamp()
+		if err != nil {
+			log.Error(err)
+		}
+
 		fmt.Println("Update done! Enjoy coding!")
 		return nil
 	} else {
@@ -264,4 +284,64 @@ func (u *CmdUpdater) LoadLockedPackages(lockFile string) (map[string]string, err
 		return nil, err
 	}
 	return lockedPkgs, nil
+}
+
+// check sync policy
+func (u *CmdUpdater) reachSyncSchedule() error {
+	// check if we are following the syncPolicy
+	if u.SyncPolicy == "never" {
+		return errors.New(fmt.Sprintf("Remote '%s': Sync policy is set to never, no update will be performed", u.LocalRepo.Name()))
+	}
+	if u.SyncPolicy == "always" {
+		return nil
+	}
+	// now load the sync timestamp
+	localRepoFolder, err := u.LocalRepo.RepositoryFolder()
+	if err != nil {
+		return err
+	}
+	data, err := os.ReadFile(path.Join(localRepoFolder, "sync.timestamp"))
+	if err != nil {
+		// error read the file, we assume the sync time is passed
+		return nil
+	}
+	syncTime, err := time.Parse(time.RFC3339, string(data))
+	if err != nil {
+		return err
+	}
+
+	// now check if we passed the sync time
+	if time.Now().Before(syncTime) {
+		return errors.New(fmt.Sprintf("Remote '%s': Not yet reach the sync time", u.LocalRepo.Name()))
+	}
+
+	return nil
+}
+
+func (u *CmdUpdater) UpdateSyncTimestamp() error {
+	localRepoFolder, err := u.LocalRepo.RepositoryFolder()
+	if err != nil {
+		return err
+	}
+
+	var delay time.Duration = 24
+	switch u.SyncPolicy {
+	case "always":
+		return errors.New(fmt.Sprintf("Remote '%s': Sync policy is set to always, no need to update the sync timestamp", u.LocalRepo.Name()))
+	case "never":
+		return errors.New(fmt.Sprintf("Remote '%s': Sync policy is set to never, no need to update the sync timestamp", u.LocalRepo.Name()))
+	case "hourly":
+		delay = 1
+	case "daily":
+		delay = 24
+	case "weekly":
+		delay = 24 * 7
+	case "monthly":
+		delay = 24 * 30
+	}
+
+	err = os.WriteFile(path.Join(localRepoFolder, "sync.timestamp"), []byte(time.Now().Add(time.Hour*delay).Format(time.RFC3339)), 0644)
+
+	log.Infof("Remote '%s': Sync timestamp updated to %s", u.LocalRepo.Name(), time.Now().Add(time.Hour*delay).Format(time.RFC3339))
+	return err
 }
