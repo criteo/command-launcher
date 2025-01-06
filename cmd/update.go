@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/criteo/command-launcher/internal/backend"
 	"github.com/criteo/command-launcher/internal/config"
 	"github.com/criteo/command-launcher/internal/console"
 	"github.com/criteo/command-launcher/internal/context"
@@ -25,7 +26,7 @@ var (
 	updateFlags = UpdateFlags{}
 )
 
-func AddUpdateCmd(rootCmd *cobra.Command, appCtx context.LauncherContext, localRepo repository.PackageRepository) {
+func AddUpdateCmd(rootCmd *cobra.Command, appCtx context.LauncherContext, localRepo repository.PackageRepository, extraPackageSources ...*backend.PackageSource) {
 	appName := appCtx.AppName()
 	updateCmd := &cobra.Command{
 		Use:   "update",
@@ -83,7 +84,21 @@ Check the update of %s and its commands.
 				if err != nil {
 					console.Error(err.Error())
 				} else {
-					console.Success("packages are up-to-date")
+					console.Success("packages in 'default' repository are up-to-date")
+				}
+
+				// now update the packages in extra remote
+				for _, source := range extraPackageSources {
+					updater := source.InitUpdater(&u, updateFlags.Timeout, enableCI, packageLockFile, false, false)
+					// force sync policy to always, as the intention of running this command is to update the packages
+					updater.SyncPolicy = "always"
+					updater.CheckUpdateAsync()
+					err := updater.Update()
+					if err != nil {
+						console.Error(err.Error())
+					} else {
+						console.Success("packages in '%s' repository are up-to-date", source.Name)
+					}
 				}
 			}
 

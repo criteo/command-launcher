@@ -283,7 +283,7 @@ func addBuiltinCommands() {
 	AddVersionCmd(rootCmd, rootCtxt.appCtx)
 	AddConfigCmd(rootCmd, rootCtxt.appCtx)
 	AddLoginCmd(rootCmd, rootCtxt.appCtx, rootCtxt.backend.SystemCommand(repository.SYSTEM_LOGIN_COMMAND))
-	AddUpdateCmd(rootCmd, rootCtxt.appCtx, rootCtxt.backend.DefaultRepository())
+	AddUpdateCmd(rootCmd, rootCtxt.appCtx, rootCtxt.backend.DefaultRepository(), rootCtxt.backend.ExtraPackageSources()...)
 	AddCompletionCmd(rootCmd, rootCtxt.appCtx)
 	AddPackageCmd(rootCmd, rootCtxt.appCtx)
 	AddRenameCmd(rootCmd, rootCtxt.appCtx, rootCtxt.backend)

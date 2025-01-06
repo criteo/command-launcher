@@ -93,9 +93,6 @@ func (backend *DefaultBackend) loadRepos() error {
 func (backend *DefaultBackend) loadAlias() error {
 	if renameFile, err := os.Open(filepath.Join(backend.homeDir, RENAME_FILE_NAME)); err == nil {
 		defer renameFile.Close()
-		if err != nil {
-			return fmt.Errorf("no such rename file found (%s)", err)
-		}
 
 		stat, err := renameFile.Stat()
 		if err != nil {
@@ -283,6 +280,16 @@ func (backend DefaultBackend) DropinRepository() repository.PackageRepository {
 
 func (backend DefaultBackend) AllPackageSources() []*PackageSource {
 	return backend.sources
+}
+
+func (backend DefaultBackend) ExtraPackageSources() []*PackageSource {
+	extras := []*PackageSource{}
+	for i, src := range backend.sources {
+		if i != DEFAULT_REPO_INDEX && i != DROPIN_REPO_INDEX {
+			extras = append(extras, src)
+		}
+	}
+	return extras
 }
 
 func (backend DefaultBackend) AllRepositories() []repository.PackageRepository {
