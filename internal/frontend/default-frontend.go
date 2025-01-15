@@ -322,11 +322,7 @@ func (self *defaultFrontend) executeCommand(group, name string, args []string, i
 		return 1, errors.New(EXECUTABLE_NOT_DEFINED)
 	}
 
-	envCtx := self.getCmdEnvContext(initialEnvCtx, consent)
-
-	// Resources that do not depend on consent:
-	envCtx = append(envCtx, fmt.Sprintf("%s=%s", self.appCtx.CmdPackageDirEnvVar(), iCmd.PackageDir()))
-	envCtx = append(envCtx, fmt.Sprintf("%s=%s", self.appCtx.FullCmdNameEnvVar(), self.getFullCommandName(group, name)))
+	envCtx := self.getCmdEnvContext(iCmd, initialEnvCtx, consent)
 
 	exitCode, err := iCmd.Execute(envCtx, args...)
 	if err != nil {
@@ -343,7 +339,7 @@ func (self *defaultFrontend) executeValidArgsOfCommand(group, name string, args 
 		return "", err
 	}
 
-	envCtx := self.getCmdEnvContext([]string{
+	envCtx := self.getCmdEnvContext(iCmd, []string{
 		fmt.Sprintf("%s=%s", self.appCtx.EnvVarName("TO_COMPLETE"), toComplete),
 	}, []string{})
 
@@ -362,7 +358,7 @@ func (self *defaultFrontend) executeFlagValuesOfCommand(group, name string, flag
 		return "", err
 	}
 
-	envCtx := self.getCmdEnvContext([]string{}, []string{})
+	envCtx := self.getCmdEnvContext(iCmd, []string{}, []string{})
 
 	_, output, err := iCmd.ExecuteFlagValuesCmd(envCtx, flagCmd, args...)
 	if err != nil {
@@ -486,9 +482,10 @@ func parseFlagDefinition(line string) (string, string, string, string, string) {
 	return name, short, description, flagType, defaultValue
 }
 
-func (self *defaultFrontend) getCmdEnvContext(envVars []string, consents []string) []string {
+func (self *defaultFrontend) getCmdEnvContext(cmd command.Command, envVars []string, consents []string) []string {
 	vars := append([]string{}, envVars...)
 
+	/* append environment variables that requires consent */
 	for _, item := range consents {
 		switch item {
 		case consent.USERNAME:
@@ -515,21 +512,6 @@ func (self *defaultFrontend) getCmdEnvContext(envVars []string, consents []strin
 			if token != "" {
 				vars = append(vars, fmt.Sprintf("%s=%s", self.appCtx.AuthTokenEnvVar(), token))
 			}
-		case consent.LOG_LEVEL:
-			// append log level from configuration
-			logLevel := viper.GetString(config.LOG_LEVEL_KEY)
-			vars = append(vars, fmt.Sprintf("%s=%s",
-				self.appCtx.LogLevelEnvVar(),
-				logLevel,
-			))
-		case consent.DEBUG_FLAGS:
-			// append debug flags from configuration
-			debugFlags := os.Getenv(self.appCtx.DebugFlagsEnvVar())
-			vars = append(vars, fmt.Sprintf("%s=%s,%s",
-				self.appCtx.DebugFlagsEnvVar(),
-				debugFlags,
-				viper.GetString(config.DEBUG_FLAGS_KEY),
-			))
 		default:
 			value, err := helper.GetSecret(strings.ToLower(item))
 			if err != nil {
@@ -540,6 +522,26 @@ func (self *defaultFrontend) getCmdEnvContext(envVars []string, consents []strin
 			}
 		}
 	}
+
+	/* append environment variables that do not requires consent */
+	// append log level from configuration
+	logLevel := viper.GetString(config.LOG_LEVEL_KEY)
+	vars = append(vars, fmt.Sprintf("%s=%s",
+		self.appCtx.LogLevelEnvVar(),
+		logLevel,
+	))
+
+	// append debug flags from configuration
+	debugFlags := os.Getenv(self.appCtx.DebugFlagsEnvVar())
+	vars = append(vars, fmt.Sprintf("%s=%s,%s",
+		self.appCtx.DebugFlagsEnvVar(),
+		debugFlags,
+		viper.GetString(config.DEBUG_FLAGS_KEY),
+	))
+
+	// append package dir and full command name
+	vars = append(vars, fmt.Sprintf("%s=%s", self.appCtx.CmdPackageDirEnvVar(), cmd.PackageDir()))
+	vars = append(vars, fmt.Sprintf("%s=%s", self.appCtx.FullCmdNameEnvVar(), self.getFullCommandName(cmd.RuntimeGroup(), cmd.RuntimeName())))
 
 	// Enable variable with prefix [binary_name] and COLA
 	// TODO: remove it when in version 1.8 all variables are migrated to COLA prefix
