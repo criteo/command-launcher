@@ -1,3 +1,16 @@
+1.14.0:
+  version: 1.14.0
+  releaseNotes: |
+    # ✨ New Features and Updates
+      # Extra remote registry now support different sync policies: hourly, daily, weekly, and monthly. For the first iteration, the sync_policy configuration can only be modified in the configuration file. A built-in command will be provided in the future release to manage these sync policies.
+      # LOG_LEVEL and DEBUG_FLAGS no longer requires user consent.
+    # 🐛 Bug Fixes
+      # built-in update command now take into account the extra remote registries, and respect the sync_policy configuration for each registry.
+    # 📝 Documentation Updates
+      # Update configuration documentation to reflect the new sync_policy configuration and user consent resources.
+  startPartition: 0
+  endPartition: 9
+
 1.13.0:
   version: 1.13.0
   releaseNotes: |
