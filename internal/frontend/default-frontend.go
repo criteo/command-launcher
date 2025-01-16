@@ -485,7 +485,7 @@ func parseFlagDefinition(line string) (string, string, string, string, string) {
 func (self *defaultFrontend) getCmdEnvContext(cmd command.Command, envVars []string, consents []string) []string {
 	vars := append([]string{}, envVars...)
 
-	/* append environment variables that requires consent */
+	/* append environment variables that require consent */
 	for _, item := range consents {
 		switch item {
 		case consent.USERNAME:
@@ -523,7 +523,7 @@ func (self *defaultFrontend) getCmdEnvContext(cmd command.Command, envVars []str
 		}
 	}
 
-	/* append environment variables that do not requires consent */
+	/* append environment variables that do not require consent */
 	// append log level from configuration
 	logLevel := viper.GetString(config.LOG_LEVEL_KEY)
 	vars = append(vars, fmt.Sprintf("%s=%s",
