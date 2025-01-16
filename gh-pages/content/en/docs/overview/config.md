@@ -63,11 +63,11 @@ Each extra remote must have a unique name, it is used to identify the command as
 }
 ```
 
-| Config Name     | Type   | Description                                                                                                    |
-|-----------------|--------|----------------------------------------------------------------------------------------------------------------|
-| remote_base_url | string | the base url of the remote repository, it must contain a `/index.json` endpoint to list all available packages |
-| sync_policy     | string | how often the repository is synched from its remote, always, hourly, daily, weekly, or monthly                 |
-| repository_dir  | string | the absolute path of the local repository folder to keep the downloaded local packages                         |
+| Config Name     | Type   | Description                                                                                                                                                                |
+|-----------------|--------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| remote_base_url | string | the base url of the remote repository, it must contain a `/index.json` endpoint to list all available packages                                                             |
+| sync_policy     | string | how often the repository is synched from its remote. Possible value: always, hourly, daily, weekly, or monthly. (hourly, daily, weekly and monthly are supported in 1.14+) |
+| repository_dir  | string | the absolute path of the local repository folder to keep the downloaded local packages                                                                                     |
 
 > You don't need to manage these extra remote configurations by your self. Use the built-in `remote` command instead
 
