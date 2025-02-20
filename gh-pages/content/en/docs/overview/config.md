@@ -69,14 +69,14 @@ Each extra remote must have a unique name, it is used to identify the command as
 | sync_policy     | string | how often the repository is synched from its remote. Possible value: always, hourly, daily, weekly, or monthly. (hourly, daily, weekly and monthly are supported in 1.14+) |
 | repository_dir  | string | the absolute path of the local repository folder to keep the downloaded local packages                                                                                     |
 
-> You don't need to manage these extra remote configurations by your self. Use the built-in `remote` command instead
+> You don't need to manage these extra remote configurations by yourself. Use the built-in `remote` command instead.
 
 ## Change configuration
 
-It is recommended to use the built-in `config` command to change the configurations. For duration type configurations, you can use `h`, `m`, and `s` to present hour, minute, and seconds. For example:
+It is recommended to use the built-in `config` command to change the configuration. For duration type configuration entries, you can use `h`, `m`, and `s` to represent hours, minutes, and seconds, respectively. For example:
 
 ```bash
 cola config user_consent_life 24h
 ```
 
-set the user consent life to 24 hours.
+will set the value of `user_consent_life` to 24 hours.

@@ -14,13 +14,13 @@ weight: 800
 toc: true
 ---
 
-## What is a system package
+## What is a System Package
 
-System package is like other command launcher packages, with one `manifest.mf` file in it to describe the commands and contains binaries, scripts, and resources to execute these commands.
+A System Package is like any other Command Launcher package, with one `manifest.mf` file in it to describe the commands, and containing binaries, scripts, and resources to execute those commands.
 
-The difference is that a system package contains `system` commands, and it can be only installed from a central repository (not as a dropin package).
+The difference is that a System Package contains `system` commands, and it can only be installed from a central repository (not as a dropin package).
 
-You can customize your command launcher by providing a system package. In a system package, you can define system commands as functional hooks to extend command launcher's built-in functionalities, for example, login and metrics.
+You can customize your Command Launcher by providing a system package. In a system package, you can define system commands as functional hooks to extend Command Launcher's built-in functionalities, for example, `login` and `metrics`.
 
 ## Define system package
 
@@ -52,7 +52,7 @@ cmds:
 
 ## System commands
 
-To extend command launcher, you need to specify `system` type command in a system package.
+To extend Command Launcher built-in functionality, you need to specify some `system` type commands in a system package.
  The following table lists available system commands:
 
 | system command name | description                                     |
@@ -92,7 +92,7 @@ To use these credentials see [Manage resources](../resources)
 
 ### System command \_\_metrics\_\_
 
-At the end of each command launcher execution, the `__metrics__` system hook will be triggered. The following arguments will be passed to `__metrics__` system command in order:
+At the end of each Command Launcher execution, the `__metrics__` system hook will be triggered. The following arguments will be passed to the `__metrics__` system command in order:
 
 1. repository/registry name (see remote command)
 2. package name
@@ -110,4 +110,4 @@ Here is an example:
 __metrics__ default example cola-example hello 2 0 5000000 nil 1668363339
 ```
 
-> Note: the `__metrics__` hook will be called at the end of each command launcher call, please make sure it ends fast to reduce the footprint
+> Note: the `__metrics__` hook will be called at the end of **each Command Launcher call**, please make sure it ends fast to reduce the footprint.

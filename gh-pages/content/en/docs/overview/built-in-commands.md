@@ -16,17 +16,17 @@ toc: true
 
 ## config
 
-Get or set command launcher configuration.
+Get or set the Command Launcher configuration.
 
-Use `cola config` to list all configurations.
+Use `cola config` to list all configuration entries.
 
-Use `cola config [key]` to get one configuration.
+Use `cola config [key]` to get one configuration entry.
 
-Use `cola config [key] [value]` to set one configuration.
+Use `cola config [key] [value]` to set one configuration entry.
 
 ## completion
 
-setup auto completion. See help to get instructions:
+Set up auto completion. See help to get instructions:
 
 ```shell
 cola completion --help
@@ -34,15 +34,15 @@ cola completion --help
 
 ## login
 
-Store your credentials securely and pass them to managed commands when requested and under your agreements. More details see: [Managed resources](../resources)
+Store your credentials securely and pass them to managed commands when requested and under your agreements. For more details see: [Managed resources](../resources)
 
 ## update
 
-Check updates for command launcher and managed commands.
+Check updates for the Command Launcher and any managed commands.
 
 ## version
 
-Return command launcher version information.
+Return Command Launcher version information.
 
 ## package
 
@@ -50,7 +50,7 @@ A collection of commands to manage installed packages and commands
 
 ### package list
 
-List installed packages and commands
+List installed packages and commands.
 
 ```shell
 # list local installed packages
@@ -71,7 +71,7 @@ cola package list --remote
 
 ### package install
 
-Install a dropin package from a git repo or from a zip file
+Install a *dropin package* from a git repo or from a zip file.
 
 ```shell
 # install a dropin package from git repository
@@ -83,7 +83,7 @@ cola package install --file https://github.com/criteo/command-launcher/raw/main/
 
 ### package delete
 
-Remove a dropin package from the package name defined in manifest
+Remove a *dropin package* from the package name defined in the manifest.
 
 ```shell
 cola package delete command-launcher-example-package
@@ -91,7 +91,7 @@ cola package delete command-launcher-example-package
 
 ### package setup
 
-Manually trigger the package [setup hook](../manifest/#__setup__)
+Manually trigger the package [setup hook](../manifest/#__setup__).
 
 ```shell
 cola package setup command-launcher-example-package
@@ -129,13 +129,13 @@ cola delete myregistry
 
 ### rename
 
-Rename a command into a different name
+Rename a command into a different name.
 
-To avoid command conflicts, each command has a unique full name in form of `[name]@[group]@[package]@[repository]`, for group command and root level command, it's group is empty. For example: `hello@@my-package@dropin` is the full name of the command `hello` in `my-package` package, which can be found in the `dropin` repository.
+To avoid command conflicts, each command has a unique full name in the form of `[name]@[group]@[package]@[repository]`. For group commands and root level commands, their group is empty. For example: `hello@@my-package@dropin` is the full name of the command `hello` in `my-package` package, which can be found in the `dropin` repository.
 
 Usually, such command is launched through: `cola [group] [name]`. You can rename the group and the name of the command to a different name, so that you can call it through: `cola [new group] [new name]`
 
-To rename a command to a different name, use following commands:
+To rename a command to a different name, use the following commands:
 
 ```shell
 # To change the group name:
@@ -150,26 +150,29 @@ For example, you can rename the `hello` command to `bonjour` using following ren
 ```shell
 cola rename hello@@my-package@dropin bonjour
 
-# now call it from cola will trigger the original hello command
+# now calling it from cola will trigger the original hello command
 cola bonjour
 ```
-
-### rename --delete
-
-To delete a renamed command name
-
-```shell
-cola rename --delete [command full name]
-```
-
-Now you have to use its original name to call the command
 
 ### rename --list
 
 > available in 1.10.0+
 
-To list all renamed command
+List all renamed commands.
+
+The Command Launcher keeps track of all renamed commands. You can list all renamed commands using the following command:
 
 ```shell
 cola rename --list
 ```
+
+### rename --delete
+
+Delete a renamed command name, reverting back to the original name.
+
+```shell
+cola rename --delete [command full name]
+```
+
+Now you have to use its original name to call the command.
+
