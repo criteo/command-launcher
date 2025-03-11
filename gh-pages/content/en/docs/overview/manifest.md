@@ -89,11 +89,11 @@ You must make sure your command's group and name combination is unique.
 
 There are three types of commands: `group`, `executable`, and `system`.
 
-* An `executable` command is meant to be executed. You must fill the `executable` and `args` fields of an executable command.
+- An `executable` command is meant to be executed. You must fill the `executable` and `args` fields of an executable command.
 
-* A `group` command is used to group executable commands. It does not run anything by itself.
+- A `group` command is used to group executable commands. It does not run anything by itself.
 
-* A `system` command is an executable command which extends some built-in Command Launcher functions. For more details see [system package](../system-package)
+- A `system` command is an executable command which extends some built-in Command Launcher functions. For more details see [system package](../system-package)
 
 ### group
 

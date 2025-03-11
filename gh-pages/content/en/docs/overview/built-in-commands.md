@@ -175,4 +175,3 @@ cola rename --delete [command full name]
 ```
 
 Now you have to use its original name to call the command.
-
