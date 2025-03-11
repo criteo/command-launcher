@@ -1,7 +1,7 @@
 ---
-title: "Variable in manifest"
-description: "Use variables in manifest.mf file"
-lead: "Use variables in manifest.mf file"
+title: "Variables in manifest"
+description: "Use of variables in the manifest.mf file"
+lead: "Use of variables in the manifest.mf file"
 date: 2022-10-02T21:36:35+02:00
 lastmod: 2022-10-02T21:36:35+02:00
 draft: false
@@ -14,33 +14,33 @@ weight: 999
 toc: true
 ---
 
-The two common use cases of integrating commands in command launcher are:
+The values of certain fields in the manifest file can be set using predefined variables. These variables are replaced with their actual values at runtime.
 
-1. Reference files that are located in the package itself
-2. Provide system/architecture-aware commands, for example, .sh script for linux, and .bat script for windows
+The two most common use cases of variables in a Command Launcher's manifest.mf file are:
 
-To cover these use cases, in certain fields of the manifest file, predefined variables can used in the field values.
+1. Referencing files that are located in the package directory itself
+2. Providing system/architecture-aware commands, for example, .sh script for linux, and .bat script for windows
 
 ## Available Variables
 
 | Variable Name   | Variable Description                                                   |
 |-----------------|------------------------------------------------------------------------|
 | PackageDir      | The absolute path of the package                                       |
-| Root            | Same as "PackageDir" variable                                          |
-| Cache           | Same as "PackageDir" variable                                          |
-| Os              | The OS, "windows", "linux", and "darwin"                               |
+| Root            | Same as the "PackageDir" variable                                      |
+| Cache           | Same as the "PackageDir" variable                                      |
+| Os              | The OS: "windows", "linux", or "darwin"                                |
 | Arch            | The system architecture: "arm64", "amd64"                              |
-| Binary          | The binary file name of the command launcher                           |
+| Binary          | The binary file name of the Command Launcher                           |
 | Extension       | The system-aware binary extension, "" for linux, ".exe" for windows    |
-| ScriptExtension | The system-aware scritp extension, ".sh" for linux, ".bat" for windows |
+| ScriptExtension | The system-aware script extension, ".sh" for linux, ".bat" for windows |
 
-## Fields that accepts variables
+## Fields that accept variables
 
-The command fields: `executable`, `args`, and `validArgsCmd`
+Variables can only be used in the command properties: `executable`, `args`, and `validArgsCmd`
 
 ## How to use these variables
 
-You can reference them in form of `{{.Variable}}`. For example:
+You can reference them in this format: `{{.Variable}}`. For example:
 
 ```json
 "cmds": [
@@ -52,11 +52,11 @@ You can reference them in form of `{{.Variable}}`. For example:
 ]
 ```
 
-The executable on linux will be a script called `script.sh` located in the bin folder of the package. On windows, the executable will be a script called `script.bat`.
+The executable on Linux will be a script called `script.sh` located in the `bin` folder of the package. On windows, the executable will be a script called `script.bat`.
 
 ## If Else
 
-One common scenario is to have different path or file name according to different OS. You can use condition (if-else) in the fields that accept variables. For example:
+One common scenario is to have a different path or file name, depending on what OS Command Launcher is running on. You can use a conditional structure (if-else) in the fields that accept variables. For example:
 
 ```json
 "cmds": [
@@ -68,7 +68,7 @@ One common scenario is to have different path or file name according to differen
 ]
 ```
 
-The executable on linux will be a script called `script.sh` located in the bin folder of the package. On windows, the executable will be a script called `script.ps1`.
+The executable on Linux will be a script called `script.sh` located in the `bin` folder of the package. On Windows, the executable will be a script called `script.ps1`.
 
 ## Advanced usage of variables
 

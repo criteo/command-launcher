@@ -14,15 +14,15 @@ weight: 250
 toc: true
 ---
 
-## What is resources
+## What are Resources
 
-Resources are the information collected by command launcher. One good example is the user name and password from the built-in `login` command.
+Resources are the information collected by Command Launcher. One good example is the _username_ and _password_ from the built-in `login` command.
 
-Some of these information require user consent to access them, a command needs to explicitly request the access to these resources through the `requestedResources` property in the manifest.
+Some of these pieces of information require user consent to access them, a command needs to explicitly request the access to these resources through the `requestedResources` property in the manifest.
 
 Others are automatically passed to the command.
 
-Command Launcher passes resources to managed command through environment variables. The naming convention is: COLA_[RESOURCE_NAME]. If you compiled command launcher to a different name, command launcher will pass an additional environment variable `[APP_NAME]_[RESOURCE_NAME]` to the managed command as well.
+Command Launcher passes resources to managed commands through environment variables. The naming convention is: COLA_[RESOURCE_NAME]. If you compiled command launcher to a different name, command launcher will pass an additional environment variable `[APP_NAME]_[RESOURCE_NAME]` to the managed command as well.
 
 For example, the following snippet of manifest requests the resource `USERNAME` and `AUTH_TOKEN`.
 
@@ -48,11 +48,11 @@ Command 'create-pod' requests access to the following resources:
 authorize the access? [yN]
 ```
 
-The user consent will last for a specific period of time define in `user_consent_life` configuration.
+The user consent will last for a specific period of time define in the `user_consent_life` configuration entry.
 
 ## Access resources in your command
 
-Once user grant the access to the requested resources, command launcher will pass the resources to the command in runtime through environment variable with naming convention: `COLA_[RESOURCE_NAME]`. Here is an example of bash script:
+Once the user grants access to the requested resources, Command Launcher will pass the resources to the command at runtime through environment variables with the naming convention: `COLA_[RESOURCE_NAME]`. Here is an example of a bash script:
 
 ```bash
 #!/bin/bash

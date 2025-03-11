@@ -17,28 +17,30 @@ mermaid: true
 
 ## What is command launcher?
 
-Command launcher is a small footprint, rich feature CLI management tool for both enterprise and individual CLI developers. It eases the command line tool development by providing built-in common functionalities like: monitoring, progressive rollout, auto-completion, credential management, and more to your commands.
+Command launcher is a small-footprint, feature-rich CLI management tool for both enterprise and individual CLI developers. It eases the command line tool development by providing built-in common functionalities like: monitoring, progressive rollout, auto-completion, credential management, and more to your commands.
 
 ## Why a command launcher?
 
-At Criteo, we have many teams who provides command line applications for developers. These CLI providers repeatly handle the same features and functionalities for their CLI apps, such as auto-completion, credential management, release, delivery, monitoring, etc.
+At Criteo, we have many teams who provide command line applications for developers. These CLI providers repeatly handle the same features and functionalities for their CLI apps, such as auto-completion, credential management, release, delivery, monitoring, etc.
 
-On developer side, they have to manually download these tools to keep them up-to-date, it is difficult for them to discover available new tools. On the other hand, different developers have developed lots of similar handy scripts/tools by themselves without an easy way to share with others to avoid "re-inventing" the wheel.
+On the developer side, they have to manually download these tools and keep them up-to-date. It is also difficult for them to discover available new tools. On the other hand, different developers have developed lots of similar handy scripts/tools by themselves without an easy way to share with others to avoid "re-inventing" the wheel.
 
-To improve both developer and CLI provider's experience, we developed a command launcher to solve the above issues. It has built-in features like auto-completion, credential management, progressive roll-out, and monitoring, so that the CLI app provider can focus on the functionality of their CLI app. Developers only need to download the command launcher to access all these CLI apps. The command launcher will keep their CLI application up-to-date. The dropin feature allows developers to integrate their own scripts/tools into command launcher and share with others. These scripts and tools can also benefits from built-in features like auto-completion, and monitoring.
+To improve both developer and CLI provider's experience, we developed a command launcher to solve the above issues. It has built-in features like auto-completion, credential management, progressive roll-out, and monitoring, so that the CLI app provider can focus on the functionality of their CLI app. Developers only need to download the command launcher to access all these CLI apps. The command launcher will keep their CLI application up-to-date. The dropin feature allows developers to integrate their own scripts/tools into command launcher and share with others. These scripts and tools can also benefit from built-in features like auto-completion and monitoring.
 
 ## How it works?
 
-Command launcher is a small binary downloaded by developer in their development environment. CLI provider packages new commands or new version of command into a package, upload it to a remote repository, and update the package index of the repository. This process can be automated. More details about the remote repository, see [CLI Provider Guide](../provider-guide)
+Command Launcher is a small binary downloaded by a developer in their development environment. *CLI providers* package new commands or new versions of commands into a package, upload them to a remote repository, and update the package index of the repository. This process can be automated. For more details about the remote repository, see [CLI Provider Guide](../provider-guide)
 
-Developers can integrate their own commands into command launcher as a "dropin" package. These dropin package will be only accessible from the developers themselves. To share such commands see [Dropin Package](../dropin)
+Developers can integrate their own commands into Command Launcher as a "dropin" package. These dropin packages will be only accessible on the developer's machine. To share such commands see [Dropin Package](../dropin)
 
-Developers run command launcher to access these commands, for example, you have a command called `toto`, instead of run it directly from command line, you use `cl toto`, where `cl` is the binary name of the command launcher, you can name it anything suits you. Every time you execute command launcher, it will synchronize with the remote command, and propose available updates if exists.
+Developers run Command Launcher to access these commands. For example, if you have a command called `toto`, instead of running it directly from the command line, you use `cl toto`, where `cl` is the binary name of the Command Launcher (you can name it anything that suits you).
+
+Every time you run the Command Launcher, it will synchronize with the remote command, and propose updates if they are available.
 
 ```text
 
                            ┌──────────────────┐    Synch    ┌───────────────────────────┐
-            ┌──────────────│ command launcher │◄────────────│ Remote Command Repository │
+            ┌──────────────│ Command Launcher │◄────────────│ Remote Command Repository │
             │              └──────────────────┘             └───────────────────────────┘
             │                       │                                      │
             │            ┌──────────┼──────────┐              ┌────────────┼────────────┐
@@ -55,46 +57,46 @@ Developers run command launcher to access these commands, for example, you have 
 
 ## Features
 
-- **Small footprint**. Command launcher is around 10M, with no dependency to your OS.
-- **Technology agnostic**. It can launch commands implemented in any technology, and integrate to it with a simple manifest file.
-- **Auto-completion**. It supports auto-completion for all your commands installed by it.
-- **Auto-update**. Not only keeps itself but all its commands up-to-date.
-- **Credential management**. With the built-in login command, it securely passes user credential to your command.
+- **Small footprint**. Command Launcher is around 10M, with no dependency to your OS.
+- **Technology agnostic**. It can launch commands implemented in any technology, and integrate them with a simple manifest file.
+- **Auto-completion**. It will auto-complete the name of your commands out of the box, and their arguments if you provide the right information in the manifest file.
+- **Auto-update**. Command Launcher can keep itself and its command packages up to date.
+- **Credential management**. With the built-in `login` command, it securely passes user credentials to your commands.
 - **Progressive rollout**. Target a new version of command to a group of beta test users, and rollout progressively to all your users.
-- **Monitoring**. Built-in monitoring feature to monitor the usage your commands.
-- **Dropins**. Easy to intergrate your own command line scripts/tools by dropping your manifest in the "dropins" folder.
+- **Monitoring**. Built-in monitoring feature to monitor the usage of your commands.
+- **Dropins**. Easy to integrate your own command line scripts/tools by dropping your manifest in the "dropins" folder.
 
 ## Installation
 
-Pre-built binary can be downloaded from the release page. Unzip it, copy the binary into your PATH.
+A pre-built binary can be downloaded from the release page. Unzip it, and place the binary in a directory in your `PATH`.
 
-The two pre-built binaries are named `cola` (**Co**mmand **La**uncher) and `cdt` (**C**riteo **D**ev **T**oolkit), if you want to use a different name, you can pass your prefered name in the build. See build section below.
+The two pre-built binaries are named `cola` (**Co**mmand **La**uncher) and `cdt` (**C**riteo **D**ev **T**oolkit), if you want to use a different name, you can pass your preferred name in the build. See the *build* section below.
 
-## Build
+## Building
 
 Requirements: golang >= 1.17
 
-You can build the command launcher with your prefered name (in the example: `Criteo Developer Toolkit`, a.k.a `cdt`).
+You can build the command launcher with your preferred name (in the example: `Criteo Developer Toolkit`, a.k.a `cdt`).
 
 ```shell
 go build -o cdt -ldflags='-X main.version=dev -X main.appName=cdt -X "main.appLongName=Criteo Dev Toolkit"' main.go
 ```
 
-Or simply call the `build.sh` scripts
+Or simply call the `build.sh` script
 
 ```shell
 ./build.sh [version] [app name] [app long name]
 ```
 
-## Run tests
+## Running tests
 
-Run unit tests
+Run unit tests:
 
 ```shell
 go test -v ./...
 ```
 
-Run all integration tests
+Run all integration tests:
 
 ```shell
 ./test/integration.sh
@@ -106,7 +108,7 @@ You can run one integration test by specify the name of the integration test fil
 ./test/integration.sh test-remote
 ```
 
-## Release
+## Releasing
 
 Simply tag a commit with format 'x.y.z', and push it.
 
@@ -120,4 +122,4 @@ The supported release tag format:
 - \*.\*.\*
 - \*.\*.\*-\*
 
-Example: `1.0.0`, `1.0.1-preview`
+Examples: `1.0.0`, `1.0.1-preview`
