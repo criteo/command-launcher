@@ -104,7 +104,7 @@ func (u *CmdUpdater) Update() error {
 			if remote.IsVersionSmaller(remoteVersion, localPkg.Version()) {
 				op = "downgrade"
 			}
-			console.Highlight("- %s command '%s' from version %s to version %s ...\n", op, pkgName, localPkg.Version(), remoteVersion)
+			console.Highlight("- %s package '%s' from version %s to version %s ...\n", op, pkgName, localPkg.Version(), remoteVersion)
 			pkg, err := remoteRepo.Package(pkgName, remoteVersion)
 			if err != nil {
 				errPool = append(errPool, err)
@@ -118,7 +118,7 @@ func (u *CmdUpdater) Update() error {
 			}
 			if err = repo.Update(pkg); err != nil {
 				errPool = append(errPool, err)
-				fmt.Printf("Cannot update the command %s: %v\n", pkgName, err)
+				fmt.Printf("Cannot update the package %s: %v\n", pkgName, err)
 			}
 		}
 	}
