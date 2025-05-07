@@ -1,8 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
+
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 
 	remote "github.com/criteo/command-launcher/internal/remote"
 	handlers "github.com/criteo/command-launcher/remote-registry/handlers"
@@ -10,9 +16,85 @@ import (
 	. "github.com/criteo/command-launcher/remote-registry/store"
 )
 
+type CommandLineArgs struct {
+	StoreType string
+	StorePath string
+	ShowHelp  bool
+}
+
+func setupCommandLineArgs() (*CommandLineArgs, error) {
+	pflag.String("store", "memory", "Type of store to use: 'memory' or 'filesystem'")
+	pflag.String("store-path", "", "Path for file store (required when using filesystem store)")
+	pflag.Bool("help", false, "Display this message")
+	pflag.Parse()
+
+	if err := viper.BindPFlags(pflag.CommandLine); err != nil {
+		return nil, fmt.Errorf("failed to bind flags: %w", err)
+	}
+
+	viper.SetDefault("store", "memory")
+
+	viper.SetEnvPrefix("REGISTRY")
+	viper.AutomaticEnv()
+
+	return &CommandLineArgs{
+		StoreType: viper.GetString("store"),
+		StorePath: viper.GetString("store-path"),
+		ShowHelp:  viper.GetBool("help"),
+	}, nil
+}
+
+func createStore(config *CommandLineArgs) (Store, error) {
+	var store Store
+	var err error
+
+	switch config.StoreType {
+	case "memory":
+		log.Println("Using in-memory store")
+		store = NewInMemoryStore()
+	case "filesystem":
+		storePath := config.StorePath
+		if storePath == "" {
+			log.Printf("No path specified, using default working directory")
+			wd, err := os.Getwd()
+			if err == nil {
+				storePath = filepath.Join(wd, "registry-store")
+			} else {
+				return nil, fmt.Errorf("failed to get working directory: %w", err)
+			}
+			log.Printf("Using path: %s", storePath)
+		}
+
+		log.Printf("Using filesystem store at: %s", storePath)
+		store, err = NewFileStore(storePath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create filesystem store: %w", err)
+		}
+		log.Printf("Filesystem store created at %s", storePath)
+	default:
+		return nil, fmt.Errorf("unknown store type: %s", config.StoreType)
+	}
+
+	return store, nil
+}
+
 func main() {
-	// create a new in-memory store
-	store := NewInMemoryStore()
+	config, err := setupCommandLineArgs()
+	if err != nil {
+		log.Fatalf("Failed to set up configuration: %v", err)
+	}
+
+	if config.ShowHelp {
+		pflag.PrintDefaults()
+		os.Exit(0)
+	}
+
+	// Create the appropriate store
+	store, err := createStore(config)
+	if err != nil {
+		log.Fatalf("Failed to create store: %v", err)
+	}
+
 	initStore(store)
 
 	// create a controller instance by specifying the store
