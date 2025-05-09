@@ -24,17 +24,27 @@ func main() {
 	// GET the remote registry index
 	mux.HandleFunc("/registry/{registry}/index.json", controller.IndexHandler)
 
-	mux.HandleFunc("/registry", controller.RegistryHandler)
-	mux.HandleFunc("/registry/{registry}", controller.RegistryHandler)
-	mux.HandleFunc("/registry/{registry}/package", controller.PackageHandler)
-	mux.HandleFunc("/registry/{registry}/package/{package}", controller.PackageHandler)
-	mux.HandleFunc("/registry/{registry}/package/{package}/version", controller.PackageVersionHandler)
-	mux.HandleFunc("/registry/{registry}/package/{package}/version/{version}", controller.PackageVersionHandler)
+	// POST create a new registry
+	mux.HandleFunc("/registry", controller.NewRegistryHandler)
+	// PUT or DELETE update or delete a registry
+	mux.HandleFunc("/registry/{registry}", controller.UpdateOrDeleteRegistryHandler)
+
+	// POST create a new package
+	mux.HandleFunc("/registry/{registry}/package", controller.NewPackageHandler)
+	// PUT or DELETE update or delete a package
+	mux.HandleFunc("/registry/{registry}/package/{package}", controller.UpdateOrDeletePackageHandler)
+
+	// POST create a new package version
+	mux.HandleFunc("/registry/{registry}/package/{package}/version", controller.NewPackageVersionHandler)
+	// DELETE delete a package version
+	mux.HandleFunc("/registry/{registry}/package/{package}/version/{version}", controller.DeletePackageVersionHandler)
 
 	log.Println("Starting server on :8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
 
+// for dev purpose
+// TODO: remove this
 func initStore(store Store) {
 	// put some example data in the store
 	store.NewRegistry("test-registry", model.RegistryMetadata{
