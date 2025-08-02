@@ -10,6 +10,7 @@ import (
 
 	"github.com/criteo/command-launcher/internal/console"
 	"github.com/criteo/command-launcher/internal/helper"
+	"github.com/criteo/command-launcher/internal/remote"
 	"github.com/criteo/command-launcher/internal/user"
 	"github.com/inconshreveable/go-update"
 	log "github.com/sirupsen/logrus"
@@ -102,8 +103,10 @@ func (u *SelfUpdater) checkSelfUpdate() <-chan bool {
 			return
 		}
 
-		ch <- u.latestVersion.Version != u.CurrentVersion &&
+		// Only offer update if remote version is newer than current version
+		shouldUpdate := remote.IsVersionSmaller(u.CurrentVersion, u.latestVersion.Version) &&
 			u.User.InPartition(u.latestVersion.StartPartition, u.latestVersion.EndPartition)
+		ch <- shouldUpdate
 	}()
 	return ch
 }
