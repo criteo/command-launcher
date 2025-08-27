@@ -53,6 +53,7 @@ Check the update of %s and its commands.
 					User:              u,
 					CurrentVersion:    appCtx.AppVersion(),
 					Timeout:           updateFlags.Timeout,
+					Policy:            config.SelfUpdatePolicy(viper.GetString(config.SELF_UPDATE_POLICY_KEY)),
 				}
 				selfUpdater.CheckUpdateAsync()
 				err := selfUpdater.Update()

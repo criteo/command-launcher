@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -16,6 +17,7 @@ const (
 	SELF_UPDATE_TIMEOUT_KEY              = "SELF_UPDATE_TIMEOUT"
 	SELF_UPDATE_LATEST_VERSION_URL_KEY   = "SELF_UPDATE_LATEST_VERSION_URL"
 	SELF_UPDATE_BASE_URL_KEY             = "SELF_UPDATE_BASE_URL"
+	SELF_UPDATE_POLICY_KEY               = "SELF_UPDATE_POLICY"
 	COMMAND_UPDATE_ENABLED_KEY           = "COMMAND_UPDATE_ENABLED"
 	COMMAND_REPOSITORY_BASE_URL_KEY      = "COMMAND_REPOSITORY_BASE_URL"
 	LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY = "LOCAL_COMMAND_REPOSITORY_DIRNAME"
@@ -52,6 +54,14 @@ type ExtraRemote struct {
 	SyncPolicy    string `mapstructure:"sync_policy" json:"sync_policy"`
 }
 
+// SelfUpdatePolicy defines the behavior for self-update version comparison
+type SelfUpdatePolicy string
+
+const (
+	SelfUpdatePolicyExactMatch SelfUpdatePolicy = "exact_match"        // Update if versions are different (legacy behavior)
+	SelfUpdatePolicyOnlyNewer  SelfUpdatePolicy = "only_newer_version" // Update if remote is newer
+)
+
 var SettingKeys []string
 
 func init() {
@@ -62,6 +72,7 @@ func init() {
 		SELF_UPDATE_TIMEOUT_KEY,
 		SELF_UPDATE_LATEST_VERSION_URL_KEY,
 		SELF_UPDATE_BASE_URL_KEY,
+		SELF_UPDATE_POLICY_KEY,
 		COMMAND_UPDATE_ENABLED_KEY,
 		COMMAND_REPOSITORY_BASE_URL_KEY,
 		LOCAL_COMMAND_REPOSITORY_DIRNAME_KEY,
@@ -97,6 +108,8 @@ func SetSettingValue(key string, value string) error {
 		return setStringConfig(upperKey, value)
 	case SELF_UPDATE_LATEST_VERSION_URL_KEY:
 		return setStringConfig(upperKey, value)
+	case SELF_UPDATE_POLICY_KEY:
+		return setSelfUpdatePolicyConfig(value)
 	case COMMAND_UPDATE_ENABLED_KEY:
 		return setBooleanConfig(upperKey, value)
 	case COMMAND_REPOSITORY_BASE_URL_KEY:
@@ -227,4 +240,20 @@ func setLogLevelConfig(value string) error {
 		viper.Set(LOG_LEVEL_KEY, strings.ToLower(value))
 	}
 	return err
+}
+
+func setChoicesConfig(key string, value string, label string, choices []string) error {
+	if slices.Contains(choices, value) {
+		setStringConfig(key, value)
+		return nil
+	}
+	return fmt.Errorf("invalid value for %s: \"%s\"", label, value)
+}
+
+func setSelfUpdatePolicyConfig(value string) error {
+	choices := []string{
+		string(SelfUpdatePolicyExactMatch),
+		string(SelfUpdatePolicyOnlyNewer),
+	}
+	return setChoicesConfig(SELF_UPDATE_POLICY_KEY, value, "self-update policy", choices)
 }

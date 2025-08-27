@@ -176,6 +176,7 @@ func initSelfUpdater() {
 		User:              rootCtxt.user,
 		CurrentVersion:    rootCtxt.appCtx.AppVersion(),
 		Timeout:           viper.GetDuration(config.SELF_UPDATE_TIMEOUT_KEY),
+		Policy:            config.SelfUpdatePolicy(viper.GetString(config.SELF_UPDATE_POLICY_KEY)),
 	}
 }
 

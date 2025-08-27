@@ -36,6 +36,7 @@ toc: true
 | self_update_enabled              | bool     | whether auto update command launcher itself                                                                                   |
 | self_update_latest_version_url   | string   | url to get the latest command launcher version information                                                                    |
 | self_update_timeout              | duration | timeout duration for self update                                                                                              |
+| self_update_policy               | string   | self-update version comparison policy: `exact_match` or `only_newer_version` (default: `exact_match`)      |
 | usage_metrics_enabled            | bool     | whether enable metrics                                                                                                        |
 | user_consent_life                | duration | the life of user consent                                                                                                      |
 | system_package                   | string   | the system package name                                                                                                       |
@@ -70,6 +71,16 @@ Each extra remote must have a unique name, it is used to identify the command as
 | repository_dir  | string | the absolute path of the local repository folder to keep the downloaded local packages                                                                                     |
 
 > You don't need to manage these extra remote configurations by yourself. Use the built-in `remote` command instead.
+
+### Self-update policies
+
+The `self_update_policy` configuration controls how the self-updater determines when to offer updates:
+
+- **`exact_match`**: Offers updates whenever the remote version differs from the current version (legacy behavior). This can result in offering updates to older versions, which may be useful in specific rollback scenarios.
+
+- **`only_newer_version`**: Only offers updates when the remote version is newer than the current version.
+
+> **Note**: The default policy is `exact_match` to maintain legacy behavior. Enterprise environments can override this via remote configuration to enforce their preferred update strategy.
 
 ## Change configuration
 

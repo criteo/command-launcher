@@ -82,6 +82,7 @@ func setDefaultConfig() {
 	viper.SetDefault(SELF_UPDATE_TIMEOUT_KEY, 2*time.Second) // In seconds
 	viper.SetDefault(SELF_UPDATE_LATEST_VERSION_URL_KEY, "")
 	viper.SetDefault(SELF_UPDATE_BASE_URL_KEY, "")
+	viper.SetDefault(SELF_UPDATE_POLICY_KEY, string(SelfUpdatePolicyExactMatch))
 
 	viper.SetDefault(COMMAND_UPDATE_ENABLED_KEY, false)
 	viper.SetDefault(COMMAND_REPOSITORY_BASE_URL_KEY, "")
@@ -146,10 +147,7 @@ func findLocalConfig(startPath string, configFileName string) (string, bool) {
 
 func hasConfigFile(configRootPath string, configFileName string) bool {
 	_, err := os.Stat(filepath.Join(configRootPath, configFileName))
-	if err == nil {
-		return true
-	}
-	return false
+	return err == nil
 }
 
 func loadRemoteConfig(appCtx context.LauncherContext) bool {

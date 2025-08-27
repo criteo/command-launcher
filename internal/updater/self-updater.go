@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/criteo/command-launcher/internal/config"
 	"github.com/criteo/command-launcher/internal/console"
 	"github.com/criteo/command-launcher/internal/helper"
 	"github.com/criteo/command-launcher/internal/remote"
@@ -34,6 +35,7 @@ type SelfUpdater struct {
 	User              user.User
 	CurrentVersion    string
 	Timeout           time.Duration
+	Policy            config.SelfUpdatePolicy
 }
 
 func (u *SelfUpdater) CheckUpdateAsync() {
@@ -103,9 +105,23 @@ func (u *SelfUpdater) checkSelfUpdate() <-chan bool {
 			return
 		}
 
-		// Only offer update if remote version is newer than current version
-		shouldUpdate := remote.IsVersionSmaller(u.CurrentVersion, u.latestVersion.Version) &&
-			u.User.InPartition(u.latestVersion.StartPartition, u.latestVersion.EndPartition)
+		// Apply the configured self-update policy
+		var versionNeedsUpdate bool
+		switch u.Policy {
+		case config.SelfUpdatePolicyOnlyNewer:
+			// Only update if remote is newer
+			versionNeedsUpdate = remote.IsVersionSmaller(u.CurrentVersion, u.latestVersion.Version)
+		case config.SelfUpdatePolicyExactMatch:
+			// Only update if versions are different
+			versionNeedsUpdate = u.CurrentVersion != u.latestVersion.Version
+		default:
+			// Default to exact_match behavior if invalid (matches default policy)
+			log.Warnf("invalid self-update policy: %s, using exact_match behavior", u.Policy)
+			versionNeedsUpdate = u.CurrentVersion != u.latestVersion.Version
+		}
+
+		// Apply partition filtering
+		shouldUpdate := versionNeedsUpdate && u.User.InPartition(u.latestVersion.StartPartition, u.latestVersion.EndPartition)
 		ch <- shouldUpdate
 	}()
 	return ch
