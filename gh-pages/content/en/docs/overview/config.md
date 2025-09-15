@@ -25,7 +25,7 @@ toc: true
 | enable_user_consent              | bool     | whether enable the user consent. Be caution, when set to false, all resources are allowed to pass to the managed commands.    |
 | experimental_command_enabled     | bool     | whether enable experimental command or not                                                                                    |
 | internal_command_enabled         | bool     | whether enable internal command or not                                                                                        |
-| local_command_repository_dirname | bool     | the absolute path of the local repository folder.                                                                             |
+| local_command_repository_dirname | string   | the absolute path of the local repository folder.                                                                             |
 | log_enabled                      | bool     | whether log is enabled or not                                                                                                 |
 | log_level                        | string   | the log level of command launcher. Note, the managed command could also request access to this config                         |
 | metric_graphite_host             | string   | graphite url for metrics                                                                                                      |
