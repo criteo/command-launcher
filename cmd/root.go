@@ -207,7 +207,8 @@ func initBackend() {
 		))
 	}
 
-	rootCtxt.backend, _ = backend.NewDefaultBackend(
+	var err error
+	rootCtxt.backend, err = backend.NewDefaultBackend(
 		config.AppDir(),
 		backend.NewDropinSource(viper.GetString(config.DROPIN_FOLDER_KEY)),
 		backend.NewManagedSource(
@@ -218,6 +219,14 @@ func initBackend() {
 		),
 		extraSources...,
 	)
+	if err != nil {
+		log.Fatalf(
+			"Failed to initialize %s: %s\nPlease check your configuration in file %s.\n",
+			rootCtxt.appCtx.AppName(),
+			err,
+			viper.ConfigFileUsed(),
+		)
+	}
 
 	toBeInitiated := []*backend.PackageSource{}
 	for _, s := range rootCtxt.backend.AllPackageSources() {
