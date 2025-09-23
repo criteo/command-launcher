@@ -72,6 +72,7 @@ These are the properties available to define each command:
 | groupFlags         | no                 | group of grouped flags, which must be presented together (available in 1.9+)                          |
 | checkFlags         | no                 | whether to check the flags defined in manifest before calling the command. Default: false             |
 | requestedResources | no                 | the resources that the command requested, e.g., `USERNAME`, `PASSWORD`                                |
+| precheckURLs       | no                 | pre-check URLs that must return OK before running the plugin                                          |
 
 ## Command properties
 
@@ -542,6 +543,30 @@ The following snippet requests access the `USERNAME` and `PASSWORD` resources.
       "executable": "get-city-population",
       "args": [],
       "requestedResources": [ "USERNAME", "PASSWORD" ]
+    }
+  ]
+}
+```
+
+### precheckURLs
+
+A list of external endpoints to probe before running the plugin. Each URL must return a successful HTTP response (for example, 200 OK). If any probe fails or times out, the plugin will not start and will report which endpoint(s) caused the failure. Use this to declare services the plugin depends on being available prior to execution.
+
+Example:
+
+```json
+{
+  "cmds": [
+    {
+      "name": "population",
+      "type": "executable",
+      "group": "city",
+      "executable": "get-city-population",
+      "args": [],
+      "precheckURLs": [
+        "https://api.example.com/health",
+        "http://internal-service.local:8080/ready"
+      ]
     }
   ]
 }

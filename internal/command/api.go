@@ -47,6 +47,8 @@ type CommandManifest interface {
 	FlagValuesCmd() []string
 
 	CheckFlags() bool
+
+	PrecheckURLs() []string
 }
 
 type Command interface {

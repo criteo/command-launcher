@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/criteo/command-launcher/cmd/consent"
+	"github.com/criteo/command-launcher/cmd/prechecks"
 	"github.com/criteo/command-launcher/internal/backend"
 	"github.com/criteo/command-launcher/internal/command"
 	"github.com/criteo/command-launcher/internal/config"
@@ -87,6 +88,7 @@ func (self *defaultFrontend) addGroupCommands() {
 		))
 		requiredFlags := v.RequiredFlags()
 		requestedResources := v.RequestedResources()
+		CheckURLs := v.PrecheckURLs()
 		flags := v.Flags()
 		exclusiveFlags := v.ExclusiveFlags()
 		groupFlags := v.GroupFlags()
@@ -97,6 +99,12 @@ func (self *defaultFrontend) addGroupCommands() {
 			Short:              v.ShortDescription(),
 			Long:               v.LongDescription(),
 			Run: func(cmd *cobra.Command, args []string) {
+				err := prechecks.PrecheckURLsAccess(CheckURLs)
+				if err != nil {
+					log.Errorf("pre-check failed: %v", err)
+					RootExitCode = 1
+					return
+				}
 				consents, err := consent.GetConsents(group, name, requestedResources, viper.GetBool(config.ENABLE_USER_CONSENT_KEY))
 				if err != nil {
 					log.Warnf("failed to get user consent: %v", err)
@@ -140,6 +148,7 @@ func (self *defaultFrontend) addExecutableCommands() {
 		validArgsCmd := v.ValidArgsCmd()
 		checkFlags := v.CheckFlags()
 		requestedResources := v.RequestedResources()
+		CheckURLs := v.PrecheckURLs()
 		flags := v.Flags()
 		exclusiveFlags := v.ExclusiveFlags()
 		groupFlags := v.GroupFlags()
@@ -150,6 +159,12 @@ func (self *defaultFrontend) addExecutableCommands() {
 			Short:              v.ShortDescription(),
 			Long:               v.LongDescription(),
 			Run: func(c *cobra.Command, args []string) {
+				err := prechecks.PrecheckURLsAccess(CheckURLs)
+				if err != nil {
+					log.Errorf("pre-check failed: %v", err)
+					RootExitCode = 1
+					return
+				}
 				consents, err := consent.GetConsents(group, name, requestedResources, viper.GetBool(config.ENABLE_USER_CONSENT_KEY))
 				if err != nil {
 					log.Warnf("failed to get user consent: %v", err)

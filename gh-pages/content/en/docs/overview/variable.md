@@ -47,7 +47,7 @@ You can reference them in this format: `{{.Variable}}`. For example:
   {
     "name": "variable-demo",
     "type": "executable",
-    "executable": "{{.PackageDir}}/bin/script{{.ScripteExtension}}",
+    "executable": "{{.PackageDir}}/bin/script{{.ScriptExtension}}",
   }
 ]
 ```

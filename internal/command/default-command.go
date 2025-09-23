@@ -74,6 +74,7 @@ type DefaultCommand struct {
 	CmdFlagValuesCmd      []string       `json:"flagValuesCmd" yaml:"flagValuesCmd"` // the command to call flag values for autocompletion
 	CmdCheckFlags         bool           `json:"checkFlags" yaml:"checkFlags"`       // whether parse the flags and check them before execution
 	CmdRequestedResources []string       `json:"requestedResources" yaml:"requestedResources"`
+	CmdPrecheckURLs       []string       `json:"precheckURLs" yaml:"precheckURLs"` // Pre-check URLs that must return OK before running the plugin
 
 	PkgDir string `json:"pkgDir"`
 }
@@ -107,6 +108,7 @@ func NewDefaultCommandFromCopy(cmd Command, pkgDir string) *DefaultCommand {
 		CmdFlagValuesCmd:      cmd.FlagValuesCmd(),
 		CmdCheckFlags:         cmd.CheckFlags(),
 		CmdRequestedResources: cmd.RequestedResources(),
+		CmdPrecheckURLs:       cmd.PrecheckURLs(),
 		PkgDir:                pkgDir,
 	}
 }
@@ -360,6 +362,13 @@ func (cmd *DefaultCommand) FlagValuesCmd() []string {
 
 func (cmd *DefaultCommand) CheckFlags() bool {
 	return cmd.CmdCheckFlags
+}
+
+func (cmd *DefaultCommand) PrecheckURLs() []string {
+	if cmd.CmdPrecheckURLs == nil {
+		return []string{}
+	}
+	return cmd.CmdPrecheckURLs
 }
 
 func (cmd *DefaultCommand) PackageDir() string {

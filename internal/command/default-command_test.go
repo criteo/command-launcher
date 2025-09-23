@@ -33,6 +33,7 @@ func getDefaultCommand() DefaultCommand {
 		CmdFlagValuesCmd:      nil,
 		CmdCheckFlags:         true,
 		CmdRequestedResources: nil,
+		CmdPrecheckURLs:       nil,
 		PkgDir:                "/tmp/test/root",
 	}
 }
@@ -40,6 +41,7 @@ func getDefaultCommand() DefaultCommand {
 func TestRequestResources(t *testing.T) {
 	cmd := getDefaultCommand()
 	assert.NotNil(t, cmd.RequestedResources())
+	assert.NotNil(t, cmd.PrecheckURLs())
 	assert.Equal(t, 0, len(cmd.RequestedResources()))
 }
 

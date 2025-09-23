@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/criteo/command-launcher/cmd/prechecks"
 	"github.com/criteo/command-launcher/internal/command"
 	"gopkg.in/yaml.v3"
 )
@@ -145,6 +146,10 @@ func ExecSetupHookFromPackage(pkg command.PackageManifest, pkgDir string) error 
 		if c.Name() == "__setup__" && c.Type() == "system" {
 			if pkgDir != "" {
 				c.SetPackageDir(pkgDir)
+			}
+			prechecksUrls := c.PrecheckURLs()
+			if err := prechecks.PrecheckURLsAccess(prechecksUrls); err != nil {
+				return fmt.Errorf("setup hook of package %s cannot be executed because pre-checks failed: %v", pkg.Name(), err)
 			}
 			// Execute the __setup__ hook
 			_, err := c.Execute(os.Environ())
