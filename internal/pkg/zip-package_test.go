@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -40,12 +41,14 @@ func TestInstallPackageWithSetupError(t *testing.T) {
 	target, err := os.MkdirTemp("", "cdt-package-test-*")
 	assert.Nil(t, err)
 
-	var previousValue = viper.GetBool(config.ENABLE_PACKAGE_SETUP_HOOK_KEY)
+	var previousSetupHook = viper.GetBool(config.ENABLE_PACKAGE_SETUP_HOOK_KEY)
+	defer viper.Set(config.ENABLE_PACKAGE_SETUP_HOOK_KEY, previousSetupHook)
 	viper.Set(config.ENABLE_PACKAGE_SETUP_HOOK_KEY, true)
+
 	mf, err := pkg.InstallTo(target)
 	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), fmt.Sprintf("setup hook of package %s failed to execute", pkg.Name()))
 	assert.Nil(t, mf)
-	viper.Set(config.ENABLE_PACKAGE_SETUP_HOOK_KEY, previousValue)
 }
 
 func TestVerifyChecksum(t *testing.T) {

@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -53,10 +54,12 @@ func TestFolder_InstallToWithSetupError(t *testing.T) {
 	targetDir := t.TempDir()
 	assert.Nil(t, err)
 
-	var previousValue = viper.GetBool(config.ENABLE_PACKAGE_SETUP_HOOK_KEY)
+	var previousSetupHook = viper.GetBool(config.ENABLE_PACKAGE_SETUP_HOOK_KEY)
+	defer viper.Set(config.ENABLE_PACKAGE_SETUP_HOOK_KEY, previousSetupHook)
 	viper.Set(config.ENABLE_PACKAGE_SETUP_HOOK_KEY, true)
+
 	mf, err := p.InstallTo(targetDir)
 	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), fmt.Sprintf("setup hook of package %s failed to execute", p.Name()))
 	assert.Nil(t, mf)
-	viper.Set(config.ENABLE_PACKAGE_SETUP_HOOK_KEY, previousValue)
 }
