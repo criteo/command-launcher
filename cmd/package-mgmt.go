@@ -315,11 +315,13 @@ func installZipFile(fileUrl string) error {
 	}
 
 	mf, err := zipPkg.InstallTo(targetDir)
-	if err == nil {
-		console.Success("Package '%s' version %s installed in the dropin repository", mf.Name(), mf.Version())
+	if err != nil {
+		os.RemoveAll(targetDir)
+		return fmt.Errorf("failed to install zip package %s: %v", fileUrl, err)
 	}
 
-	return err
+	console.Success("Package '%s' version %s installed in the dropin repository", mf.Name(), mf.Version())
+	return nil
 }
 
 func findPackageFolder(pkgName string) (string, error) {

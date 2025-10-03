@@ -55,9 +55,12 @@ func (pkg *zipPackage) InstallTo(targetDir string) (command.PackageManifest, err
 		}
 	}
 
+	var err error
 	if viper.GetBool(config.ENABLE_PACKAGE_SETUP_HOOK_KEY) {
-		// for now ignore the setup error
-		pkg.RunSetup(targetDir)
+		err = pkg.RunSetup(targetDir)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return pkg.Manifest, nil

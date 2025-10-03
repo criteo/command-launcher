@@ -1,0 +1,11 @@
+{
+    "pkgName": "fake-wrong-setup",
+    "version": "1.0.0",
+    "cmds": [
+	    {
+            "name": "__setup__",
+            "type": "system",
+            "executable": "fake"
+        }
+    ]
+}
