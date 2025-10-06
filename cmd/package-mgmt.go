@@ -305,51 +305,13 @@ func installZipFile(fileUrl string) error {
 	}
 
 	targetDir := filepath.Join(viper.GetString(config.DROPIN_FOLDER_KEY), zipPkg.Name())
-	var backupDir string
-
-	// If target directory exists, move it to backup location
-	if _, err := os.Stat(targetDir); !os.IsNotExist(err) {
-		tmpDir, err := os.MkdirTemp("", "package-backup-*")
-		defer os.RemoveAll(tmpDir)
-		if err != nil {
-			return fmt.Errorf("cannot create temporary backup directory: %v", err)
-		}
-		backupDir = filepath.Join(tmpDir, zipPkg.Name())
-
-		if err := os.Rename(targetDir, backupDir); err != nil {
-			return fmt.Errorf("cannot backup existing package directory %s: %v", targetDir, err)
-		}
-	}
-
-	// Cleanup function to handle backup restoration and cleanup
-	var installSuccessful bool
-	defer removeBackupOnFailure(backupDir, targetDir, installSuccessful)
-
-	if err := os.MkdirAll(targetDir, os.ModePerm); err != nil {
-		return fmt.Errorf("cannot create target package directory %s: %v", targetDir, err)
-	}
-
 	mf, err := zipPkg.InstallTo(targetDir)
 	if err != nil {
-		os.RemoveAll(targetDir)
-		console.Error("Installation failed: %v", err)
 		return fmt.Errorf("failed to install zip package %s: %v", fileUrl, err)
 	}
 
-	// Mark installation as successful
-	installSuccessful = true
-
 	console.Success("Package '%s' version %s installed in the dropin repository", mf.Name(), mf.Version())
 	return nil
-}
-
-func removeBackupOnFailure(backupDir string, targetDir string, installSuccessful bool) {
-	if backupDir != "" && !installSuccessful {
-		// Restore backup if install failed
-		os.RemoveAll(targetDir)
-		os.Rename(backupDir, targetDir)
-		console.Warn("Restored the previous version of the package from backup")
-	}
 }
 
 func findPackageFolder(pkgName string) (string, error) {

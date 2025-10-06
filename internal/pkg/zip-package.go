@@ -10,6 +10,7 @@ import (
 
 	"github.com/criteo/command-launcher/internal/command"
 	"github.com/criteo/command-launcher/internal/config"
+	"github.com/criteo/command-launcher/internal/console"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -49,6 +50,30 @@ func CreateZipPackage(zipFilename string) (command.Package, error) {
 func (pkg *zipPackage) InstallTo(targetDir string) (command.PackageManifest, error) {
 	zipReader, _ := zip.OpenReader(pkg.ZipFile)
 	defer zipReader.Close()
+
+	var backupDir string
+	// If target directory exists, move it to backup location
+	if _, err := os.Stat(targetDir); !os.IsNotExist(err) {
+		tmpDir, err := os.MkdirTemp("", "package-backup-*")
+		defer os.RemoveAll(tmpDir)
+		if err != nil {
+			return nil, fmt.Errorf("cannot create temporary backup directory: %v", err)
+		}
+		backupDir = filepath.Join(tmpDir, pkg.Name())
+
+		if err := os.Rename(targetDir, backupDir); err != nil {
+			return nil, fmt.Errorf("cannot backup existing package directory %s: %v", targetDir, err)
+		}
+	}
+	// Create target directory
+	if err := os.MkdirAll(targetDir, os.ModePerm); err != nil {
+		return nil, fmt.Errorf("cannot create target package directory %s: %v", targetDir, err)
+	}
+
+	// Cleanup function to handle backup restoration and cleanup
+	var installSuccessful bool
+	defer RestoreBackupOnFailure(backupDir, targetDir, installSuccessful)
+
 	for _, file := range zipReader.Reader.File {
 		if err := extractZipEntry(targetDir, file); err != nil {
 			return nil, err
@@ -59,11 +84,24 @@ func (pkg *zipPackage) InstallTo(targetDir string) (command.PackageManifest, err
 	if viper.GetBool(config.ENABLE_PACKAGE_SETUP_HOOK_KEY) {
 		err = pkg.RunSetup(targetDir)
 		if err != nil {
+			os.RemoveAll(targetDir)
 			return nil, err
 		}
 	}
 
+	// Mark installation as successful
+	installSuccessful = true
+
 	return pkg.Manifest, nil
+}
+
+func RestoreBackupOnFailure(backupDir string, targetDir string, installSuccessful bool) {
+	if backupDir != "" && !installSuccessful {
+		// Restore backup if install failed
+		os.RemoveAll(targetDir)
+		os.Rename(backupDir, targetDir)
+		console.Warn("Restored the previous version of the package from backup")
+	}
 }
 
 func (pkg *zipPackage) VerifyChecksum(checksum string) (bool, error) {
