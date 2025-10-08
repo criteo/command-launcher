@@ -72,7 +72,7 @@ func (pkg *zipPackage) InstallTo(targetDir string) (command.PackageManifest, err
 
 	// Cleanup function to handle backup restoration and cleanup
 	var installSuccessful bool
-	defer RestoreBackupOnFailure(backupDir, targetDir, installSuccessful)
+	defer RestoreBackupOnFailure(backupDir, targetDir, &installSuccessful)
 
 	for _, file := range zipReader.Reader.File {
 		if err := extractZipEntry(targetDir, file); err != nil {
@@ -95,12 +95,12 @@ func (pkg *zipPackage) InstallTo(targetDir string) (command.PackageManifest, err
 	return pkg.Manifest, nil
 }
 
-func RestoreBackupOnFailure(backupDir string, targetDir string, installSuccessful bool) {
-	if backupDir != "" && !installSuccessful {
+func RestoreBackupOnFailure(backupDir string, targetDir string, installSuccessful *bool) {
+	if backupDir != "" && !*installSuccessful {
 		// Restore backup if install failed
 		os.RemoveAll(targetDir)
 		os.Rename(backupDir, targetDir)
-		console.Warn("Restored the previous version of the package from backup")
+		console.Warn("Restored the previous version of the package %s from backup", filepath.Base(backupDir))
 	}
 }
 

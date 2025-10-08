@@ -79,7 +79,7 @@ func ReadManifest(file fs.File) (command.PackageManifest, error) {
 }
 
 func (pkg *defaultPackage) RunSetup(pkgDir string) error {
-	return ExecSetupHookFromPackage(pkg, pkgDir)
+	return ExecSetupHookFromPackage(pkg, pkgDir, false)
 }
 
 func copyFolder(srcFolder string, dstFolder string) error {
@@ -140,7 +140,7 @@ func copyFile(src string, dst string) error {
 	return os.Chmod(dst, srcInfo.Mode())
 }
 
-func ExecSetupHookFromPackage(pkg command.PackageManifest, pkgDir string) error {
+func ExecSetupHookFromPackage(pkg command.PackageManifest, pkgDir string, force bool) error {
 	for _, c := range pkg.Commands() {
 		if c.Name() == "__setup__" && c.Type() == "system" {
 			if pkgDir != "" {
@@ -154,5 +154,8 @@ func ExecSetupHookFromPackage(pkg command.PackageManifest, pkgDir string) error 
 			return nil
 		}
 	}
-	return fmt.Errorf("no setup hook found in the package")
+	if force {
+		return fmt.Errorf("no setup hook found in the package")
+	}
+	return nil
 }

@@ -149,7 +149,7 @@ To enable the automatic setup during package installation, enable the configurat
 			for _, s := range rootCtxt.backend.AllPackageSources() {
 				for _, installedPkg := range s.Repo.InstalledPackages() {
 					if installedPkg.Name() == args[0] {
-						return pkg.ExecSetupHookFromPackage(installedPkg, "")
+						return pkg.ExecSetupHookFromPackage(installedPkg, "", true)
 					}
 				}
 			}
