@@ -9,5 +9,4 @@ cmds:
     executable: "{{.PackageDir}}/metrics.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}"
   - name: __setup__
     type: system
-    executable: bash
-    args: [ "{{.PackageDir}}/setup.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}" ]
+    executable: "{{.PackageDir}}/setup.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}"
