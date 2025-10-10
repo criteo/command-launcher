@@ -61,8 +61,13 @@ func (pkg *zipPackage) InstallTo(targetDir string) (command.PackageManifest, err
 		}
 		backupDir = filepath.Join(tmpDir, pkg.Name())
 
-		if err := os.Rename(targetDir, backupDir); err != nil {
+		// Create backup directory and copy existing target directory contents
+		// to avoid cross-filesystem rename issues during restoration
+		if err := os.CopyFS(backupDir, os.DirFS(targetDir)); err != nil {
 			return nil, fmt.Errorf("cannot backup existing package directory %s: %v", targetDir, err)
+		}
+		if err := os.RemoveAll(targetDir); err != nil {
+			return nil, fmt.Errorf("cannot remove existing package directory %s: %v", targetDir, err)
 		}
 	}
 	// Create target directory
@@ -98,8 +103,21 @@ func (pkg *zipPackage) InstallTo(targetDir string) (command.PackageManifest, err
 func RestoreBackupOnFailure(backupDir string, targetDir string, installSuccessful *bool) {
 	if backupDir != "" && !*installSuccessful {
 		// Restore backup if install failed
-		os.RemoveAll(targetDir)
-		os.Rename(backupDir, targetDir)
+		err := os.RemoveAll(targetDir)
+		if err != nil {
+			console.Error("Failed to remove target directory %s: %v", targetDir, err)
+			return
+		}
+		err = os.CopyFS(targetDir, os.DirFS(backupDir))
+		if err != nil {
+			console.Error("Failed to restore backup from %s to %s: %v", backupDir, targetDir, err)
+			return
+		}
+		err = os.RemoveAll(backupDir)
+		if err != nil {
+			console.Warn("Failed to remove backup directory %s: %v", backupDir, err)
+			return
+		}
 		console.Warn("Restored the previous version of the package %s from backup", filepath.Base(backupDir))
 	}
 }
