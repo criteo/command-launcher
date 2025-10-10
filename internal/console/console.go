@@ -97,6 +97,9 @@ func Reminder(format string, a ...interface{}) {
 // usually used as warning message
 func Warn(format string, a ...interface{}) {
 	if isAnsiSequenceSupported {
+		if !strings.HasSuffix(format, "\n") {
+			format += "\n"
+		}
 		colorWarn.Printf(format, a...)
 	} else {
 		fmt.Printf(format, a...)

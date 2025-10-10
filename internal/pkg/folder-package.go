@@ -41,12 +41,15 @@ func (pkg *folderPackage) InstallTo(targetDir string) (command.PackageManifest, 
 		return nil, err
 	}
 
+	var err error
 	if viper.GetBool(config.ENABLE_PACKAGE_SETUP_HOOK_KEY) {
-		// for now ignore the setup error
-		pkg.RunSetup(dstDir)
+		err = pkg.RunSetup(dstDir)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return pkg.Manifest, nil
+	return pkg.Manifest, err
 }
 
 func (pkg *folderPackage) VerifyChecksum(checksum string) (bool, error) {

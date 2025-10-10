@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/criteo/command-launcher/internal/command"
+	"github.com/criteo/command-launcher/internal/console"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -77,6 +78,7 @@ func (repo *defaultPackageRepository) Install(pkg command.Package) error {
 		return fmt.Errorf("cannot add the command package %s: %v", pkg.Name(), err)
 	}
 
+	console.Success("Package %s@%s installed successfully", pkg.Name(), pkg.Version())
 	return nil
 }
 

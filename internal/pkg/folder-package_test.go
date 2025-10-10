@@ -1,10 +1,13 @@
 package pkg
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/criteo/command-launcher/internal/config"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -41,4 +44,22 @@ func TestFolder_InstallTo(t *testing.T) {
 
 	_, err = os.Stat(filepath.Join(targetDir, "fake_test", "manifest.mf"))
 	assert.Nil(t, err)
+}
+
+func TestFolder_InstallToWithSetupError(t *testing.T) {
+	p, err := CreateFolderPackage("assets/fake-wrong-setup")
+	assert.NotNil(t, p)
+	assert.Nil(t, err)
+
+	targetDir := t.TempDir()
+	assert.Nil(t, err)
+
+	var previousSetupHook = viper.GetBool(config.ENABLE_PACKAGE_SETUP_HOOK_KEY)
+	defer viper.Set(config.ENABLE_PACKAGE_SETUP_HOOK_KEY, previousSetupHook)
+	viper.Set(config.ENABLE_PACKAGE_SETUP_HOOK_KEY, true)
+
+	mf, err := p.InstallTo(targetDir)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), fmt.Sprintf("setup hook of package %s failed to execute", p.Name()))
+	assert.Nil(t, mf)
 }
