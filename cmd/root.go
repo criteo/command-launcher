@@ -8,6 +8,7 @@ import (
 	"github.com/criteo/command-launcher/cmd/metrics"
 	"github.com/criteo/command-launcher/internal/backend"
 	"github.com/criteo/command-launcher/internal/config"
+	"github.com/criteo/command-launcher/internal/console"
 	ctx "github.com/criteo/command-launcher/internal/context"
 	"github.com/criteo/command-launcher/internal/frontend"
 	"github.com/criteo/command-launcher/internal/repository"
@@ -237,12 +238,20 @@ func initBackend() {
 	if len(toBeInitiated) > 0 {
 		log.Info("Initialization...")
 		for _, s := range toBeInitiated {
-			s.InitialInstallCommands(&rootCtxt.user,
-				viper.GetBool(config.CI_ENABLED_KEY),
-				viper.GetString(config.PACKAGE_LOCK_FILE_KEY),
-				viper.GetBool(config.VERIFY_PACKAGE_CHECKSUM_KEY),
-				viper.GetBool(config.VERIFY_PACKAGE_SIGNATURE_KEY),
-			)
+			if s.RemoteBaseURL != "" {
+				err := s.InitialInstallCommands(&rootCtxt.user,
+					viper.GetBool(config.CI_ENABLED_KEY),
+					viper.GetString(config.PACKAGE_LOCK_FILE_KEY),
+					viper.GetBool(config.VERIFY_PACKAGE_CHECKSUM_KEY),
+					viper.GetBool(config.VERIFY_PACKAGE_SIGNATURE_KEY),
+				)
+				if err != nil {
+					log.Errorf("Failed to initialize package source %s: %v", s.Name, err)
+					console.Error(fmt.Sprintf("Failed to initialize package source %s: %v", s.Name, err))
+				}
+			} else {
+				log.Warnf("Package source %s has no remote URL, skipping initial installation", s.Name)
+			}
 		}
 		rootCtxt.backend.Reload()
 	}
