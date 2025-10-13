@@ -48,77 +48,108 @@ func CreateZipPackage(zipFilename string) (command.Package, error) {
 }
 
 func (pkg *zipPackage) InstallTo(targetDir string) (command.PackageManifest, error) {
-	zipReader, _ := zip.OpenReader(pkg.ZipFile)
-	defer zipReader.Close()
-
-	var backupDir string
-	// If target directory exists, move it to backup location
-	if _, err := os.Stat(targetDir); !os.IsNotExist(err) {
-		tmpDir, err := os.MkdirTemp("", "package-backup-*")
-		defer os.RemoveAll(tmpDir)
-		if err != nil {
-			return nil, fmt.Errorf("cannot create temporary backup directory: %v", err)
-		}
-		backupDir = filepath.Join(tmpDir, pkg.Name())
-
-		// Create backup directory and copy existing target directory contents
-		// to avoid cross-filesystem rename issues during restoration
-		if err := os.CopyFS(backupDir, os.DirFS(targetDir)); err != nil {
-			return nil, fmt.Errorf("cannot backup existing package directory %s: %v", targetDir, err)
-		}
-		if err := os.RemoveAll(targetDir); err != nil {
-			return nil, fmt.Errorf("cannot remove existing package directory %s: %v", targetDir, err)
-		}
-	}
-	// Create target directory
-	if err := os.MkdirAll(targetDir, os.ModePerm); err != nil {
-		return nil, fmt.Errorf("cannot create target package directory %s: %v", targetDir, err)
+	// Backup existing directory if it exists
+	backupDir, err := pkg.createBackup(targetDir)
+	if err != nil {
+		return nil, err
 	}
 
-	// Cleanup function to handle backup restoration and cleanup
-	var installSuccessful bool
-	defer RestoreBackupOnFailure(backupDir, targetDir, &installSuccessful)
-
-	for _, file := range zipReader.Reader.File {
-		if err := extractZipEntry(targetDir, file); err != nil {
-			return nil, err
-		}
+	// Install the package
+	err = pkg.installFromZip(targetDir)
+	if err != nil {
+		// Restore backup on failure
+		pkg.restoreBackup(backupDir, targetDir)
+		return nil, err
 	}
 
-	var err error
-	if viper.GetBool(config.ENABLE_PACKAGE_SETUP_HOOK_KEY) {
-		err = pkg.RunSetup(targetDir)
-		if err != nil {
-			os.RemoveAll(targetDir)
-			return nil, err
-		}
+	// Clean up backup on success
+	if backupDir != "" {
+		os.RemoveAll(backupDir)
 	}
-
-	// Mark installation as successful
-	installSuccessful = true
 
 	return pkg.Manifest, nil
 }
 
-func RestoreBackupOnFailure(backupDir string, targetDir string, installSuccessful *bool) {
-	if backupDir != "" && !*installSuccessful {
-		// Restore backup if install failed
-		err := os.RemoveAll(targetDir)
-		if err != nil {
-			console.Error("Failed to remove target directory %s: %v", targetDir, err)
-			return
+func (pkg *zipPackage) createBackup(targetDir string) (string, error) {
+	// If target directory doesn't exist, no backup needed
+	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
+		return "", nil
+	}
+
+	tmpDir, err := os.MkdirTemp("", "package-backup-*")
+	if err != nil {
+		return "", fmt.Errorf("cannot create temporary backup directory: %v", err)
+	}
+
+	backupDir := filepath.Join(tmpDir, pkg.Name())
+
+	// Create backup directory and copy existing target directory contents
+	// to avoid cross-filesystem rename issues during restoration
+	if err := os.CopyFS(backupDir, os.DirFS(targetDir)); err != nil {
+		os.RemoveAll(tmpDir)
+		return "", fmt.Errorf("cannot backup existing package directory %s: %v", targetDir, err)
+	}
+
+	if err := os.RemoveAll(targetDir); err != nil {
+		os.RemoveAll(tmpDir)
+		return "", fmt.Errorf("cannot remove existing package directory %s: %v", targetDir, err)
+	}
+
+	return tmpDir, nil
+}
+
+func (pkg *zipPackage) installFromZip(targetDir string) error {
+	zipReader, err := zip.OpenReader(pkg.ZipFile)
+	if err != nil {
+		return fmt.Errorf("failed to open zip file: %v", err)
+	}
+	defer zipReader.Close()
+
+	// Create target directory
+	if err := os.MkdirAll(targetDir, os.ModePerm); err != nil {
+		return fmt.Errorf("cannot create target package directory %s: %v", targetDir, err)
+	}
+
+	// Extract files
+	for _, file := range zipReader.Reader.File {
+		if err := extractZipEntry(targetDir, file); err != nil {
+			return err
 		}
-		err = os.CopyFS(targetDir, os.DirFS(backupDir))
-		if err != nil {
-			console.Error("Failed to restore backup from %s to %s: %v", backupDir, targetDir, err)
-			return
+	}
+
+	// Run setup hook if enabled
+	if viper.GetBool(config.ENABLE_PACKAGE_SETUP_HOOK_KEY) {
+		if err := pkg.RunSetup(targetDir); err != nil {
+			return err
 		}
-		err = os.RemoveAll(backupDir)
-		if err != nil {
-			console.Warn("Failed to remove backup directory %s: %v", backupDir, err)
-			return
-		}
-		console.Warn("Restored the previous version of the package %s from backup", filepath.Base(backupDir))
+	}
+
+	return nil
+}
+
+func (pkg *zipPackage) restoreBackup(backupDir, targetDir string) {
+	if backupDir == "" {
+		return
+	}
+
+	// Remove failed installation
+	if err := os.RemoveAll(targetDir); err != nil {
+		console.Error("Failed to remove target directory %s: %v", targetDir, err)
+		return
+	}
+
+	// Restore from backup
+	packageBackupDir := filepath.Join(backupDir, pkg.Name())
+	if err := os.CopyFS(targetDir, os.DirFS(packageBackupDir)); err != nil {
+		console.Error("Failed to restore backup from %s to %s: %v", packageBackupDir, targetDir, err)
+		return
+	}
+
+	// Clean up backup directory
+	if err := os.RemoveAll(backupDir); err != nil {
+		console.Warn("Failed to remove backup directory %s: %v", backupDir, err)
+	} else {
+		console.Warn("Restored the previous version of the package %s from backup", pkg.Name())
 	}
 }
 
