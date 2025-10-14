@@ -1,9 +1,12 @@
 package pkg
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
+	"github.com/criteo/command-launcher/internal/config"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,6 +32,23 @@ func TestInstallPackage(t *testing.T) {
 	assert.Equal(t, "fake", mf.Name())
 	assert.Equal(t, "1.0.0", mf.Version())
 	assert.Equal(t, 2, len(mf.Commands()))
+}
+
+func TestInstallPackageWithSetupError(t *testing.T) {
+	pkg, err := CreateZipPackage("assets/fake-wrong-setup-1.0.0.pkg")
+	assert.Nil(t, err)
+
+	target, err := os.MkdirTemp("", "cdt-package-test-*")
+	assert.Nil(t, err)
+
+	var previousSetupHook = viper.GetBool(config.ENABLE_PACKAGE_SETUP_HOOK_KEY)
+	defer viper.Set(config.ENABLE_PACKAGE_SETUP_HOOK_KEY, previousSetupHook)
+	viper.Set(config.ENABLE_PACKAGE_SETUP_HOOK_KEY, true)
+
+	mf, err := pkg.InstallTo(target)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), fmt.Sprintf("setup hook of package %s failed to execute", pkg.Name()))
+	assert.Nil(t, mf)
 }
 
 func TestVerifyChecksum(t *testing.T) {
