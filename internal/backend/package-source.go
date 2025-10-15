@@ -86,6 +86,10 @@ func (src PackageSource) IsInstalled() bool {
 
 func (src *PackageSource) InitialInstallCommands(user *user.User, enableCI bool, lockFilePath string, verifyChecksum bool, verifySignature bool) error {
 	remote := remote.CreateRemoteRepository(src.RemoteBaseURL)
+	if !remote.IsRemoteURLValid() {
+		log.Warn("remote URL is empty")
+		return nil
+	}
 	errors := make([]string, 0)
 
 	// check locked packages if ci is enabled

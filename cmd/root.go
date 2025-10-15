@@ -8,6 +8,7 @@ import (
 	"github.com/criteo/command-launcher/cmd/metrics"
 	"github.com/criteo/command-launcher/internal/backend"
 	"github.com/criteo/command-launcher/internal/config"
+	"github.com/criteo/command-launcher/internal/console"
 	ctx "github.com/criteo/command-launcher/internal/context"
 	"github.com/criteo/command-launcher/internal/frontend"
 	"github.com/criteo/command-launcher/internal/repository"
@@ -236,13 +237,20 @@ func initBackend() {
 	}
 	if len(toBeInitiated) > 0 {
 		log.Info("Initialization...")
+		errPool := []error{}
 		for _, s := range toBeInitiated {
-			s.InitialInstallCommands(&rootCtxt.user,
+			err = s.InitialInstallCommands(&rootCtxt.user,
 				viper.GetBool(config.CI_ENABLED_KEY),
 				viper.GetString(config.PACKAGE_LOCK_FILE_KEY),
 				viper.GetBool(config.VERIFY_PACKAGE_CHECKSUM_KEY),
 				viper.GetBool(config.VERIFY_PACKAGE_SIGNATURE_KEY),
 			)
+			if err != nil {
+				errPool = append(errPool, fmt.Errorf("source %s: %s", s.Name, err.Error()))
+			}
+		}
+		for _, e := range errPool {
+			console.Error(e.Error())
 		}
 		rootCtxt.backend.Reload()
 	}
