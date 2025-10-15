@@ -19,6 +19,24 @@ func TestCreatePackage(t *testing.T) {
 	assert.Equal(t, 2, len(pkg.Commands()))
 }
 
+func TestBackupRestore(t *testing.T) {
+	pkg, err := CreateZipPackage("assets/fake-1.0.0.pkg")
+	assert.Nil(t, err)
+
+	target, err := os.MkdirTemp("", "cdt-package-test-*")
+	assert.Nil(t, err)
+	defer os.RemoveAll(target)
+
+	zipPkg, ok := pkg.(*zipPackage)
+	assert.True(t, ok, "pkg is not a *ZipPackage")
+	backupDir, err := zipPkg.createBackup(target)
+	assert.Nil(t, err)
+	assert.DirExists(t, backupDir)
+	zipPkg.restoreBackup(backupDir, target)
+	assert.DirExists(t, target)
+	assert.NoDirExists(t, backupDir)
+}
+
 func TestInstallPackage(t *testing.T) {
 	pkg, err := CreateZipPackage("assets/fake-1.0.0.pkg")
 	assert.Nil(t, err)

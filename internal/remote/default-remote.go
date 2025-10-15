@@ -38,6 +38,10 @@ func (remote *defaultRemoteRepository) Fetch() error {
 	return remote.load()
 }
 
+func (remote *defaultRemoteRepository) IsRemoteURLValid() bool {
+	return remote.repoBaseUrl != ""
+}
+
 func (remote *defaultRemoteRepository) All() ([]PackageInfo, error) {
 	packages := make([]PackageInfo, 0)
 	if err := remote.load(); err != nil {
