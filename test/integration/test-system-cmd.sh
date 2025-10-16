@@ -70,6 +70,60 @@ else
   exit 1
 fi
 
+# enable experimental command to test broken package setup hook
+echo "> test enable experimental command to test broken package setup"
+$CL_PATH config experimental_command_enabled true
+echo "* should always return OK"
+RESULT=$($CL_PATH update --package 2>&1)
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should always return OK"
+  exit 1
+fi
+echo "* should print update paused"
+echo "$RESULT" | grep -q "Package fake-wrong-setup update has been paused due to installation failure"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should print update paused"
+  exit 1
+fi
+echo "* should print error message"
+echo "$RESULT" | grep -q "Cannot install the package fake-wrong-setup"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should print error message"
+  exit 1
+fi
+
+echo "> list packages to verify broken package is not installed"
+echo "* should list packages without errors"
+RESULT=$($CL_PATH package list 2>&1)
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should list packages"
+  exit 1
+fi
+echo "* should not list broken package"
+echo "$RESULT" | grep -q "fake-wrong-setup"
+if [ $? -ne 0 ]; then
+  echo "OK"
+else
+  echo "KO - should not list broken package"
+  exit 1
+fi
+echo "* should not reinstall broken package"
+echo "$RESULT" | grep -q "Cannot install the package fake-wrong-setup"
+if [ $? -ne 0 ]; then
+  echo "OK"
+else
+  echo "KO - should not reinstall broken package"
+  exit 1
+fi
+
 echo "> test login extension without setup system package"
 echo "* should NOT use username returned from extension"
 RESULT=$($CL_PATH login -u test-user -p test-password)
