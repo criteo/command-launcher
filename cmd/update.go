@@ -39,8 +39,10 @@ Check the update of %s and its commands.
   %s update --self
 `, appName, appName),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			errPool := []error{}
 			u, err := user.GetUser()
 			if err != nil {
+				errPool = append(errPool, err)
 				log.Errorln(err)
 			}
 
@@ -57,6 +59,7 @@ Check the update of %s and its commands.
 				selfUpdater.CheckUpdateAsync()
 				err := selfUpdater.Update()
 				if err != nil {
+					errPool = append(errPool, err)
 					console.Error(err.Error())
 				} else {
 					console.Success("%s is up-to-date", appCtx.AppName())
@@ -82,6 +85,7 @@ Check the update of %s and its commands.
 				cmdUpdater.CheckUpdateAsync()
 				err := cmdUpdater.Update()
 				if err != nil {
+					errPool = append(errPool, err)
 					console.Error(err.Error())
 				} else {
 					console.Success("packages in 'default' repository are up-to-date")
@@ -95,6 +99,7 @@ Check the update of %s and its commands.
 					updater.CheckUpdateAsync()
 					err := updater.Update()
 					if err != nil {
+						errPool = append(errPool, err)
 						console.Error(err.Error())
 					} else {
 						console.Success("packages in '%s' repository are up-to-date", source.Name)
@@ -105,7 +110,9 @@ Check the update of %s and its commands.
 			if !updateFlags.Package && !updateFlags.Self {
 				cmd.Help()
 			}
-
+			if len(errPool) > 0 {
+				return fmt.Errorf("some errors occurred during the update")
+			}
 			return nil
 		},
 	}

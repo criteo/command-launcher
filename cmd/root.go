@@ -249,8 +249,11 @@ func initBackend() {
 				errPool = append(errPool, fmt.Errorf("source %s: %s", s.Name, err.Error()))
 			}
 		}
-		for _, e := range errPool {
-			console.Error(e.Error())
+		if len(errPool) > 0 {
+			for _, e := range errPool {
+				console.Error(e.Error())
+			}
+			log.Fatal("Initialization failed")
 		}
 		rootCtxt.backend.Reload()
 	}

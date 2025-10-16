@@ -87,7 +87,7 @@ func (src PackageSource) IsInstalled() bool {
 func (src *PackageSource) InitialInstallCommands(user *user.User, enableCI bool, lockFilePath string, verifyChecksum bool, verifySignature bool) error {
 	remote := remote.CreateRemoteRepository(src.RemoteBaseURL)
 	if !remote.IsRemoteURLValid() {
-		log.Warn("remote URL is empty")
+		log.Warnf("remote URL \"%s\" is not valid, skip initial installation", src.RemoteBaseURL)
 		return nil
 	}
 	errors := make([]string, 0)
