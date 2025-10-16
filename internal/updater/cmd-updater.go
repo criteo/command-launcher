@@ -88,7 +88,6 @@ func (u *CmdUpdater) Update() error {
 			console.Highlight("- remove deprecated package '%s', it will not be available from now on\n", pkg)
 			if err = repo.Uninstall(pkg); err != nil {
 				errPool = append(errPool, err)
-				fmt.Printf("Cannot uninstall the package %s: %v\n", pkg, err)
 			}
 		}
 	}
