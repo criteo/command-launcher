@@ -272,6 +272,36 @@ else
 fi
 
 ###############
+# work around to make sure the native path on windows
+NATIVE_SCRIPT_DIR=${SCRIPT_DIR/\/c\//C:/}
+NATIVE_SCRIPT_DIR=${NATIVE_SCRIPT_DIR/\/d\//D:/}
+NATIVE_SCRIPT_DIR=${NATIVE_SCRIPT_DIR/\/e\//E:/}
+NATIVE_SCRIPT_DIR=${NATIVE_SCRIPT_DIR/\/f\//F:/}
+echo $NATIVE_SCRIPT_DIR
+
+# setup remote package using local file
+echo "> test install package with invalid manifest"
+$CL_PATH config enable_package_setup_hook true
+RESULT=$($CL_PATH package install --file ${NATIVE_SCRIPT_DIR}/../remote-repo/fake-wrong-setup-1.0.0.pkg 2>&1)
+ERROR_CODE=$?
+
+echo "* should exit with error"
+if [ $ERROR_CODE -ne 0 ]; then
+  echo "OK"
+else
+  echo "KO - should exit with error"
+  exit 1
+fi
+echo "* should prompt setup hook of package fake-wrong-setup failed to execute"
+echo "$RESULT" | grep -q "setup hook of package fake-wrong-setup failed to execute"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should prompt setup hook of package fake-wrong-setup failed to execute"
+  exit 1
+fi
+
+###############
 echo "> test setup package"
 RESULT=$($CL_PATH package setup command-launcher-example-package)
 echo "$RESULT" | grep -q "no setup hook found"
