@@ -23,6 +23,8 @@ func TestLoadIndex(t *testing.T) {
 	assert.Nil(t, err)
 
 	remoteRepo := CreateRemoteRepository(fmt.Sprintf("file://%s", basePath))
+	valid := remoteRepo.IsRemoteURLValid()
+	assert.True(t, valid)
 
 	err = remoteRepo.Fetch()
 	assert.Nil(t, err)
@@ -103,4 +105,23 @@ func TestLoadIndex(t *testing.T) {
 	assert.Equal(t, "ls", pkg.Name())
 	assert.Equal(t, "0.0.2", pkg.Version())
 	assert.Equal(t, 1, len(pkg.Commands()))
+}
+
+func TestInvalidRemoteURL(t *testing.T) {
+	remoteRepoNoValue := CreateRemoteRepository("")
+	valid := remoteRepoNoValue.IsRemoteURLValid()
+	assert.False(t, valid)
+
+	remoteRepo := CreateRemoteRepository("ftp://invalid-url")
+	valid = remoteRepo.IsRemoteURLValid()
+	assert.False(t, valid)
+
+	err := remoteRepo.Fetch()
+	assert.NotNil(t, err)
+	assert.Equal(t, "remote URL is not valid", err.Error())
+
+	pkgs, err := remoteRepo.PackageNames()
+	assert.NotNil(t, err)
+	assert.Equal(t, "remote URL is not valid", err.Error())
+	assert.Empty(t, pkgs)
 }

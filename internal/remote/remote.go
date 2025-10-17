@@ -92,6 +92,9 @@ type RemoteRepository interface {
 
 	// Verify package: support two verifications: checksum and signature
 	Verify(pkg command.Package, verifyChecksum, verifySignature bool) (bool, error)
+
+	// Check if the remote URL is valid
+	IsRemoteURLValid() bool
 }
 
 type PackageInfoFilterFunc func(pkgInfo *PackageInfo) bool

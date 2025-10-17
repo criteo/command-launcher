@@ -38,6 +38,13 @@ func (remote *defaultRemoteRepository) Fetch() error {
 	return remote.load()
 }
 
+func (remote *defaultRemoteRepository) IsRemoteURLValid() bool {
+	return remote.repoBaseUrl != "" &&
+		(strings.HasPrefix(remote.repoBaseUrl, "http://") ||
+			strings.HasPrefix(remote.repoBaseUrl, "https://") ||
+			strings.HasPrefix(remote.repoBaseUrl, "file://"))
+}
+
 func (remote *defaultRemoteRepository) All() ([]PackageInfo, error) {
 	packages := make([]PackageInfo, 0)
 	if err := remote.load(); err != nil {
@@ -215,6 +222,9 @@ func (remote *defaultRemoteRepository) pkgFilename(name string, version string) 
 }
 
 func (remote *defaultRemoteRepository) load() error {
+	if !remote.IsRemoteURLValid() {
+		return fmt.Errorf("remote URL is not valid")
+	}
 	if !remote.isLoaded() {
 		body, err := helper.LoadFile(fmt.Sprintf("%s/index.json", remote.repoBaseUrl))
 		if err != nil {
