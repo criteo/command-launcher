@@ -25,6 +25,10 @@ in one level subfolders
 Further improvements could store commands as indexes, and laze load
 further information when necessary to reduce the startup time
 */
+const (
+	PACKAGE_UPDATE_LOCK_FILE = ".update-lock"
+)
+
 type defaultRepoIndex struct {
 	id             string
 	packages       map[string]command.PackageManifest
@@ -136,6 +140,33 @@ func (repoIndex *defaultRepoIndex) Package(name string) (command.PackageManifest
 		return pkg, nil
 	}
 	return nil, fmt.Errorf("cannot find the package '%s'", name)
+}
+
+func (repoIndex *defaultRepoIndex) IsPackageLocked(name string) (bool, error) {
+	if _, exists := repoIndex.packageDirs[name]; !exists {
+		return false, fmt.Errorf("cannot find the package '%s'", name)
+	} else {
+		pkgDir := repoIndex.packageDirs[name]
+		lockFile := filepath.Join(pkgDir, PACKAGE_UPDATE_LOCK_FILE)
+		if _, err := os.Stat(lockFile); err == nil {
+			return true, nil
+		} else if os.IsNotExist(err) {
+			return false, nil
+		} else {
+			return false, err
+		}
+	}
+}
+
+func (repoIndex *defaultRepoIndex) SetPackageLock(name string) error {
+	if _, exists := repoIndex.packageDirs[name]; !exists {
+		return fmt.Errorf("cannot find the package '%s'", name)
+	} else {
+		pkgDir := repoIndex.packageDirs[name]
+		lockFile := filepath.Join(pkgDir, PACKAGE_UPDATE_LOCK_FILE)
+		_, err := os.Create(lockFile)
+		return err
+	}
 }
 
 func (repoIndex *defaultRepoIndex) Command(pkg string, group string, name string) (command.Command, error) {

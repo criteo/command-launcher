@@ -78,6 +78,7 @@ Check the update of %s and its commands.
 					EnableCI:             enableCI,
 					PackageLockFile:      packageLockFile,
 					SyncPolicy:           "always", // TODO: use constant instead of string
+					ForceUpdateLock:      true,
 				}
 				cmdUpdater.CheckUpdateAsync()
 				err := cmdUpdater.Update()
