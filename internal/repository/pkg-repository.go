@@ -32,6 +32,8 @@ type PackageRepository interface {
 
 	IsPackageLocked(name string) (bool, error)
 
+	SetPackageLock(name string) error
+
 	// package repository doesn't resolve the the conflicts, to identify a command, we have to
 	// provide the full path of the command: repo > pkg > group > name
 	// Since we already know the repo, this Command function will take 3 parameters:

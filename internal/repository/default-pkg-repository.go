@@ -148,6 +148,10 @@ func (repo *defaultPackageRepository) IsPackageLocked(name string) (bool, error)
 	return repo.repoIndex.IsPackageLocked(name)
 }
 
+func (repo *defaultPackageRepository) SetPackageLock(name string) error {
+	return repo.repoIndex.SetPackageLock(name)
+}
+
 func (repo *defaultPackageRepository) Command(pkg string, group string, name string) (command.Command, error) {
 	cmd, err := repo.repoIndex.Command(pkg, group, name)
 	if err != nil {

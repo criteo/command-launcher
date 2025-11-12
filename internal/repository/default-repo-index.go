@@ -11,6 +11,7 @@ import (
 	"github.com/criteo/command-launcher/internal/command"
 	"github.com/criteo/command-launcher/internal/config"
 	"github.com/criteo/command-launcher/internal/pkg"
+	"github.com/criteo/command-launcher/internal/updateConfig"
 	"github.com/spf13/viper"
 )
 
@@ -26,7 +27,7 @@ Further improvements could store commands as indexes, and laze load
 further information when necessary to reduce the startup time
 */
 const (
-	PACKAGE_UPDATE_LOCK_FILE = ".update-lock"
+	PACKAGE_UPDATE_LOCK_FILE = ".update"
 )
 
 type defaultRepoIndex struct {
@@ -147,14 +148,18 @@ func (repoIndex *defaultRepoIndex) IsPackageLocked(name string) (bool, error) {
 		return false, fmt.Errorf("cannot find the package '%s'", name)
 	} else {
 		pkgDir := repoIndex.packageDirs[name]
-		lockFile := filepath.Join(pkgDir, PACKAGE_UPDATE_LOCK_FILE)
-		if _, err := os.Stat(lockFile); err == nil {
-			return true, nil
-		} else if os.IsNotExist(err) {
-			return false, nil
-		} else {
+		exists, err := updateConfig.IsUpdateConfigExists(pkgDir)
+		if err != nil {
 			return false, err
 		}
+		if !exists {
+			return false, nil
+		}
+		uConfig, err := updateConfig.ReadFromDir(pkgDir)
+		if err != nil {
+			return false, err
+		}
+		return uConfig.IsExpired(), nil
 	}
 }
 
@@ -163,9 +168,17 @@ func (repoIndex *defaultRepoIndex) SetPackageLock(name string) error {
 		return fmt.Errorf("cannot find the package '%s'", name)
 	} else {
 		pkgDir := repoIndex.packageDirs[name]
-		lockFile := filepath.Join(pkgDir, PACKAGE_UPDATE_LOCK_FILE)
-		_, err := os.Create(lockFile)
-		return err
+		uConfig := &updateConfig.UpdateConfig{}
+		if exists, err := updateConfig.IsUpdateConfigExists(pkgDir); err != nil {
+			return err
+		} else if exists {
+			uConfig, err = updateConfig.ReadFromDir(pkgDir)
+			if err != nil {
+				return err
+			}
+		}
+		uConfig.UpdateAfterDate(updateConfig.DEFAULT_UPDATE_LOCK_DURATION)
+		return uConfig.WriteToDir(pkgDir)
 	}
 }
 
