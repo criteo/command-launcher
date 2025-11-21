@@ -23,8 +23,10 @@ type CommandLineArgs struct {
 }
 
 func setupCommandLineArgs() (*CommandLineArgs, error) {
+	// Define CLI flags
 	pflag.String("store", "memory", "Type of store to use: 'memory' or 'filesystem'")
 	pflag.String("store-path", "", "Path for file store (required when using filesystem store)")
+	pflag.String("config", "", "Path to configuration file")
 	pflag.Bool("help", false, "Display this message")
 	pflag.Parse()
 
@@ -32,16 +34,56 @@ func setupCommandLineArgs() (*CommandLineArgs, error) {
 		return nil, fmt.Errorf("failed to bind flags: %w", err)
 	}
 
+	// Set defaults
 	viper.SetDefault("store", "memory")
 
+	// Support environment variables
 	viper.SetEnvPrefix("REGISTRY")
 	viper.AutomaticEnv()
+
+	// Config file support
+	configureConfigFile()
 
 	return &CommandLineArgs{
 		StoreType: viper.GetString("store"),
 		StorePath: viper.GetString("store-path"),
 		ShowHelp:  viper.GetBool("help"),
 	}, nil
+}
+
+// configureConfigFile sets up and loads the config file
+func configureConfigFile() {
+	// 1. Check if explicit config path is specified via flag or env var
+	if configPath := viper.GetString("config"); configPath != "" {
+		viper.SetConfigFile(configPath)
+	} else {
+		// 2. Set config name and type for default search
+		viper.SetConfigName("registry-config")
+		viper.SetConfigType("yaml")
+
+		// 3. Look for config file in these paths (in order)
+		// Current directory
+		viper.AddConfigPath(".")
+		// User's home directory
+		if homeDir, err := os.UserHomeDir(); err == nil {
+			viper.AddConfigPath(filepath.Join(homeDir, ".command-launcher"))
+		}
+		// System-wide config
+		viper.AddConfigPath("/etc/command-launcher")
+	}
+
+	// 4. Read the config file
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			// Config file was found but another error occurred
+			log.Printf("Error reading config file: %v", err)
+		} else {
+			// No config file found, using only flags and environment variables
+			log.Printf("No config file found, using only flags and environment variables")
+		}
+	} else {
+		log.Printf("Using config file: %s", viper.ConfigFileUsed())
+	}
 }
 
 func createStore(config *CommandLineArgs) (Store, error) {
@@ -145,16 +187,14 @@ func initStore(store Store) {
 	store.NewPackageVersion("test-registry", "test-package", "1.0.0", remote.PackageInfo{
 		Name:           "test-package",
 		Version:        "1.0.0",
-		Url:            "http://example.com/test-package-1.0.0.tar.gz",
-		Checksum:       "abc123",
+		Url:            "file:///tmp/test-package-1.0.0.pkg",
 		StartPartition: 0,
 		EndPartition:   9,
 	})
 	store.NewPackageVersion("test-registry", "test-package", "1.1.0", remote.PackageInfo{
 		Name:           "test-package",
 		Version:        "1.1.0",
-		Url:            "http://example.com/test-package-1.1.0.tar.gz",
-		Checksum:       "abc456",
+		Url:            "file:///tmp/test-package-1.1.0.pkg",
 		StartPartition: 0,
 		EndPartition:   9,
 	})
@@ -175,8 +215,7 @@ func initStore(store Store) {
 	store.NewPackageVersion("test-registry-2", "test-package-2", "1.0.0", remote.PackageInfo{
 		Name:           "test-package-2",
 		Version:        "1.0.0",
-		Url:            "http://example.com/test-package-2-1.0.0.tar.gz",
-		Checksum:       "abc123",
+		Url:            "file:///tmp/test-package-2-1.0.0.pkg",
 		StartPartition: 0,
 		EndPartition:   9,
 	})
