@@ -17,15 +17,27 @@ import (
 )
 
 type CommandLineArgs struct {
-	StoreType string
-	StorePath string
-	ShowHelp  bool
+	StoreType       string
+	StorePath       string
+	S3Bucket        string
+	S3Region        string
+	S3Endpoint      string
+	S3AccessKey     string
+	S3SecretKey     string
+	S3UsePathStyle  bool
+	ShowHelp        bool
 }
 
 func setupCommandLineArgs() (*CommandLineArgs, error) {
 	// Define CLI flags
-	pflag.String("store", "memory", "Type of store to use: 'memory' or 'filesystem'")
+	pflag.String("store", "memory", "Type of store to use: 'memory', 'filesystem', or 's3'")
 	pflag.String("store-path", "", "Path for file store (required when using filesystem store)")
+	pflag.String("s3-bucket", "", "S3 bucket name (required when using s3 store)")
+	pflag.String("s3-region", "us-east-1", "S3 region")
+	pflag.String("s3-endpoint", "", "S3 endpoint URL (for S3-compatible services like MinIO)")
+	pflag.String("s3-access-key", "", "S3 access key ID (optional, uses IAM role if not set)")
+	pflag.String("s3-secret-key", "", "S3 secret access key (optional, uses IAM role if not set)")
+	pflag.Bool("s3-use-path-style", false, "Use path-style S3 URLs (required for MinIO)")
 	pflag.String("config", "", "Path to configuration file")
 	pflag.Bool("help", false, "Display this message")
 	pflag.Parse()
@@ -45,9 +57,15 @@ func setupCommandLineArgs() (*CommandLineArgs, error) {
 	configureConfigFile()
 
 	return &CommandLineArgs{
-		StoreType: viper.GetString("store"),
-		StorePath: viper.GetString("store-path"),
-		ShowHelp:  viper.GetBool("help"),
+		StoreType:      viper.GetString("store"),
+		StorePath:      viper.GetString("store-path"),
+		S3Bucket:       viper.GetString("s3-bucket"),
+		S3Region:       viper.GetString("s3-region"),
+		S3Endpoint:     viper.GetString("s3-endpoint"),
+		S3AccessKey:    viper.GetString("s3-access-key"),
+		S3SecretKey:    viper.GetString("s3-secret-key"),
+		S3UsePathStyle: viper.GetBool("s3-use-path-style"),
+		ShowHelp:       viper.GetBool("help"),
 	}, nil
 }
 
@@ -113,6 +131,30 @@ func createStore(config *CommandLineArgs) (Store, error) {
 			return nil, fmt.Errorf("failed to create filesystem store: %w", err)
 		}
 		log.Printf("Filesystem store created at %s", storePath)
+	case "s3":
+		if config.S3Bucket == "" {
+			return nil, fmt.Errorf("s3-bucket is required when using s3 store")
+		}
+
+		log.Printf("Using S3 store with bucket: %s, region: %s", config.S3Bucket, config.S3Region)
+		if config.S3Endpoint != "" {
+			log.Printf("Using custom S3 endpoint: %s", config.S3Endpoint)
+		}
+
+		s3Config := S3StoreConfig{
+			Bucket:          config.S3Bucket,
+			Region:          config.S3Region,
+			Endpoint:        config.S3Endpoint,
+			AccessKeyID:     config.S3AccessKey,
+			SecretAccessKey: config.S3SecretKey,
+			UsePathStyle:    config.S3UsePathStyle,
+		}
+
+		store, err = NewS3Store(s3Config)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create S3 store: %w", err)
+		}
+		log.Printf("S3 store created successfully")
 	default:
 		return nil, fmt.Errorf("unknown store type: %s", config.StoreType)
 	}
