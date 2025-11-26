@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/spf13/pflag"
+	 "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	remote "github.com/criteo/command-launcher/internal/remote"
