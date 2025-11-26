@@ -1,8 +1,6 @@
 module github.com/criteo/command-launcher
 
-go 1.23.0
-
-toolchain go1.24.7
+go 1.23.9
 
 require (
 	github.com/cavaliergopher/grab/v3 v3.0.1

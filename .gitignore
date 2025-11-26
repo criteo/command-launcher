@@ -13,3 +13,4 @@ node_modules
 *.swp
 test/metrics.txt
 cdt
+cdt-registry
