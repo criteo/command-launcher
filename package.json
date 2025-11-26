@@ -1,5 +1,5 @@
 {
-  "name": "command-launcher",
+  "name": "@criteo/command-launcher",
   "description": "A command launcher 🚀 made with ❤️",
   "scripts": {
     "prepare": "husky install && npm install --prefix ./gh-pages"

@@ -305,21 +305,13 @@ func installZipFile(fileUrl string) error {
 	}
 
 	targetDir := filepath.Join(viper.GetString(config.DROPIN_FOLDER_KEY), zipPkg.Name())
-	if _, err := os.Stat(targetDir); !os.IsNotExist(err) {
-		if err := os.RemoveAll(targetDir); err != nil {
-			return fmt.Errorf("cannot remove existing package directory %s: %v", targetDir, err)
-		}
-	}
-	if err := os.MkdirAll(targetDir, os.ModePerm); err != nil {
-		return fmt.Errorf("cannot create target package directory %s: %v", targetDir, err)
-	}
-
 	mf, err := zipPkg.InstallTo(targetDir)
-	if err == nil {
-		console.Success("Package '%s' version %s installed in the dropin repository", mf.Name(), mf.Version())
+	if err != nil {
+		return fmt.Errorf("failed to install zip package %s: %v", fileUrl, err)
 	}
 
-	return err
+	console.Success("Package '%s' version %s installed in the dropin repository", mf.Name(), mf.Version())
+	return nil
 }
 
 func findPackageFolder(pkgName string) (string, error) {

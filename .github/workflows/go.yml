@@ -5,7 +5,7 @@ on:
     branches: [ '*' ]
     tags: [ '*.*.*', '*.*.*-*', 'test-release-*' ]
   pull_request:
-    branches: [ 'main', 'v*.*.*' ]
+    branches: [ 'main', 'v*.*.*', 'remote-registry' ]
 
 env:
   CDT_VAULT_SECRET: very_secret
@@ -139,7 +139,7 @@ jobs:
           mv output/windows/amd64/cdt_windows_amd64_${{needs.build.outputs.sha_short}} output/windows/amd64/cdt.exe
 
       - name: Zip the package
-        uses: thedoctor0/zip-release@master
+        uses: thedoctor0/zip-release@0.7.6
         if: startsWith(github.ref, 'refs/tags/')
         with:
           type: 'zip'

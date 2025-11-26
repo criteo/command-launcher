@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/criteo/command-launcher/internal/command"
 	"gopkg.in/yaml.v3"
 )
@@ -154,5 +156,6 @@ func ExecSetupHookFromPackage(pkg command.PackageManifest, pkgDir string) error 
 			return nil
 		}
 	}
-	return fmt.Errorf("no setup hook found in the package")
+	log.Warnf("No setup hook defined for package %s", pkg.Name())
+	return nil
 }
