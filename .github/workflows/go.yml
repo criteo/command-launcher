@@ -5,7 +5,7 @@ on:
     branches: [ '*' ]
     tags: [ '*.*.*', '*.*.*-*', 'test-release-*' ]
   pull_request:
-    branches: [ 'main', 'v*.*.*' ]
+    branches: [ 'main', 'v*.*.*', 'remote-registry' ]
 
 env:
   CDT_VAULT_SECRET: very_secret
