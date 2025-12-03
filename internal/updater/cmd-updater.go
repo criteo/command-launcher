@@ -29,16 +29,16 @@ type CmdUpdater struct {
 	toBeUpdated   map[string]string
 	toBeInstalled map[string]string
 
-	CmdRepositoryBaseUrl   string
-	LocalRepo              repository.PackageRepository
-	User                   user.User
-	Timeout                time.Duration
-	EnableCI               bool
-	PackageLockFile        string
-	ForceUpdateBypassPause bool
-	VerifyChecksum         bool
-	VerifySignature        bool
-	SyncPolicy             string
+	CmdRepositoryBaseUrl string
+	LocalRepo            repository.PackageRepository
+	User                 user.User
+	Timeout              time.Duration
+	EnableCI             bool
+	PackageLockFile      string
+	IgnoreUpdatePause    bool
+	VerifyChecksum       bool
+	VerifySignature      bool
+	SyncPolicy           string
 }
 
 func (u *CmdUpdater) CheckUpdateAsync() {
@@ -227,7 +227,7 @@ func (u *CmdUpdater) checkUpdateCommands() <-chan bool {
 		for _, localPkg := range localPkgs {
 			localPkgMap[localPkg.Name()] = localPkg.Version()
 			if remoteVersion, exist := availablePkgs[localPkg.Name()]; exist {
-				if !u.ForceUpdateBypassPause {
+				if !u.IgnoreUpdatePause {
 					locked, err := u.LocalRepo.IsPackageUpdatePaused(localPkg.Name())
 					if err != nil {
 						log.Errorf("Cannot check if package %s is locked: %v", localPkg.Name(), err)
