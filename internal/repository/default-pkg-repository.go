@@ -71,7 +71,7 @@ func (repo *defaultPackageRepository) Install(pkg command.Package) error {
 
 	_, err = pkg.InstallTo(pkgDir)
 	if err != nil {
-		err := repo.repoIndex.SetPackageLock(pkg.Name())
+		err := repo.repoIndex.PausePackageUpdate(pkg.Name())
 		if err != nil {
 			console.Warn("Failed to set lock for package %s: %v", pkg.Name(), err)
 		} else {
@@ -144,12 +144,12 @@ func (repo *defaultPackageRepository) Package(name string) (command.PackageManif
 	return repo.repoIndex.Package(name)
 }
 
-func (repo *defaultPackageRepository) IsPackageLocked(name string) (bool, error) {
-	return repo.repoIndex.IsPackageLocked(name)
+func (repo *defaultPackageRepository) IsPackageUpdatePaused(name string) (bool, error) {
+	return repo.repoIndex.IsPackageUpdatePaused(name)
 }
 
-func (repo *defaultPackageRepository) SetPackageLock(name string) error {
-	return repo.repoIndex.SetPackageLock(name)
+func (repo *defaultPackageRepository) PausePackageUpdate(name string) error {
+	return repo.repoIndex.PausePackageUpdate(name)
 }
 
 func (repo *defaultPackageRepository) Command(pkg string, group string, name string) (command.Command, error) {

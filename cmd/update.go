@@ -71,14 +71,14 @@ Check the update of %s and its commands.
 					fmt.Printf("CI mode enabled, load package lock file: %s\n", packageLockFile)
 				}
 				cmdUpdater := updater.CmdUpdater{
-					LocalRepo:            localRepo,
-					CmdRepositoryBaseUrl: viper.GetString(config.COMMAND_REPOSITORY_BASE_URL_KEY),
-					User:                 u,
-					Timeout:              updateFlags.Timeout,
-					EnableCI:             enableCI,
-					PackageLockFile:      packageLockFile,
-					SyncPolicy:           "always", // TODO: use constant instead of string
-					ForceUpdateLock:      true,
+					LocalRepo:              localRepo,
+					CmdRepositoryBaseUrl:   viper.GetString(config.COMMAND_REPOSITORY_BASE_URL_KEY),
+					User:                   u,
+					Timeout:                updateFlags.Timeout,
+					EnableCI:               enableCI,
+					PackageLockFile:        packageLockFile,
+					SyncPolicy:             "always", // TODO: use constant instead of string
+					ForceUpdateBypassPause: true,     // Disable pause to force update during 'update' command
 				}
 				cmdUpdater.CheckUpdateAsync()
 				err := cmdUpdater.Update()

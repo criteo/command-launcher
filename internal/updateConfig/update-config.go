@@ -12,10 +12,10 @@ type UpdateConfig struct {
 }
 
 const DEFAULT_UPDATE_LOCK_DURATION = 24 * time.Hour
-const PACKAGE_UPDATE_LOCK_FILE = ".update"
+const PACKAGE_UPDATE_FILE = ".update"
 
 func ReadFromDir(dir string) (*UpdateConfig, error) {
-	path := filepath.Join(dir, PACKAGE_UPDATE_LOCK_FILE)
+	path := filepath.Join(dir, PACKAGE_UPDATE_FILE)
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func ReadFromDir(dir string) (*UpdateConfig, error) {
 }
 
 func IsUpdateConfigExists(dir string) (bool, error) {
-	path := filepath.Join(dir, PACKAGE_UPDATE_LOCK_FILE)
+	path := filepath.Join(dir, PACKAGE_UPDATE_FILE)
 	_, err := os.Stat(path)
 	if err == nil {
 		return true, nil
@@ -43,7 +43,7 @@ func IsUpdateConfigExists(dir string) (bool, error) {
 }
 
 func (config *UpdateConfig) WriteToDir(dir string) error {
-	path := filepath.Join(dir, PACKAGE_UPDATE_LOCK_FILE)
+	path := filepath.Join(dir, PACKAGE_UPDATE_FILE)
 	jsonData, err := json.MarshalIndent(config, "", "    ")
 	if err != nil {
 		return err

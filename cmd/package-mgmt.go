@@ -166,7 +166,7 @@ To enable the automatic setup during package installation, enable the configurat
 		Example: fmt.Sprintf(`
   %s pause my-pkg`, appCtx.AppName()),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := rootCtxt.backend.DefaultRepository().SetPackageLock(args[0])
+			err := rootCtxt.backend.DefaultRepository().PausePackageUpdate(args[0])
 			if err != nil {
 				return err
 			}

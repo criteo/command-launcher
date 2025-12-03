@@ -27,7 +27,7 @@ Further improvements could store commands as indexes, and laze load
 further information when necessary to reduce the startup time
 */
 const (
-	PACKAGE_UPDATE_LOCK_FILE = ".update"
+	PACKAGE_UPDATE_FILE = ".update"
 )
 
 type defaultRepoIndex struct {
@@ -143,7 +143,7 @@ func (repoIndex *defaultRepoIndex) Package(name string) (command.PackageManifest
 	return nil, fmt.Errorf("cannot find the package '%s'", name)
 }
 
-func (repoIndex *defaultRepoIndex) IsPackageLocked(name string) (bool, error) {
+func (repoIndex *defaultRepoIndex) IsPackageUpdatePaused(name string) (bool, error) {
 	if _, exists := repoIndex.packageDirs[name]; !exists {
 		return false, fmt.Errorf("cannot find the package '%s'", name)
 	} else {
@@ -163,7 +163,7 @@ func (repoIndex *defaultRepoIndex) IsPackageLocked(name string) (bool, error) {
 	}
 }
 
-func (repoIndex *defaultRepoIndex) SetPackageLock(name string) error {
+func (repoIndex *defaultRepoIndex) PausePackageUpdate(name string) error {
 	if _, exists := repoIndex.packageDirs[name]; !exists {
 		return fmt.Errorf("cannot find the package '%s'", name)
 	} else {

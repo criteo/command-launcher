@@ -30,9 +30,9 @@ type PackageRepository interface {
 
 	Package(name string) (command.PackageManifest, error)
 
-	IsPackageLocked(name string) (bool, error)
+	IsPackageUpdatePaused(name string) (bool, error)
 
-	SetPackageLock(name string) error
+	PausePackageUpdate(name string) error
 
 	// package repository doesn't resolve the the conflicts, to identify a command, we have to
 	// provide the full path of the command: repo > pkg > group > name

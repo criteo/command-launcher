@@ -17,7 +17,7 @@ type RepoIndex interface {
 	SystemLoginCommand() command.Command
 	SystemMetricsCommand() command.Command
 	Package(name string) (command.PackageManifest, error)
-	IsPackageLocked(name string) (bool, error)
-	SetPackageLock(name string) error
+	IsPackageUpdatePaused(name string) (bool, error)
+	PausePackageUpdate(name string) error
 	Command(pkg string, group string, name string) (command.Command, error)
 }

@@ -56,7 +56,7 @@ func TestWriteToDir(t *testing.T) {
 	err := config.WriteToDir(tmpDir)
 	assert.NoError(t, err)
 
-	lockFile := filepath.Join(tmpDir, PACKAGE_UPDATE_LOCK_FILE)
+	lockFile := filepath.Join(tmpDir, PACKAGE_UPDATE_FILE)
 	_, err = os.Stat(lockFile)
 	assert.NoError(t, err)
 
