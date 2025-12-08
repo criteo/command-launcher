@@ -158,10 +158,29 @@ To enable the automatic setup during package installation, enable the configurat
 		ValidArgsFunction: packageNameValidatonFunc(true, true, false),
 	}
 
+	packagePauseCmd := &cobra.Command{
+		Use:   "pause [package_name]",
+		Short: "Pause update for a package",
+		Long:  "Pause update for a package",
+		Args:  cobra.ExactArgs(1),
+		Example: fmt.Sprintf(`
+  %s pause my-pkg`, appCtx.AppName()),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := rootCtxt.backend.DefaultRepository().PausePackageUpdate(args[0])
+			if err != nil {
+				return err
+			}
+			console.Success("Package %s updates are paused", args[0])
+			return nil
+		},
+		ValidArgsFunction: packageNameValidatonFunc(true, true, false),
+	}
+
 	packageCmd.AddCommand(packageListCmd)
 	packageCmd.AddCommand(packageInstallCmd)
 	packageCmd.AddCommand(packageDeleteCmd)
 	packageCmd.AddCommand(packageSetupCmd)
+	packageCmd.AddCommand(packagePauseCmd)
 	rootCmd.AddCommand(packageCmd)
 }
 

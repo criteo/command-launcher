@@ -7,6 +7,7 @@ import (
 
 	"github.com/criteo/command-launcher/internal/command"
 	"github.com/criteo/command-launcher/internal/console"
+	"github.com/criteo/command-launcher/internal/context"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -70,6 +71,17 @@ func (repo *defaultPackageRepository) Install(pkg command.Package) error {
 
 	_, err = pkg.InstallTo(pkgDir)
 	if err != nil {
+		err := repo.repoIndex.PausePackageUpdate(pkg.Name())
+		if err != nil {
+			console.Warn("Failed to set lock for package %s: %v", pkg.Name(), err)
+		} else {
+			appCtx, _ := context.AppContext()
+			console.Reminder(
+				"Package %s has been locked due to installation failure, explicitly run `%s update package` to retry installation.",
+				pkg.Name(),
+				appCtx.AppName(),
+			)
+		}
 		return fmt.Errorf("cannot install the command package %s: %v", pkg.Name(), err)
 	}
 
@@ -130,6 +142,14 @@ func (repo *defaultPackageRepository) InstalledSystemCommands() SystemCommands {
 
 func (repo *defaultPackageRepository) Package(name string) (command.PackageManifest, error) {
 	return repo.repoIndex.Package(name)
+}
+
+func (repo *defaultPackageRepository) IsPackageUpdatePaused(name string) (bool, error) {
+	return repo.repoIndex.IsPackageUpdatePaused(name)
+}
+
+func (repo *defaultPackageRepository) PausePackageUpdate(name string) error {
+	return repo.repoIndex.PausePackageUpdate(name)
 }
 
 func (repo *defaultPackageRepository) Command(pkg string, group string, name string) (command.Command, error) {

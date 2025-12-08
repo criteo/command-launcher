@@ -11,6 +11,7 @@ import (
 	"github.com/criteo/command-launcher/internal/command"
 	"github.com/criteo/command-launcher/internal/config"
 	"github.com/criteo/command-launcher/internal/pkg"
+	"github.com/criteo/command-launcher/internal/updateConfig"
 	"github.com/spf13/viper"
 )
 
@@ -25,6 +26,10 @@ in one level subfolders
 Further improvements could store commands as indexes, and laze load
 further information when necessary to reduce the startup time
 */
+const (
+	PACKAGE_UPDATE_FILE = ".update"
+)
+
 type defaultRepoIndex struct {
 	id             string
 	packages       map[string]command.PackageManifest
@@ -136,6 +141,45 @@ func (repoIndex *defaultRepoIndex) Package(name string) (command.PackageManifest
 		return pkg, nil
 	}
 	return nil, fmt.Errorf("cannot find the package '%s'", name)
+}
+
+func (repoIndex *defaultRepoIndex) IsPackageUpdatePaused(name string) (bool, error) {
+	if _, exists := repoIndex.packageDirs[name]; !exists {
+		return false, fmt.Errorf("cannot find the package '%s'", name)
+	} else {
+		pkgDir := repoIndex.packageDirs[name]
+		exists, err := updateConfig.IsUpdateConfigExists(pkgDir)
+		if err != nil {
+			return false, err
+		}
+		if !exists {
+			return false, nil
+		}
+		uConfig, err := updateConfig.ReadFromDir(pkgDir)
+		if err != nil {
+			return false, err
+		}
+		return uConfig.IsExpired(), nil
+	}
+}
+
+func (repoIndex *defaultRepoIndex) PausePackageUpdate(name string) error {
+	if _, exists := repoIndex.packageDirs[name]; !exists {
+		return fmt.Errorf("cannot find the package '%s'", name)
+	} else {
+		pkgDir := repoIndex.packageDirs[name]
+		uConfig := &updateConfig.UpdateConfig{}
+		if exists, err := updateConfig.IsUpdateConfigExists(pkgDir); err != nil {
+			return err
+		} else if exists {
+			uConfig, err = updateConfig.ReadFromDir(pkgDir)
+			if err != nil {
+				return err
+			}
+		}
+		uConfig.UpdateAfterDate(updateConfig.DEFAULT_UPDATE_LOCK_DURATION)
+		return uConfig.WriteToDir(pkgDir)
+	}
 }
 
 func (repoIndex *defaultRepoIndex) Command(pkg string, group string, name string) (command.Command, error) {
