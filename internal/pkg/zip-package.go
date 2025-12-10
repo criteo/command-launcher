@@ -128,13 +128,17 @@ func (pkg *zipPackage) installFromZip(targetDir string) error {
 }
 
 func (pkg *zipPackage) restoreBackup(backupDir, targetDir string) {
-	if backupDir == "" {
-		return
-	}
-
 	// Remove failed installation
 	if err := os.RemoveAll(targetDir); err != nil {
 		console.Error("Failed to remove target directory %s: %v", targetDir, err)
+		return
+	}
+
+	// If backup directory is empty, no backup needed, create empty target directory
+	if backupDir == "" {
+		if err := os.MkdirAll(targetDir, os.ModePerm); err != nil {
+			console.Error("Failed to create target directory %s: %v", targetDir, err)
+		}
 		return
 	}
 

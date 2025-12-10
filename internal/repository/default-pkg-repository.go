@@ -64,30 +64,33 @@ func (repo *defaultPackageRepository) Install(pkg command.Package) error {
 	}
 
 	pkgDir := filepath.Join(repo.RepoDir, pkg.Name())
-	err := os.MkdirAll(pkgDir, 0755)
-	if err != nil {
-		return fmt.Errorf("cannot create the commmand package folder (%v)", err)
+
+	_, err := pkg.InstallTo(pkgDir)
+
+	// Even if installation fails, we still add the package to the index to pause update
+	errAdd := repo.repoIndex.Add(pkg, repo.RepoDir, pkg.Name())
+	if errAdd != nil {
+		return fmt.Errorf("cannot add the command package %s: %v", pkg.Name(), err)
 	}
 
-	_, err = pkg.InstallTo(pkgDir)
+	// Pause update if installation fails
 	if err != nil {
-		err := repo.repoIndex.PausePackageUpdate(pkg.Name())
-		if err != nil {
-			console.Warn("Failed to set lock for package %s: %v", pkg.Name(), err)
+		errPaused := repo.repoIndex.PausePackageUpdate(pkg.Name())
+		if errPaused != nil {
+			console.Warn("Failed to set update pause for package %s: %v", pkg.Name(), errPaused)
 		} else {
 			appCtx, _ := context.AppContext()
 			console.Reminder(
-				"Package %s has been locked due to installation failure, explicitly run `%s update package` to retry installation.",
+				"Package %s update has been paused due to installation failure, explicitly run `%s update --package` to retry installation.",
 				pkg.Name(),
 				appCtx.AppName(),
 			)
 		}
-		return fmt.Errorf("cannot install the command package %s: %v", pkg.Name(), err)
-	}
-
-	err = repo.repoIndex.Add(pkg, repo.RepoDir, pkg.Name())
-	if err != nil {
-		return fmt.Errorf("cannot add the command package %s: %v", pkg.Name(), err)
+		errRemove := repo.repoIndex.Remove(pkg.Name(), repo.RepoDir)
+		if errRemove != nil {
+			console.Warn("Failed to remove package %s: %v", pkg.Name(), errRemove)
+		}
+		return err
 	}
 
 	console.Success("Package %s@%s installed successfully", pkg.Name(), pkg.Version())
