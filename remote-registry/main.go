@@ -33,7 +33,7 @@ func setupCommandLineArgs() (*CommandLineArgs, error) {
 	pflag.String("store", "memory", "Type of store to use: 'memory', 'filesystem', or 's3'")
 	pflag.String("store-path", "", "Path for file store (required when using filesystem store)")
 	pflag.String("s3-bucket", "", "S3 bucket name (required when using s3 store)")
-	pflag.String("s3-region", "us-east-1", "S3 region")
+	pflag.String("s3-region", "", "S3 region (required when using AWS S3)")
 	pflag.String("s3-endpoint", "", "S3 endpoint URL (for S3-compatible services like MinIO)")
 	pflag.String("s3-access-key", "", "S3 access key ID (optional, uses IAM role if not set)")
 	pflag.String("s3-secret-key", "", "S3 secret access key (optional, uses IAM role if not set)")

@@ -38,12 +38,23 @@ type S3Store struct {
 func NewS3Store(cfg S3StoreConfig) (*S3Store, error) {
 	ctx := context.Background()
 
+	// MinIO/S3-compatible services don't use regions, but AWS SDK v2 requires a region parameter.
+	// If a custom endpoint is provided (indicating MinIO) and no region is specified,
+	// we automatically use a placeholder value that MinIO will ignore.
+	region := cfg.Region
+	if region == "" && cfg.Endpoint != "" {
+		region = "us-east-1" // Placeholder value - MinIO ignores this but SDK requires it
+	}
+	if region == "" {
+		return nil, fmt.Errorf("s3-region is required for AWS S3 (or provide s3-endpoint for S3-compatible services)")
+	}
+
 	var awsConfig aws.Config
 	var err error
 
 	if cfg.AccessKeyID != "" && cfg.SecretAccessKey != "" {
 		awsConfig, err = config.LoadDefaultConfig(ctx,
-			config.WithRegion(cfg.Region),
+			config.WithRegion(region),
 			config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(
 				cfg.AccessKeyID,
 				cfg.SecretAccessKey,
@@ -52,7 +63,7 @@ func NewS3Store(cfg S3StoreConfig) (*S3Store, error) {
 		)
 	} else {
 		awsConfig, err = config.LoadDefaultConfig(ctx,
-			config.WithRegion(cfg.Region),
+			config.WithRegion(region),
 		)
 	}
 
