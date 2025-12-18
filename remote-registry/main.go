@@ -17,27 +17,25 @@ import (
 )
 
 type CommandLineArgs struct {
-	StoreType       string
-	StorePath       string
-	S3Bucket        string
-	S3Region        string
-	S3Endpoint      string
-	S3AccessKey     string
-	S3SecretKey     string
-	S3UsePathStyle  bool
-	ShowHelp        bool
+	StoreType   string
+	StorePath   string
+	S3Bucket    string
+	S3Region    string
+	S3Endpoint  string
+	S3AccessKey string
+	S3SecretKey string
+	ShowHelp    bool
 }
 
 func setupCommandLineArgs() (*CommandLineArgs, error) {
 	// Define CLI flags
-	pflag.String("store", "memory", "Type of store to use: 'memory', 'filesystem', or 's3'")
+	pflag.String("store", "memory", "Type of store to use: 'memory', 'filesystem', 's3'")
 	pflag.String("store-path", "", "Path for file store (required when using filesystem store)")
 	pflag.String("s3-bucket", "", "S3 bucket name (required when using s3 store)")
-	pflag.String("s3-region", "", "S3 region (required when using AWS S3)")
-	pflag.String("s3-endpoint", "", "S3 endpoint URL (for S3-compatible services like MinIO)")
-	pflag.String("s3-access-key", "", "S3 access key ID (optional, uses IAM role if not set)")
-	pflag.String("s3-secret-key", "", "S3 secret access key (optional, uses IAM role if not set)")
-	pflag.Bool("s3-use-path-style", false, "Use path-style S3 URLs (required for MinIO)")
+	pflag.String("s3-region", "", "AWS region (required when using AWS S3, omit for S3-compatible services)")
+	pflag.String("s3-endpoint", "", "S3 endpoint URL (required for S3-compatible services like MinIO, omit for AWS S3)")
+	pflag.String("s3-access-key", "", "S3 access key ID (optional for AWS, uses IAM role if not set)")
+	pflag.String("s3-secret-key", "", "S3 secret access key (optional for AWS, uses IAM role if not set)")
 	pflag.String("config", "", "Path to configuration file")
 	pflag.Bool("help", false, "Display this message")
 	pflag.Parse()
@@ -57,15 +55,14 @@ func setupCommandLineArgs() (*CommandLineArgs, error) {
 	configureConfigFile()
 
 	return &CommandLineArgs{
-		StoreType:      viper.GetString("store"),
-		StorePath:      viper.GetString("store-path"),
-		S3Bucket:       viper.GetString("s3-bucket"),
-		S3Region:       viper.GetString("s3-region"),
-		S3Endpoint:     viper.GetString("s3-endpoint"),
-		S3AccessKey:    viper.GetString("s3-access-key"),
-		S3SecretKey:    viper.GetString("s3-secret-key"),
-		S3UsePathStyle: viper.GetBool("s3-use-path-style"),
-		ShowHelp:       viper.GetBool("help"),
+		StoreType:   viper.GetString("store"),
+		StorePath:   viper.GetString("store-path"),
+		S3Bucket:    viper.GetString("s3-bucket"),
+		S3Region:    viper.GetString("s3-region"),
+		S3Endpoint:  viper.GetString("s3-endpoint"),
+		S3AccessKey: viper.GetString("s3-access-key"),
+		S3SecretKey: viper.GetString("s3-secret-key"),
+		ShowHelp:    viper.GetBool("help"),
 	}, nil
 }
 
@@ -136,9 +133,22 @@ func createStore(config *CommandLineArgs) (Store, error) {
 			return nil, fmt.Errorf("s3-bucket is required when using s3 store")
 		}
 
-		log.Printf("Using S3 store with bucket: %s, region: %s", config.S3Bucket, config.S3Region)
-		if config.S3Endpoint != "" {
-			log.Printf("Using custom S3 endpoint: %s", config.S3Endpoint)
+		// Detect if using AWS S3 or S3-compatible service based on endpoint
+		isAwsS3 := config.S3Endpoint == ""
+		usePathStyle := config.S3Endpoint != ""
+
+		if isAwsS3 {
+			// AWS S3: region is required
+			if config.S3Region == "" {
+				return nil, fmt.Errorf("s3-region is required for AWS S3 (omit s3-endpoint for AWS)")
+			}
+			log.Printf("Using AWS S3 store with bucket: %s, region: %s", config.S3Bucket, config.S3Region)
+		} else {
+			// S3-compatible service (e.g., MinIO): endpoint is required, region is optional
+			log.Printf("Using S3-compatible store with bucket: %s, endpoint: %s", config.S3Bucket, config.S3Endpoint)
+			if config.S3Region == "" {
+				config.S3Region = "us-east-1" // Placeholder for S3-compatible services
+			}
 		}
 
 		s3Config := S3StoreConfig{
@@ -147,7 +157,7 @@ func createStore(config *CommandLineArgs) (Store, error) {
 			Endpoint:        config.S3Endpoint,
 			AccessKeyID:     config.S3AccessKey,
 			SecretAccessKey: config.S3SecretKey,
-			UsePathStyle:    config.S3UsePathStyle,
+			UsePathStyle:    usePathStyle,
 		}
 
 		store, err = NewS3Store(s3Config)
@@ -156,7 +166,7 @@ func createStore(config *CommandLineArgs) (Store, error) {
 		}
 		log.Printf("S3 store created successfully")
 	default:
-		return nil, fmt.Errorf("unknown store type: %s", config.StoreType)
+		return nil, fmt.Errorf("unknown store type: %s (valid options: memory, filesystem, s3)", config.StoreType)
 	}
 
 	return store, nil
