@@ -17,14 +17,26 @@ import (
 )
 
 type CommandLineArgs struct {
-	StoreType string
-	StorePath string
-	ShowHelp  bool
+	StoreType   string
+	StorePath   string
+	S3Bucket    string
+	S3Region    string
+	S3Endpoint  string
+	S3AccessKey string
+	S3SecretKey string
+	ShowHelp    bool
 }
 
 func setupCommandLineArgs() (*CommandLineArgs, error) {
-	pflag.String("store", "memory", "Type of store to use: 'memory' or 'filesystem'")
+	// Define CLI flags
+	pflag.String("store", "memory", "Type of store to use: 'memory', 'filesystem', 's3'")
 	pflag.String("store-path", "", "Path for file store (required when using filesystem store)")
+	pflag.String("s3-bucket", "", "S3 bucket name (required when using s3 store)")
+	pflag.String("s3-region", "", "AWS region (required when using AWS S3, omit for S3-compatible services)")
+	pflag.String("s3-endpoint", "", "S3 endpoint URL (required for S3-compatible services like MinIO, omit for AWS S3)")
+	pflag.String("s3-access-key", "", "S3 access key ID (optional for AWS, uses IAM role if not set)")
+	pflag.String("s3-secret-key", "", "S3 secret access key (optional for AWS, uses IAM role if not set)")
+	pflag.String("config", "", "Path to configuration file")
 	pflag.Bool("help", false, "Display this message")
 	pflag.Parse()
 
@@ -32,16 +44,61 @@ func setupCommandLineArgs() (*CommandLineArgs, error) {
 		return nil, fmt.Errorf("failed to bind flags: %w", err)
 	}
 
+	// Set defaults
 	viper.SetDefault("store", "memory")
 
+	// Support environment variables
 	viper.SetEnvPrefix("REGISTRY")
 	viper.AutomaticEnv()
 
+	// Config file support
+	configureConfigFile()
+
 	return &CommandLineArgs{
-		StoreType: viper.GetString("store"),
-		StorePath: viper.GetString("store-path"),
-		ShowHelp:  viper.GetBool("help"),
+		StoreType:   viper.GetString("store"),
+		StorePath:   viper.GetString("store-path"),
+		S3Bucket:    viper.GetString("s3-bucket"),
+		S3Region:    viper.GetString("s3-region"),
+		S3Endpoint:  viper.GetString("s3-endpoint"),
+		S3AccessKey: viper.GetString("s3-access-key"),
+		S3SecretKey: viper.GetString("s3-secret-key"),
+		ShowHelp:    viper.GetBool("help"),
 	}, nil
+}
+
+// configureConfigFile sets up and loads the config file
+func configureConfigFile() {
+	// 1. Check if explicit config path is specified via flag or env var
+	if configPath := viper.GetString("config"); configPath != "" {
+		viper.SetConfigFile(configPath)
+	} else {
+		// 2. Set config name and type for default search
+		viper.SetConfigName("registry-config")
+		viper.SetConfigType("yaml")
+
+		// 3. Look for config file in these paths (in order)
+		// Current directory
+		viper.AddConfigPath(".")
+		// User's home directory
+		if homeDir, err := os.UserHomeDir(); err == nil {
+			viper.AddConfigPath(filepath.Join(homeDir, ".command-launcher"))
+		}
+		// System-wide config
+		viper.AddConfigPath("/etc/command-launcher")
+	}
+
+	// 4. Read the config file
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			// Config file was found but another error occurred
+			log.Printf("Error reading config file: %v", err)
+		} else {
+			// No config file found, using only flags and environment variables
+			log.Printf("No config file found, using only flags and environment variables")
+		}
+	} else {
+		log.Printf("Using config file: %s", viper.ConfigFileUsed())
+	}
 }
 
 func createStore(config *CommandLineArgs) (Store, error) {
@@ -71,8 +128,45 @@ func createStore(config *CommandLineArgs) (Store, error) {
 			return nil, fmt.Errorf("failed to create filesystem store: %w", err)
 		}
 		log.Printf("Filesystem store created at %s", storePath)
+	case "s3":
+		if config.S3Bucket == "" {
+			return nil, fmt.Errorf("s3-bucket is required when using s3 store")
+		}
+
+		// Detect if using AWS S3 or S3-compatible service based on endpoint
+		isAwsS3 := config.S3Endpoint == ""
+		usePathStyle := config.S3Endpoint != ""
+
+		if isAwsS3 {
+			// AWS S3: region is required
+			if config.S3Region == "" {
+				return nil, fmt.Errorf("s3-region is required for AWS S3 (omit s3-endpoint for AWS)")
+			}
+			log.Printf("Using AWS S3 store with bucket: %s, region: %s", config.S3Bucket, config.S3Region)
+		} else {
+			// S3-compatible service (e.g., MinIO): endpoint is required, region is optional
+			log.Printf("Using S3-compatible store with bucket: %s, endpoint: %s", config.S3Bucket, config.S3Endpoint)
+			if config.S3Region == "" {
+				config.S3Region = "us-east-1" // Placeholder for S3-compatible services
+			}
+		}
+
+		s3Config := S3StoreConfig{
+			Bucket:          config.S3Bucket,
+			Region:          config.S3Region,
+			Endpoint:        config.S3Endpoint,
+			AccessKeyID:     config.S3AccessKey,
+			SecretAccessKey: config.S3SecretKey,
+			UsePathStyle:    usePathStyle,
+		}
+
+		store, err = NewS3Store(s3Config)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create S3 store: %w", err)
+		}
+		log.Printf("S3 store created successfully")
 	default:
-		return nil, fmt.Errorf("unknown store type: %s", config.StoreType)
+		return nil, fmt.Errorf("unknown store type: %s (valid options: memory, filesystem, s3)", config.StoreType)
 	}
 
 	return store, nil
@@ -145,16 +239,14 @@ func initStore(store Store) {
 	store.NewPackageVersion("test-registry", "test-package", "1.0.0", remote.PackageInfo{
 		Name:           "test-package",
 		Version:        "1.0.0",
-		Url:            "http://example.com/test-package-1.0.0.tar.gz",
-		Checksum:       "abc123",
+		Url:            "file:///tmp/test-package-1.0.0.pkg",
 		StartPartition: 0,
 		EndPartition:   9,
 	})
 	store.NewPackageVersion("test-registry", "test-package", "1.1.0", remote.PackageInfo{
 		Name:           "test-package",
 		Version:        "1.1.0",
-		Url:            "http://example.com/test-package-1.1.0.tar.gz",
-		Checksum:       "abc456",
+		Url:            "file:///tmp/test-package-1.1.0.pkg",
 		StartPartition: 0,
 		EndPartition:   9,
 	})
@@ -175,8 +267,7 @@ func initStore(store Store) {
 	store.NewPackageVersion("test-registry-2", "test-package-2", "1.0.0", remote.PackageInfo{
 		Name:           "test-package-2",
 		Version:        "1.0.0",
-		Url:            "http://example.com/test-package-2-1.0.0.tar.gz",
-		Checksum:       "abc123",
+		Url:            "file:///tmp/test-package-2-1.0.0.pkg",
 		StartPartition: 0,
 		EndPartition:   9,
 	})

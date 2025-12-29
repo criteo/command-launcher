@@ -1,0 +1,3 @@
+store: filesystem
+
+store-path: ~/command-launcher/registry-store
