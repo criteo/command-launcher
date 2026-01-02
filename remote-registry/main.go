@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -49,6 +50,7 @@ func setupCommandLineArgs() (*CommandLineArgs, error) {
 
 	// Support environment variables
 	viper.SetEnvPrefix("REGISTRY")
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	viper.AutomaticEnv()
 
 	// Config file support
