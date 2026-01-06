@@ -7,18 +7,46 @@ import (
 	"net/http"
 
 	"github.com/criteo/command-launcher/internal/remote"
+	"github.com/criteo/command-launcher/remote-registry/auth"
 	"github.com/criteo/command-launcher/remote-registry/model"
 	. "github.com/criteo/command-launcher/remote-registry/store"
 )
 
 type Controller struct {
-	store Store
+	store         Store
+	authenticator auth.Authenticator
 }
 
-func NewController(store Store) *Controller {
+func NewController(store Store, authenticator auth.Authenticator) *Controller {
 	return &Controller{
-		store: store,
+		store:         store,
+		authenticator: authenticator,
 	}
+}
+
+func (c Controller) authenticate(w http.ResponseWriter, r *http.Request) bool {
+	if c.authenticator == nil {
+		return true
+	}
+
+	err := c.authenticator.Authenticate(r)
+	if err != nil {
+		switch err.Error() {
+		case "forbidden":
+			http.Error(w, "Access denied: user not in required group", http.StatusForbidden)
+		case "missing_credentials":
+			w.Header().Set("WWW-Authenticate", `Basic realm="Registry"`)
+			http.Error(w, "Authentication required", http.StatusUnauthorized)
+		default:
+			w.Header().Set("WWW-Authenticate", `Basic realm="Registry"`)
+			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		}
+		log.Printf("Authentication failed: %v", err)
+		return false
+	}
+
+	log.Printf("Authentication successful")
+	return true
 }
 
 func (c Controller) HomePageHandler(w http.ResponseWriter, r *http.Request) {
@@ -63,6 +91,11 @@ func (c Controller) IndexHandler(w http.ResponseWriter, r *http.Request) {
 
 func (c Controller) NewRegistryHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Calling NewRegistryHandler")
+	
+	if !c.authenticate(w, r) {
+		return
+	}
+	
 	if r.Method != http.MethodPost {
 		http.Error(w,
 			"Method not allowed",
@@ -92,6 +125,11 @@ func (c Controller) NewRegistryHandler(w http.ResponseWriter, r *http.Request) {
 
 func (c Controller) UpdateOrDeleteRegistryHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Calling UpdateOrDeleteRegistryHandler")
+	
+	if !c.authenticate(w, r) {
+		return
+	}
+	
 	if r.Method != http.MethodPut && r.Method != http.MethodDelete {
 		http.Error(w,
 			"Method not allowed",
@@ -149,6 +187,11 @@ func (c Controller) UpdateOrDeleteRegistryHandler(w http.ResponseWriter, r *http
 
 func (c Controller) NewPackageHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Calling NewPackageHandler")
+	
+	if !c.authenticate(w, r) {
+		return
+	}
+	
 	if r.Method != http.MethodPost {
 		http.Error(w,
 			"Method not allowed",
@@ -190,6 +233,11 @@ func (c Controller) NewPackageHandler(w http.ResponseWriter, r *http.Request) {
 
 func (c Controller) UpdateOrDeletePackageHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Calling UpdateOrDeletePackageHandler")
+	
+	if !c.authenticate(w, r) {
+		return
+	}
+	
 	if r.Method != http.MethodPut && r.Method != http.MethodDelete {
 		http.Error(w,
 			"Method not allowed",
@@ -253,6 +301,11 @@ func (c Controller) UpdateOrDeletePackageHandler(w http.ResponseWriter, r *http.
 
 func (c Controller) NewPackageVersionHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Calling NewPackageVersionHandler")
+	
+	if !c.authenticate(w, r) {
+		return
+	}
+	
 	if r.Method != http.MethodPost {
 		http.Error(w,
 			"Method not allowed",
@@ -313,6 +366,11 @@ func (c Controller) NewPackageVersionHandler(w http.ResponseWriter, r *http.Requ
 
 func (c Controller) DeletePackageVersionHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Calling DeletePackageVersionHandler")
+	
+	if !c.authenticate(w, r) {
+		return
+	}
+	
 	if r.Method != http.MethodDelete {
 		http.Error(w,
 			"Method not allowed",

@@ -18,7 +18,7 @@ func TestHomeHandlers(t *testing.T) {
 	s := store.NewInMemoryStore()
 
 	// Create a controller instance by specifying the store
-	controller := NewController(s)
+	controller := NewController(s, nil)
 
 	// Create a new HTTP request to test the HomePageHandler
 	req, err := http.NewRequest("GET", "/", nil)
@@ -50,7 +50,7 @@ func TestRegistryHandlers(t *testing.T) {
 	s := store.NewInMemoryStore()
 
 	// Create a controller instance by specifying the store
-	controller := NewController(s)
+	controller := NewController(s, nil)
 
 	// Create a new HTTP request to test the NewRegistryHandler
 	// Here we are using a POST request to create a new registry
@@ -108,7 +108,7 @@ func TestRegistryHandlers(t *testing.T) {
 func TestPackageHandlers(t *testing.T) {
 	s := store.NewInMemoryStore()
 	initStore(s)
-	controller := NewController(s)
+	controller := NewController(s, nil)
 
 	// first check if the registry is correctly initiated
 	_, regs, _ := getEntireRegistryContent(controller)
@@ -188,7 +188,7 @@ func TestPackageHandlers(t *testing.T) {
 func TestPackageVersionHandlers(t *testing.T) {
 	s := store.NewInMemoryStore()
 	initStore(s)
-	controller := NewController(s)
+	controller := NewController(s, nil)
 
 	// first check if the registry is correctly initiated
 	_, regs, _ := getEntireRegistryContent(controller)

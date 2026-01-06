@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
+	"github.com/criteo/command-launcher/remote-registry/auth"
 	remote "github.com/criteo/command-launcher/internal/remote"
 	handlers "github.com/criteo/command-launcher/remote-registry/handlers"
 	model "github.com/criteo/command-launcher/remote-registry/model"
@@ -193,8 +194,25 @@ func main() {
 
 	initStore(store)
 
+	// Create authenticator from config
+	var authConfig auth.Config
+	if err := viper.UnmarshalKey("auth", &authConfig); err != nil {
+		log.Printf("Failed to parse auth config: %v, continuing without authentication", err)
+	}
+
+	authenticator, err := auth.NewAuthenticator(authConfig)
+	if err != nil {
+		log.Fatalf("Failed to create authenticator: %v", err)
+	}
+
+	if authenticator != nil {
+		log.Printf("Authentication enabled with type: %s", authConfig.Type)
+	} else {
+		log.Println("Authentication disabled")
+	}
+
 	// create a controller instance by specifying the store
-	controller := handlers.NewController(store)
+	controller := handlers.NewController(store, authenticator)
 
 	mux := http.NewServeMux()
 	// Home Page
