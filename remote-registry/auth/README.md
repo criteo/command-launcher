@@ -50,6 +50,71 @@ auth:
 - `401 Unauthorized`: Missing or invalid credentials
 - `403 Forbidden`: Valid credentials but user not in required group
 
+### Custom JWT Authentication
+
+Custom JWT authentication delegates token validation to an external script. This allows integration with any JWT provider without modifying the registry code.
+
+#### Configuration Example
+
+```yaml
+auth:
+  enabled: true
+  type: custom_jwt
+  custom_jwt:
+    script: /path/to/jwt-validator.sh
+    required_group: my-required-group
+```
+
+#### Configuration Parameters
+
+- `script`: Path to the external script that validates JWT tokens (required)
+- `required_group`: Group name that must be present in the script output (optional)
+
+#### Script Contract
+
+The script receives the JWT token as its first argument and must follow this contract:
+
+**On success (exit code 0):**
+- Print one group name per line to stdout
+
+**On failure (exit code 1):**
+- Print error message to stderr
+
+#### Example Script
+
+```bash
+#!/bin/bash
+TOKEN="$1"
+
+# Validate token and extract groups (example using jq)
+PAYLOAD=$(echo "$TOKEN" | cut -d'.' -f2 | base64 -d 2>/dev/null)
+if [ $? -ne 0 ]; then
+    echo "Invalid token format" >&2
+    exit 1
+fi
+
+# Extract and print groups
+echo "$PAYLOAD" | jq -r '.groups[]' 2>/dev/null
+if [ $? -ne 0 ]; then
+    echo "Failed to extract groups" >&2
+    exit 1
+fi
+```
+
+#### Authentication Flow
+
+1. Client sends HTTP request with `Authorization: Bearer <token>` header
+2. Server extracts the token from the header
+3. Server executes the configured script with the token as argument
+4. Script validates the token and returns groups (exit 0) or error (exit 1)
+5. If `required_group` is set, server checks if that group is in the script output
+6. Returns success (200) or failure (401/403)
+
+#### HTTP Status Codes
+
+- `401 Unauthorized`: Missing or invalid Bearer token
+- `403 Forbidden`: Valid token but user not in required group
+
 ### No Authentication
 
 To disable authentication:

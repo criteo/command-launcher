@@ -1,9 +1,10 @@
 package auth
 
 type Config struct {
-	Enabled bool       `mapstructure:"enabled"`
-	Type    string     `mapstructure:"type"`
-	LDAP    LDAPConfig `mapstructure:"ldap"`
+	Enabled   bool            `mapstructure:"enabled"`
+	Type      string          `mapstructure:"type"`
+	LDAP      LDAPConfig      `mapstructure:"ldap"`
+	CustomJWT CustomJWTConfig `mapstructure:"custom_jwt"`
 }
 
 type LDAPConfig struct {
@@ -14,5 +15,10 @@ type LDAPConfig struct {
 	UserFilter    string `mapstructure:"user_filter"`
 	GroupBaseDN   string `mapstructure:"group_base_dn"`
 	GroupFilter   string `mapstructure:"group_filter"`
+	RequiredGroup string `mapstructure:"required_group"`
+}
+
+type CustomJWTConfig struct {
+	Script        string `mapstructure:"script"`
 	RequiredGroup string `mapstructure:"required_group"`
 }

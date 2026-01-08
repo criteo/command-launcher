@@ -17,9 +17,11 @@ func NewAuthenticator(config Config) (Authenticator, error) {
 	switch config.Type {
 	case "ldap":
 		return NewLDAPAuthenticator(config.LDAP)
+	case "custom_jwt":
+		return NewCustomJWTAuthenticator(config.CustomJWT)
 	case "none":
 		return nil, nil
 	default:
-		return nil, fmt.Errorf("unknown auth type: %s (valid options: ldap, none)", config.Type)
+		return nil, fmt.Errorf("unknown auth type: %s (valid options: ldap, custom_jwt, none)", config.Type)
 	}
 }
