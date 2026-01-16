@@ -7,13 +7,16 @@ import (
 	"time"
 )
 
+// UpdateConfig stores pause information for all packages in a repository
 type UpdateConfig struct {
-	Date time.Time `json:"updateAfter"`
+	// Packages maps package name to the time after which updates are allowed
+	Packages map[string]time.Time `json:"packages"`
 }
 
 const DEFAULT_UPDATE_PAUSE_DURATION = 24 * time.Hour
 const PACKAGE_UPDATE_FILE = ".update"
 
+// ReadFromDir reads the update config from the repository directory
 func ReadFromDir(dir string) (*UpdateConfig, error) {
 	path := filepath.Join(dir, PACKAGE_UPDATE_FILE)
 	data, err := os.ReadFile(path)
@@ -27,9 +30,15 @@ func ReadFromDir(dir string) (*UpdateConfig, error) {
 		return nil, err
 	}
 
+	// Initialize map if nil (for backwards compatibility or empty file)
+	if config.Packages == nil {
+		config.Packages = make(map[string]time.Time)
+	}
+
 	return &config, nil
 }
 
+// IsUpdateConfigExists checks if the update config file exists in the directory
 func IsUpdateConfigExists(dir string) (bool, error) {
 	path := filepath.Join(dir, PACKAGE_UPDATE_FILE)
 	_, err := os.Stat(path)
@@ -42,6 +51,7 @@ func IsUpdateConfigExists(dir string) (bool, error) {
 	}
 }
 
+// WriteToDir writes the update config to the repository directory
 func (config *UpdateConfig) WriteToDir(dir string) error {
 	path := filepath.Join(dir, PACKAGE_UPDATE_FILE)
 	jsonData, err := json.MarshalIndent(config, "", "    ")
@@ -52,10 +62,43 @@ func (config *UpdateConfig) WriteToDir(dir string) error {
 	return os.WriteFile(path, jsonData, 0644)
 }
 
-func (config *UpdateConfig) IsExpired() bool {
-	return time.Now().After(config.Date)
+// IsPackagePaused checks if a specific package is paused (not expired)
+func (config *UpdateConfig) IsPackagePaused(packageName string) bool {
+	if config.Packages == nil {
+		return false
+	}
+	updateAfter, exists := config.Packages[packageName]
+	if !exists {
+		return false
+	}
+	// Paused if current time is BEFORE the updateAfter time
+	return time.Now().Before(updateAfter)
 }
 
-func (config *UpdateConfig) UpdateAfterDate(duration time.Duration) {
-	config.Date = time.Now().Add(duration)
+// PausePackage sets the pause duration for a specific package
+func (config *UpdateConfig) PausePackage(packageName string, duration time.Duration) {
+	if config.Packages == nil {
+		config.Packages = make(map[string]time.Time)
+	}
+	config.Packages[packageName] = time.Now().Add(duration)
+}
+
+// RemoveExpiredPauses removes all expired pause entries from the config
+func (config *UpdateConfig) RemoveExpiredPauses() {
+	if config.Packages == nil {
+		return
+	}
+	now := time.Now()
+	for pkg, updateAfter := range config.Packages {
+		if now.After(updateAfter) {
+			delete(config.Packages, pkg)
+		}
+	}
+}
+
+// NewUpdateConfig creates a new empty UpdateConfig
+func NewUpdateConfig() *UpdateConfig {
+	return &UpdateConfig{
+		Packages: make(map[string]time.Time),
+	}
 }

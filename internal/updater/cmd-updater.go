@@ -110,16 +110,19 @@ func (u *CmdUpdater) Update() error {
 			if err != nil {
 				errPool = append(errPool, err)
 				fmt.Printf("Cannot get the package %s: %v\n", pkgName, err)
+				u.pausePackageOnFailure(pkgName)
 				continue
 			}
 			if ok, err := remoteRepo.Verify(pkg, u.VerifyChecksum, u.VerifySignature); !ok || err != nil {
 				errPool = append(errPool, err)
 				fmt.Printf("Failed to verify package %s, skip it: %v\n", pkgName, err)
+				u.pausePackageOnFailure(pkgName)
 				continue
 			}
 			if err = repo.Update(pkg); err != nil {
 				errPool = append(errPool, err)
 				fmt.Printf("Cannot update the package %s: %v\n", pkgName, err)
+				// Note: repo.Update() calls repo.Install() which already handles pausing on failure
 			}
 		}
 	}
@@ -134,16 +137,19 @@ func (u *CmdUpdater) Update() error {
 				if err != nil {
 					errPool = append(errPool, err)
 					fmt.Printf("Cannot get the package %s: %v\n", pkgName, err)
+					u.pausePackageOnFailure(pkgName)
 					continue
 				}
 				if ok, err := remoteRepo.Verify(pkg, u.VerifyChecksum, u.VerifySignature); !ok || err != nil {
 					errPool = append(errPool, err)
 					fmt.Printf("Failed to verify package %s, skip it: %v\n", pkgName, err)
+					u.pausePackageOnFailure(pkgName)
 					continue
 				}
 				if err = repo.Install(pkg); err != nil {
 					errPool = append(errPool, err)
 					fmt.Printf("Cannot install the package %s: %v\n", pkgName, err)
+					// Note: repo.Install() already handles pausing on failure
 				}
 			} else {
 				errPool = append(errPool,
@@ -251,6 +257,18 @@ func (u *CmdUpdater) checkUpdateCommands() <-chan bool {
 		// (exist in remote available pkgs, but not in local packages)
 		for pkg, version := range availablePkgs {
 			if _, exist := localPkgMap[pkg]; !exist {
+				// Check if the new package is paused (e.g., from a previous failed installation)
+				if !u.IgnoreUpdatePause {
+					paused, err := u.LocalRepo.IsPackageUpdatePaused(pkg)
+					if err != nil {
+						log.Errorf("Cannot check if package %s is paused: %v", pkg, err)
+					}
+					if paused {
+						// skip paused packages
+						log.Infof("Skipping paused package %s", pkg)
+						continue
+					}
+				}
 				install[pkg] = version
 			}
 		}
@@ -355,4 +373,16 @@ func (u *CmdUpdater) UpdateSyncTimestamp() error {
 
 	log.Infof("Remote '%s': Sync timestamp updated to %s", u.LocalRepo.Name(), time.Now().Add(time.Hour*delay).Format(time.RFC3339))
 	return err
+}
+
+// pausePackageOnFailure pauses a package after an installation failure
+func (u *CmdUpdater) pausePackageOnFailure(pkgName string) {
+	if err := u.LocalRepo.PausePackageUpdate(pkgName); err != nil {
+		console.Warn("Failed to pause update for package %s: %v", pkgName, err)
+	} else {
+		console.Reminder(
+			"Package %s has been paused due to installation failure, explicitly run `update package` to retry installation.",
+			pkgName,
+		)
+	}
 }
