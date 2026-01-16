@@ -11,7 +11,7 @@ type UpdateConfig struct {
 	Date time.Time `json:"updateAfter"`
 }
 
-const DEFAULT_UPDATE_LOCK_DURATION = 24 * time.Hour
+const DEFAULT_UPDATE_PAUSE_DURATION = 24 * time.Hour
 const PACKAGE_UPDATE_FILE = ".update"
 
 func ReadFromDir(dir string) (*UpdateConfig, error) {

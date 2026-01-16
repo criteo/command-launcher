@@ -228,12 +228,12 @@ func (u *CmdUpdater) checkUpdateCommands() <-chan bool {
 			localPkgMap[localPkg.Name()] = localPkg.Version()
 			if remoteVersion, exist := availablePkgs[localPkg.Name()]; exist {
 				if !u.IgnoreUpdatePause {
-					locked, err := u.LocalRepo.IsPackageUpdatePaused(localPkg.Name())
+					paused, err := u.LocalRepo.IsPackageUpdatePaused(localPkg.Name())
 					if err != nil {
-						log.Errorf("Cannot check if package %s is locked: %v", localPkg.Name(), err)
+						log.Errorf("Cannot check if package %s is paused: %v", localPkg.Name(), err)
 					}
-					if locked {
-						// skip locked packages
+					if paused {
+						// skip paused packages
 						continue
 					}
 				}

@@ -13,7 +13,7 @@ func TestReadFromDir(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	config := &UpdateConfig{
-		Date: time.Now().Add(DEFAULT_UPDATE_LOCK_DURATION),
+		Date: time.Now().Add(DEFAULT_UPDATE_PAUSE_DURATION),
 	}
 	err := config.WriteToDir(tmpDir)
 	assert.NoError(t, err)
@@ -56,8 +56,8 @@ func TestWriteToDir(t *testing.T) {
 	err := config.WriteToDir(tmpDir)
 	assert.NoError(t, err)
 
-	lockFile := filepath.Join(tmpDir, PACKAGE_UPDATE_FILE)
-	_, err = os.Stat(lockFile)
+	pauseFile := filepath.Join(tmpDir, PACKAGE_UPDATE_FILE)
+	_, err = os.Stat(pauseFile)
 	assert.NoError(t, err)
 
 	readConfig, err := ReadFromDir(tmpDir)

@@ -177,7 +177,7 @@ func (repoIndex *defaultRepoIndex) PausePackageUpdate(name string) error {
 				return err
 			}
 		}
-		uConfig.UpdateAfterDate(updateConfig.DEFAULT_UPDATE_LOCK_DURATION)
+		uConfig.UpdateAfterDate(updateConfig.DEFAULT_UPDATE_PAUSE_DURATION)
 		return uConfig.WriteToDir(pkgDir)
 	}
 }
