@@ -9,8 +9,8 @@ import (
 
 // UpdateConfig stores pause information for all packages in a repository
 type UpdateConfig struct {
-	// Packages maps package name to the time after which updates are allowed
-	Packages map[string]time.Time `json:"packages"`
+	// PausedUntil maps package name to the time until which updates are paused
+	PausedUntil map[string]time.Time `json:"pausedUntil"`
 }
 
 const DEFAULT_UPDATE_PAUSE_DURATION = 24 * time.Hour
@@ -31,8 +31,8 @@ func ReadFromDir(dir string) (*UpdateConfig, error) {
 	}
 
 	// Initialize map if nil (for backwards compatibility or empty file)
-	if config.Packages == nil {
-		config.Packages = make(map[string]time.Time)
+	if config.PausedUntil == nil {
+		config.PausedUntil = make(map[string]time.Time)
 	}
 
 	return &config, nil
@@ -64,10 +64,10 @@ func (config *UpdateConfig) WriteToDir(dir string) error {
 
 // IsPackagePaused checks if a specific package is paused (not expired)
 func (config *UpdateConfig) IsPackagePaused(packageName string) bool {
-	if config.Packages == nil {
+	if config.PausedUntil == nil {
 		return false
 	}
-	updateAfter, exists := config.Packages[packageName]
+	updateAfter, exists := config.PausedUntil[packageName]
 	if !exists {
 		return false
 	}
@@ -77,21 +77,21 @@ func (config *UpdateConfig) IsPackagePaused(packageName string) bool {
 
 // PausePackage sets the pause duration for a specific package
 func (config *UpdateConfig) PausePackage(packageName string, duration time.Duration) {
-	if config.Packages == nil {
-		config.Packages = make(map[string]time.Time)
+	if config.PausedUntil == nil {
+		config.PausedUntil = make(map[string]time.Time)
 	}
-	config.Packages[packageName] = time.Now().Add(duration)
+	config.PausedUntil[packageName] = time.Now().Add(duration)
 }
 
 // RemoveExpiredPauses removes all expired pause entries from the config
 func (config *UpdateConfig) RemoveExpiredPauses() {
-	if config.Packages == nil {
+	if config.PausedUntil == nil {
 		return
 	}
 	now := time.Now()
-	for pkg, updateAfter := range config.Packages {
+	for pkg, updateAfter := range config.PausedUntil {
 		if now.After(updateAfter) {
-			delete(config.Packages, pkg)
+			delete(config.PausedUntil, pkg)
 		}
 	}
 }
@@ -99,6 +99,6 @@ func (config *UpdateConfig) RemoveExpiredPauses() {
 // NewUpdateConfig creates a new empty UpdateConfig
 func NewUpdateConfig() *UpdateConfig {
 	return &UpdateConfig{
-		Packages: make(map[string]time.Time),
+		PausedUntil: make(map[string]time.Time),
 	}
 }

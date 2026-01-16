@@ -50,7 +50,7 @@ func TestWriteToDir(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	config := NewUpdateConfig()
-	config.Packages["test-package"] = time.Date(2025, 11, 14, 12, 0, 0, 0, time.UTC)
+	config.PausedUntil["test-package"] = time.Date(2025, 11, 14, 12, 0, 0, 0, time.UTC)
 
 	err := config.WriteToDir(tmpDir)
 	assert.NoError(t, err)
@@ -61,7 +61,7 @@ func TestWriteToDir(t *testing.T) {
 
 	readConfig, err := ReadFromDir(tmpDir)
 	assert.NoError(t, err)
-	assert.Equal(t, config.Packages["test-package"], readConfig.Packages["test-package"])
+	assert.Equal(t, config.PausedUntil["test-package"], readConfig.PausedUntil["test-package"])
 }
 
 func TestIsPackagePaused(t *testing.T) {
@@ -85,7 +85,7 @@ func TestIsPackagePaused(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			config := NewUpdateConfig()
-			config.Packages["test-package"] = tt.updateAfter
+			config.PausedUntil["test-package"] = tt.updateAfter
 			result := config.IsPackagePaused("test-package")
 			assert.Equal(t, tt.expected, result)
 		})
@@ -108,19 +108,19 @@ func TestPausePackage(t *testing.T) {
 	expectedMin := before.Add(duration)
 	expectedMax := after.Add(duration)
 
-	pauseTime := config.Packages["test-package"]
+	pauseTime := config.PausedUntil["test-package"]
 	assert.True(t, !pauseTime.Before(expectedMin) && !pauseTime.After(expectedMax))
 }
 
 func TestRemoveExpiredPauses(t *testing.T) {
 	config := NewUpdateConfig()
-	config.Packages["expired-package"] = time.Now().Add(-1 * time.Hour)
-	config.Packages["active-package"] = time.Now().Add(1 * time.Hour)
+	config.PausedUntil["expired-package"] = time.Now().Add(-1 * time.Hour)
+	config.PausedUntil["active-package"] = time.Now().Add(1 * time.Hour)
 
 	config.RemoveExpiredPauses()
 
-	_, expiredExists := config.Packages["expired-package"]
-	_, activeExists := config.Packages["active-package"]
+	_, expiredExists := config.PausedUntil["expired-package"]
+	_, activeExists := config.PausedUntil["active-package"]
 
 	assert.False(t, expiredExists, "expired package should be removed")
 	assert.True(t, activeExists, "active package should remain")
