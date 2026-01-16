@@ -53,6 +53,9 @@ func IsUpdateConfigExists(dir string) (bool, error) {
 
 // WriteToDir writes the update config to the repository directory
 func (config *UpdateConfig) WriteToDir(dir string) error {
+	// Clean up expired pauses before writing
+	config.RemoveExpiredPauses()
+
 	path := filepath.Join(dir, PACKAGE_UPDATE_FILE)
 	jsonData, err := json.MarshalIndent(config, "", "    ")
 	if err != nil {
