@@ -149,9 +149,7 @@ func AddRemote(name, repoDir, remoteBaseUrl string, syncPolicy string) error {
 		return err
 	}
 
-	if syncPolicy != "never" && syncPolicy != "hourly" &&
-		syncPolicy != "daily" && syncPolicy != "weekly" &&
-		syncPolicy != "monthly" && syncPolicy != "always" {
+	if !IsValidSyncPolicy(syncPolicy) {
 		syncPolicy = "always"
 	}
 
@@ -188,6 +186,44 @@ func RemoveRemote(name string) error {
 
 	viper.Set(EXTRA_REMOTES_KEY, new_remotes)
 	return nil
+}
+
+func UpdateRemote(name string, syncPolicy string) error {
+	remotes := []ExtraRemote{}
+	err := viper.UnmarshalKey(EXTRA_REMOTES_KEY, &remotes)
+	if err != nil {
+		return err
+	}
+
+	if !IsValidSyncPolicy(syncPolicy) {
+		return fmt.Errorf("invalid sync policy: %s, must be one of: never, always, hourly, daily, weekly, monthly", syncPolicy)
+	}
+
+	found := false
+	for i, remote := range remotes {
+		if remote.Name == name {
+			remotes[i].SyncPolicy = syncPolicy
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("remote '%s' not found", name)
+	}
+
+	viper.Set(EXTRA_REMOTES_KEY, remotes)
+	return nil
+}
+
+func IsValidSyncPolicy(policy string) bool {
+	return policy == "never" || policy == "always" ||
+		policy == "hourly" || policy == "daily" ||
+		policy == "weekly" || policy == "monthly"
+}
+
+func ValidSyncPolicies() []string {
+	return []string{"never", "always", "hourly", "daily", "weekly", "monthly"}
 }
 
 func Remotes() ([]ExtraRemote, error) {

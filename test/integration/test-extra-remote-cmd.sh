@@ -104,6 +104,66 @@ else
   exit 1
 fi
 
+echo "> test remote add with --sync-policy flag"
+# delete extra1 first to test adding with sync-policy
+$CL_PATH remote delete extra1
+
+RESULT=$($CL_PATH remote add extra1 https://raw.githubusercontent.com/criteo/command-launcher/main/test/remote-repo --sync-policy daily)
+
+echo "* should have sync_policy set to 'daily' in config"
+RESULT=$(cat $CL_HOME/config.json | grep -o '"sync_policy": "daily"')
+if [ "$RESULT" == '"sync_policy": "daily"' ]; then
+  echo "OK"
+else
+  echo "KO - sync_policy should be 'daily', got: $RESULT"
+  exit 1
+fi
+
+echo "> test remote set --sync-policy flag"
+RESULT=$($CL_PATH remote set extra1 --sync-policy weekly)
+
+echo "* should have sync_policy updated to 'weekly' in config"
+RESULT=$(cat $CL_HOME/config.json | grep -o '"sync_policy": "weekly"')
+if [ "$RESULT" == '"sync_policy": "weekly"' ]; then
+  echo "OK"
+else
+  echo "KO - sync_policy should be 'weekly', got: $RESULT"
+  exit 1
+fi
+
+echo "* should print confirmation message"
+RESULT=$($CL_PATH remote set extra1 --sync-policy monthly)
+echo "$RESULT" | grep -q "Remote 'extra1' sync policy updated to 'monthly'"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should print confirmation message"
+  exit 1
+fi
+
+echo "> test remote set with invalid sync-policy"
+RESULT=$($CL_PATH remote set extra1 --sync-policy invalid 2>&1)
+echo "$RESULT" | grep -q "invalid sync policy"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should reject invalid sync policy"
+  exit 1
+fi
+
+echo "> test remote add with invalid sync-policy"
+RESULT=$($CL_PATH remote add extra2 https://example.com --sync-policy invalid 2>&1)
+echo "$RESULT" | grep -q "invalid sync policy"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should reject invalid sync policy on add"
+  exit 1
+fi
+
+# reset sync policy to always for subsequent tests
+$CL_PATH remote set extra1 --sync-policy always
+
 echo "> test sync policy"
 
 echo "* should NOT have the sync.timestamp file"
@@ -114,8 +174,8 @@ if [ $? -eq 0 ]; then
 else
   echo "OK"
 fi
-# change the extra remote's sync policy to 'weekly'
-sed -i -e 's/always/weekly/g' $CL_HOME/config.json
+# change the extra remote's sync policy to 'weekly' using remote set command
+$CL_PATH remote set extra1 --sync-policy weekly
 
 # now remove one package from local repository and run command launcher to sync
 $CL_PATH config command_update_enabled true
