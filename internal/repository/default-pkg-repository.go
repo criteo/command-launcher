@@ -64,12 +64,7 @@ func (repo *defaultPackageRepository) Install(pkg command.Package) error {
 	}
 
 	pkgDir := filepath.Join(repo.RepoDir, pkg.Name())
-	err := os.MkdirAll(pkgDir, 0755)
-	if err != nil {
-		return fmt.Errorf("cannot create the commmand package folder (%v)", err)
-	}
-
-	_, err = pkg.InstallTo(pkgDir)
+	_, err := pkg.InstallTo(pkgDir)
 	if err != nil {
 		err := repo.repoIndex.PausePackageUpdate(pkg.Name())
 		if err != nil {

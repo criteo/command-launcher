@@ -88,7 +88,6 @@ func (u *CmdUpdater) Update() error {
 			console.Highlight("- remove deprecated package '%s', it will not be available from now on\n", pkg)
 			if err = repo.Uninstall(pkg); err != nil {
 				errPool = append(errPool, err)
-				fmt.Printf("Cannot uninstall the package %s: %v\n", pkg, err)
 			}
 		}
 	}
@@ -109,17 +108,14 @@ func (u *CmdUpdater) Update() error {
 			pkg, err := remoteRepo.Package(pkgName, remoteVersion)
 			if err != nil {
 				errPool = append(errPool, err)
-				fmt.Printf("Cannot get the package %s: %v\n", pkgName, err)
 				continue
 			}
 			if ok, err := remoteRepo.Verify(pkg, u.VerifyChecksum, u.VerifySignature); !ok || err != nil {
 				errPool = append(errPool, err)
-				fmt.Printf("Failed to verify package %s, skip it: %v\n", pkgName, err)
 				continue
 			}
 			if err = repo.Update(pkg); err != nil {
 				errPool = append(errPool, err)
-				fmt.Printf("Cannot update the package %s: %v\n", pkgName, err)
 			}
 		}
 	}
@@ -133,17 +129,14 @@ func (u *CmdUpdater) Update() error {
 				pkg, err := remoteRepo.Package(pkgName, remoteVersion)
 				if err != nil {
 					errPool = append(errPool, err)
-					fmt.Printf("Cannot get the package %s: %v\n", pkgName, err)
 					continue
 				}
 				if ok, err := remoteRepo.Verify(pkg, u.VerifyChecksum, u.VerifySignature); !ok || err != nil {
 					errPool = append(errPool, err)
-					fmt.Printf("Failed to verify package %s, skip it: %v\n", pkgName, err)
 					continue
 				}
 				if err = repo.Install(pkg); err != nil {
 					errPool = append(errPool, err)
-					fmt.Printf("Cannot install the package %s: %v\n", pkgName, err)
 				}
 			} else {
 				errPool = append(errPool,
