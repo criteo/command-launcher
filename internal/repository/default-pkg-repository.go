@@ -64,20 +64,15 @@ func (repo *defaultPackageRepository) Install(pkg command.Package) error {
 	}
 
 	pkgDir := filepath.Join(repo.RepoDir, pkg.Name())
-	err := os.MkdirAll(pkgDir, 0755)
-	if err != nil {
-		return fmt.Errorf("cannot create the commmand package folder (%v)", err)
-	}
-
-	_, err = pkg.InstallTo(pkgDir)
+	_, err := pkg.InstallTo(pkgDir)
 	if err != nil {
 		err := repo.repoIndex.PausePackageUpdate(pkg.Name())
 		if err != nil {
-			console.Warn("Failed to set lock for package %s: %v", pkg.Name(), err)
+			console.Warn("Failed to pause update for package %s: %v", pkg.Name(), err)
 		} else {
 			appCtx, _ := context.AppContext()
 			console.Reminder(
-				"Package %s has been locked due to installation failure, explicitly run `%s update package` to retry installation.",
+				"Package %s has been paused due to installation failure, explicitly run `%s update --package` to retry installation.",
 				pkg.Name(),
 				appCtx.AppName(),
 			)

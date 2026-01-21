@@ -32,6 +32,7 @@ const (
 
 type defaultRepoIndex struct {
 	id             string
+	repoDir        string                     // the repository directory
 	packages       map[string]command.PackageManifest
 	packageDirs    map[string]string          // key is the package name, value is the package directory
 	groupCmds      map[string]command.Command // key is in form of [repo]>[package]>[group]>[cmd name]
@@ -98,6 +99,7 @@ func (repoIndex *defaultRepoIndex) extractCmds(repoDir string) {
 }
 
 func (repoIndex *defaultRepoIndex) Load(repoDir string) error {
+	repoIndex.repoDir = repoDir
 	err := repoIndex.loadPackages(repoDir)
 	if err != nil {
 		return err
@@ -144,42 +146,36 @@ func (repoIndex *defaultRepoIndex) Package(name string) (command.PackageManifest
 }
 
 func (repoIndex *defaultRepoIndex) IsPackageUpdatePaused(name string) (bool, error) {
-	if _, exists := repoIndex.packageDirs[name]; !exists {
-		return false, fmt.Errorf("cannot find the package '%s'", name)
-	} else {
-		pkgDir := repoIndex.packageDirs[name]
-		exists, err := updateConfig.IsUpdateConfigExists(pkgDir)
-		if err != nil {
-			return false, err
-		}
-		if !exists {
-			return false, nil
-		}
-		uConfig, err := updateConfig.ReadFromDir(pkgDir)
-		if err != nil {
-			return false, err
-		}
-		return uConfig.IsExpired(), nil
+	// Read pause config from repository root directory
+	exists, err := updateConfig.IsUpdateConfigExists(repoIndex.repoDir)
+	if err != nil {
+		return false, err
 	}
+	if !exists {
+		return false, nil
+	}
+	uConfig, err := updateConfig.ReadFromDir(repoIndex.repoDir)
+	if err != nil {
+		return false, err
+	}
+	return uConfig.IsPackagePaused(name), nil
 }
 
 func (repoIndex *defaultRepoIndex) PausePackageUpdate(name string) error {
-	if _, exists := repoIndex.packageDirs[name]; !exists {
-		return fmt.Errorf("cannot find the package '%s'", name)
-	} else {
-		pkgDir := repoIndex.packageDirs[name]
-		uConfig := &updateConfig.UpdateConfig{}
-		if exists, err := updateConfig.IsUpdateConfigExists(pkgDir); err != nil {
+	// Read or create pause config at repository root directory
+	var uConfig *updateConfig.UpdateConfig
+	if exists, err := updateConfig.IsUpdateConfigExists(repoIndex.repoDir); err != nil {
+		return err
+	} else if exists {
+		uConfig, err = updateConfig.ReadFromDir(repoIndex.repoDir)
+		if err != nil {
 			return err
-		} else if exists {
-			uConfig, err = updateConfig.ReadFromDir(pkgDir)
-			if err != nil {
-				return err
-			}
 		}
-		uConfig.UpdateAfterDate(updateConfig.DEFAULT_UPDATE_LOCK_DURATION)
-		return uConfig.WriteToDir(pkgDir)
+	} else {
+		uConfig = updateConfig.NewUpdateConfig()
 	}
+	uConfig.PausePackage(name, updateConfig.DEFAULT_UPDATE_PAUSE_DURATION)
+	return uConfig.WriteToDir(repoIndex.repoDir)
 }
 
 func (repoIndex *defaultRepoIndex) Command(pkg string, group string, name string) (command.Command, error) {
