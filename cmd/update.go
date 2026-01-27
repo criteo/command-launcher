@@ -91,14 +91,18 @@ Check the update of %s and its commands.
 				// now update the packages in extra remote
 				for _, source := range extraPackageSources {
 					updater := source.InitUpdater(&u, updateFlags.Timeout, enableCI, packageLockFile, false, false)
-					// force sync policy to always, as the intention of running this command is to update the packages
-					updater.SyncPolicy = "always"
-					updater.CheckUpdateAsync()
-					err := updater.Update()
-					if err != nil {
-						console.Error(err.Error())
-					} else {
-						console.Success("packages in '%s' repository are up-to-date", source.Name)
+					if updater != nil {
+						// force sync policy to always, as the intention of running this command is to update the packages
+						updater.SyncPolicy = "always"
+						// force ignoring the update pause if exist
+						updater.IgnoreUpdatePause = true
+						updater.CheckUpdateAsync()
+						err := updater.Update()
+						if err != nil {
+							console.Error(err.Error())
+						} else {
+							console.Success("packages in '%s' repository are up-to-date", source.Name)
+						}
 					}
 				}
 			}
