@@ -212,7 +212,7 @@ func initBackend() {
 	workspaceSources := []*backend.PackageSource{}
 	if viper.GetBool(config.ENABLE_WORKSPACE_PACKAGES_KEY) {
 		wd, _ := os.Getwd()
-		for _, src := range backend.DiscoverWorkspaceSources(wd) {
+		for _, src := range backend.DiscoverWorkspaceSources(wd, rootCtxt.appCtx.AppName()) {
 			if consent.CheckWorkspaceConsent(src.RepoDir) || consent.RequestWorkspaceConsent(src.RepoDir) {
 				workspaceSources = append(workspaceSources, src)
 			}

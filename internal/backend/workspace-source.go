@@ -2,6 +2,7 @@ package backend
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,19 +12,25 @@ import (
 	"github.com/criteo/command-launcher/internal/repository"
 )
 
-const WorkspacePackagesFileName = ".cdt-packages"
 const WorkspaceSourcePrefix = "workspace:"
 
+// WorkspacePackagesFileName returns the dot file name for the given app name.
+// For example, app "cdt" -> ".cdt-packages", app "cola" -> ".cola-packages".
+func WorkspacePackagesFileName(appName string) string {
+	return fmt.Sprintf(".%s-packages", appName)
+}
+
 // DiscoverWorkspaceSources walks up from startDir to the filesystem root,
-// looking for .cdt-packages files. Returns workspace PackageSources ordered
+// looking for .<appName>-packages files. Returns workspace PackageSources ordered
 // deepest-first (closest to startDir has highest priority).
-func DiscoverWorkspaceSources(startDir string) []*PackageSource {
+func DiscoverWorkspaceSources(startDir string, appName string) []*PackageSource {
 	sources := []*PackageSource{}
 	dir := startDir
 	checked := ""
+	fileName := WorkspacePackagesFileName(appName)
 
 	for dir != checked {
-		candidate := filepath.Join(dir, WorkspacePackagesFileName)
+		candidate := filepath.Join(dir, fileName)
 		if _, err := os.Stat(candidate); err == nil {
 			pkgPaths, err := ParseWorkspaceFile(candidate)
 			if err != nil {

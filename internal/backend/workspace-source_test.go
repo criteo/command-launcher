@@ -8,6 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const testAppName = "cdt"
+
 func createTestManifest(t *testing.T, dir string, pkgName string) {
 	t.Helper()
 	pkgDir := filepath.Join(dir, pkgName)
@@ -30,9 +32,15 @@ func createTestManifest(t *testing.T, dir string, pkgName string) {
 	assert.Nil(t, err)
 }
 
+func TestWorkspacePackagesFileName(t *testing.T) {
+	assert.Equal(t, ".cdt-packages", WorkspacePackagesFileName("cdt"))
+	assert.Equal(t, ".cola-packages", WorkspacePackagesFileName("cola"))
+	assert.Equal(t, ".cl-packages", WorkspacePackagesFileName("cl"))
+}
+
 func TestDiscoverWorkspaceSources_NoneFound(t *testing.T) {
 	tmpDir := t.TempDir()
-	sources := DiscoverWorkspaceSources(tmpDir)
+	sources := DiscoverWorkspaceSources(tmpDir, testAppName)
 	assert.Empty(t, sources)
 }
 
@@ -48,7 +56,7 @@ func TestDiscoverWorkspaceSources_SingleFile(t *testing.T) {
 	createTestManifest(t, projectDir, "my-tool")
 
 	// Create .cdt-packages
-	err = os.WriteFile(filepath.Join(projectDir, WorkspacePackagesFileName), []byte("my-tool\n"), 0644)
+	err = os.WriteFile(filepath.Join(projectDir, WorkspacePackagesFileName(testAppName)), []byte("my-tool\n"), 0644)
 	assert.Nil(t, err)
 
 	// Start from a subdirectory
@@ -56,7 +64,7 @@ func TestDiscoverWorkspaceSources_SingleFile(t *testing.T) {
 	err = os.MkdirAll(subDir, 0755)
 	assert.Nil(t, err)
 
-	sources := DiscoverWorkspaceSources(subDir)
+	sources := DiscoverWorkspaceSources(subDir, testAppName)
 	assert.Len(t, sources, 1)
 	assert.Equal(t, WorkspaceSourcePrefix+projectDir, sources[0].Name)
 	assert.Equal(t, projectDir, sources[0].RepoDir)
@@ -72,7 +80,7 @@ func TestDiscoverWorkspaceSources_MultipleFiles(t *testing.T) {
 	err := os.MkdirAll(workspaceDir, 0755)
 	assert.Nil(t, err)
 	createTestManifest(t, workspaceDir, "shared-tool")
-	err = os.WriteFile(filepath.Join(workspaceDir, WorkspacePackagesFileName), []byte("shared-tool\n"), 0644)
+	err = os.WriteFile(filepath.Join(workspaceDir, WorkspacePackagesFileName(testAppName)), []byte("shared-tool\n"), 0644)
 	assert.Nil(t, err)
 
 	// Create inner project with a package
@@ -80,7 +88,7 @@ func TestDiscoverWorkspaceSources_MultipleFiles(t *testing.T) {
 	err = os.MkdirAll(projectDir, 0755)
 	assert.Nil(t, err)
 	createTestManifest(t, projectDir, "project-tool")
-	err = os.WriteFile(filepath.Join(projectDir, WorkspacePackagesFileName), []byte("project-tool\n"), 0644)
+	err = os.WriteFile(filepath.Join(projectDir, WorkspacePackagesFileName(testAppName)), []byte("project-tool\n"), 0644)
 	assert.Nil(t, err)
 
 	// Start from project subdirectory
@@ -88,7 +96,7 @@ func TestDiscoverWorkspaceSources_MultipleFiles(t *testing.T) {
 	err = os.MkdirAll(subDir, 0755)
 	assert.Nil(t, err)
 
-	sources := DiscoverWorkspaceSources(subDir)
+	sources := DiscoverWorkspaceSources(subDir, testAppName)
 	assert.Len(t, sources, 2)
 	// Deepest first
 	assert.Equal(t, WorkspaceSourcePrefix+projectDir, sources[0].Name)
@@ -106,7 +114,7 @@ valid-pkg
 
 # Another comment
 `
-	dotFile := filepath.Join(tmpDir, WorkspacePackagesFileName)
+	dotFile := filepath.Join(tmpDir, WorkspacePackagesFileName(testAppName))
 	err := os.WriteFile(dotFile, []byte(content), 0644)
 	assert.Nil(t, err)
 
@@ -126,7 +134,7 @@ func TestParseWorkspaceFile_RelativePaths(t *testing.T) {
 	createTestManifest(t, filepath.Join(tmpDir, "tools"), "my-tool")
 
 	content := "tools/my-tool\n"
-	dotFile := filepath.Join(tmpDir, WorkspacePackagesFileName)
+	dotFile := filepath.Join(tmpDir, WorkspacePackagesFileName(testAppName))
 	err = os.WriteFile(dotFile, []byte(content), 0644)
 	assert.Nil(t, err)
 
@@ -140,7 +148,7 @@ func TestParseWorkspaceFile_InvalidPath(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	content := "nonexistent-package\n"
-	dotFile := filepath.Join(tmpDir, WorkspacePackagesFileName)
+	dotFile := filepath.Join(tmpDir, WorkspacePackagesFileName(testAppName))
 	err := os.WriteFile(dotFile, []byte(content), 0644)
 	assert.Nil(t, err)
 
@@ -164,7 +172,7 @@ func TestParseWorkspaceFile_RejectParentTraversal(t *testing.T) {
 	content := `../outside/evil-pkg
 tools/../../outside/evil-pkg
 `
-	dotFile := filepath.Join(workspaceDir, WorkspacePackagesFileName)
+	dotFile := filepath.Join(workspaceDir, WorkspacePackagesFileName(testAppName))
 	err = os.WriteFile(dotFile, []byte(content), 0644)
 	assert.Nil(t, err)
 
@@ -186,7 +194,7 @@ func TestParseWorkspaceFile_AllowDotPaths(t *testing.T) {
 	content := `./tools/my-tool
 .hidden/hidden-tool
 `
-	dotFile := filepath.Join(tmpDir, WorkspacePackagesFileName)
+	dotFile := filepath.Join(tmpDir, WorkspacePackagesFileName(testAppName))
 	err := os.WriteFile(dotFile, []byte(content), 0644)
 	assert.Nil(t, err)
 
