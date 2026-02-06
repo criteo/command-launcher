@@ -14,11 +14,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// DefaultBackend supports multiple managed repositories and 1 dropin repository
-// It contains:
-// - 1 dropin local repository - index 0
-// - 1 default managed repository - index 1
-// - n additional managed repository - index 2 ..
+// DefaultBackend supports multiple managed repositories, 1 dropin repository,
+// and 0..n workspace repositories.
+// Source ordering (determines command priority):
+// - workspace sources (0..n, deepest first) - highest priority
+// - 1 dropin local repository
+// - 1 default managed repository
+// - n additional managed repositories - lowest priority
 type DefaultBackend struct {
 	homeDir string
 	sources []*PackageSource
@@ -31,8 +33,6 @@ type DefaultBackend struct {
 	tmpAlias  map[string]string
 }
 
-const DROPIN_REPO_INDEX = 0
-const DEFAULT_REPO_INDEX = 1
 const DEFAULT_REPO_ID = "default"
 const DROPIN_REPO_ID = "dropin"
 
@@ -40,11 +40,17 @@ const RENAME_FILE_NAME = "rename.json"
 
 // Create a new default backend with multiple local repository directories
 // When any of these repositories failed to load, an error is returned.
-func NewDefaultBackend(homeDir string, dropinSource *PackageSource, defaultSource *PackageSource, additionalSources ...*PackageSource) (Backend, error) {
+func NewDefaultBackend(homeDir string, workspaceSources []*PackageSource, dropinSource *PackageSource, defaultSource *PackageSource, additionalSources ...*PackageSource) (Backend, error) {
+	// Build sources slice: workspace (highest priority) -> dropin -> default -> extras (lowest priority)
+	sources := make([]*PackageSource, 0, len(workspaceSources)+2+len(additionalSources))
+	sources = append(sources, workspaceSources...)
+	sources = append(sources, dropinSource, defaultSource)
+	sources = append(sources, additionalSources...)
+
 	backend := &DefaultBackend{
 		// input properties
 		homeDir: homeDir,
-		sources: append([]*PackageSource{dropinSource, defaultSource}, additionalSources...),
+		sources: sources,
 
 		// data need to be reset during reload
 		cmdsCache:      map[string]command.Command{},
@@ -76,7 +82,7 @@ func (backend *DefaultBackend) Reload() error {
 func (backend *DefaultBackend) loadRepos() error {
 	failures := []string{}
 	for _, src := range backend.sources {
-		repo, err := repository.CreateLocalRepository(src.Name, src.RepoDir, nil)
+		repo, err := repository.CreateLocalRepository(src.Name, src.RepoDir, src.CustomRepoIndex)
 		if err != nil {
 			failures = append(failures, err.Error())
 			src.Failure = err
@@ -271,11 +277,21 @@ func (backend *DefaultBackend) FindSystemCommand(name string) (command.Command, 
 }
 
 func (backend DefaultBackend) DefaultRepository() repository.PackageRepository {
-	return backend.sources[DEFAULT_REPO_INDEX].Repo
+	for _, src := range backend.sources {
+		if src.Name == DEFAULT_REPO_ID {
+			return src.Repo
+		}
+	}
+	return nil
 }
 
 func (backend DefaultBackend) DropinRepository() repository.PackageRepository {
-	return backend.sources[DROPIN_REPO_INDEX].Repo
+	for _, src := range backend.sources {
+		if src.Name == DROPIN_REPO_ID {
+			return src.Repo
+		}
+	}
+	return nil
 }
 
 func (backend DefaultBackend) AllPackageSources() []*PackageSource {
@@ -284,12 +300,22 @@ func (backend DefaultBackend) AllPackageSources() []*PackageSource {
 
 func (backend DefaultBackend) ExtraPackageSources() []*PackageSource {
 	extras := []*PackageSource{}
-	for i, src := range backend.sources {
-		if i != DEFAULT_REPO_INDEX && i != DROPIN_REPO_INDEX {
+	for _, src := range backend.sources {
+		if src.Name != DEFAULT_REPO_ID && src.Name != DROPIN_REPO_ID && !strings.HasPrefix(src.Name, WorkspaceSourcePrefix) {
 			extras = append(extras, src)
 		}
 	}
 	return extras
+}
+
+func (backend DefaultBackend) WorkspaceSources() []*PackageSource {
+	sources := []*PackageSource{}
+	for _, src := range backend.sources {
+		if strings.HasPrefix(src.Name, WorkspaceSourcePrefix) {
+			sources = append(sources, src)
+		}
+	}
+	return sources
 }
 
 func (backend DefaultBackend) AllRepositories() []repository.PackageRepository {

@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/criteo/command-launcher/cmd/consent"
 	"github.com/criteo/command-launcher/cmd/metrics"
 	"github.com/criteo/command-launcher/internal/backend"
 	"github.com/criteo/command-launcher/internal/config"
@@ -207,9 +208,21 @@ func initBackend() {
 		))
 	}
 
+	// Discover workspace packages if enabled
+	workspaceSources := []*backend.PackageSource{}
+	if viper.GetBool(config.ENABLE_WORKSPACE_PACKAGES_KEY) {
+		wd, _ := os.Getwd()
+		for _, src := range backend.DiscoverWorkspaceSources(wd) {
+			if consent.CheckWorkspaceConsent(src.RepoDir) || consent.RequestWorkspaceConsent(src.RepoDir) {
+				workspaceSources = append(workspaceSources, src)
+			}
+		}
+	}
+
 	var err error
 	rootCtxt.backend, err = backend.NewDefaultBackend(
 		config.AppDir(),
+		workspaceSources,
 		backend.NewDropinSource(viper.GetString(config.DROPIN_FOLDER_KEY)),
 		backend.NewManagedSource(
 			"default",

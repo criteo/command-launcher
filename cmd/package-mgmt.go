@@ -25,6 +25,7 @@ type PackageFlags struct {
 	dropin     bool
 	local      bool
 	remote     bool
+	workspace  bool
 	includeCmd bool
 }
 
@@ -49,13 +50,22 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 		Short: "List installed packages and commands",
 		Long:  "List installed packages and commands with details",
 		PreRun: func(cmd *cobra.Command, args []string) {
-			if !packageFlags.dropin && !packageFlags.local && !packageFlags.remote {
+			if !packageFlags.dropin && !packageFlags.local && !packageFlags.remote && !packageFlags.workspace {
 				packageFlags.dropin = true
 				packageFlags.local = true
 				packageFlags.remote = false
+				packageFlags.workspace = true
 			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
+			if packageFlags.workspace {
+				for _, s := range rootCtxt.backend.WorkspaceSources() {
+					if s.Repo != nil {
+						printPackages(s.Repo, fmt.Sprintf("workspace: %s", s.RepoDir), packageFlags.includeCmd)
+					}
+				}
+			}
+
 			if packageFlags.local {
 				for _, s := range rootCtxt.backend.AllPackageSources() {
 					if s.IsManaged && s.Repo != nil {
@@ -86,9 +96,10 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 	packageListCmd.Flags().BoolVar(&packageFlags.dropin, "dropin", false, "List only the dropin packages")
 	packageListCmd.Flags().BoolVar(&packageFlags.local, "local", false, "List only the local packages")
 	packageListCmd.Flags().BoolVar(&packageFlags.remote, "remote", false, "List only the remote packages")
+	packageListCmd.Flags().BoolVar(&packageFlags.workspace, "workspace", false, "List only the workspace packages")
 	packageListCmd.Flags().BoolVar(&packageFlags.includeCmd, "include-cmd", false, "List the packages with all commands")
 	packageListCmd.Flags().BoolP("all", "a", true, "List all packages")
-	packageListCmd.MarkFlagsMutuallyExclusive("all", "dropin", "local", "remote")
+	packageListCmd.MarkFlagsMutuallyExclusive("all", "dropin", "local", "remote", "workspace")
 
 	packageInstallCmd := &cobra.Command{
 		Use:   "install [package_name]",
