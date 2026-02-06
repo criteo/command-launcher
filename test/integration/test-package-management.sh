@@ -125,17 +125,17 @@ fi
 echo "> test list local --include-cmd"
 RESULT=$($CL_PATH package list --local --include-cmd)
 
-echo "* should contain package version"
-echo "$RESULT" | grep -q "1.0.0"
+echo "* should contain package with version"
+echo "$RESULT" | grep -q "Package: command-launcher-demo (v1.0.0)"
 if [ $? -eq 0 ]; then
   echo "OK"
 else
-  echo "KO - should contain package version"
+  echo "KO - should contain package with version"
   exit 1
 fi
 
 echo "* should contain group"
-echo "$RESULT" | grep -q "* __no_group__                                      (group)"
+echo "$RESULT" | grep -q "\* __no_group__"
 if [ $? -eq 0 ]; then
   echo "OK"
 else
@@ -144,7 +144,7 @@ else
 fi
 
 echo "* should contain command"
-echo "$RESULT" | grep -q "\- hello                                           (cmd)"
+echo "$RESULT" | grep -q "\- hello"
 if [ $? -eq 0 ]; then
   echo "OK"
 else
@@ -157,7 +157,7 @@ echo "> test list dropin --include-cmd"
 RESULT=$($CL_PATH package list --dropin --include-cmd)
 
 echo "* should contain package version"
-echo "$RESULT" | grep -q "\- bonjour                                            1.0.0"
+echo "$RESULT" | grep -q "Package: bonjour (v1.0.0)"
 if [ $? -eq 0 ]; then
   echo "OK"
 else
@@ -166,7 +166,7 @@ else
 fi
 
 echo "* should contain group"
-echo "$RESULT" | grep -q "* __no_group__                                      (group)"
+echo "$RESULT" | grep -q "\* __no_group__"
 if [ $? -eq 0 ]; then
   echo "OK"
 else
@@ -175,7 +175,7 @@ else
 fi
 
 echo "* should contain command"
-echo "$RESULT" | grep -q "\- bonjour                                         (cmd)"
+echo "$RESULT" | grep -q "\- bonjour"
 if [ $? -eq 0 ]; then
   echo "OK"
 else
@@ -206,12 +206,132 @@ else
 fi
 
 ################
+echo "> test inspect dropin package"
+RESULT=$($CL_PATH package inspect bonjour)
+
+echo "* should contain package name"
+echo "$RESULT" | grep -q "Package: bonjour"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should contain package name"
+  exit 1
+fi
+
+echo "* should contain version"
+echo "$RESULT" | grep -q "Version:.*1.0.0"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should contain version"
+  exit 1
+fi
+
+echo "* should show full name"
+echo "$RESULT" | grep -q "Full Name:.*bonjour@dropin"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should show full name bonjour@dropin"
+  exit 1
+fi
+
+echo "* should show source as dropin"
+echo "$RESULT" | grep -q "Source:.*dropin"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should show source as dropin"
+  exit 1
+fi
+
+echo "* should show managed as false"
+echo "$RESULT" | grep -q "Managed:.*false"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should show managed as false"
+  exit 1
+fi
+
+echo "* should contain commands section"
+echo "$RESULT" | grep -q "Commands:"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should contain commands section"
+  exit 1
+fi
+
+################
+echo "> test inspect managed package"
+RESULT=$($CL_PATH package inspect command-launcher-demo)
+
+echo "* should contain package name"
+echo "$RESULT" | grep -q "Package: command-launcher-demo"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should contain package name"
+  exit 1
+fi
+
+echo "* should show full name"
+echo "$RESULT" | grep -q "Full Name:.*command-launcher-demo@default"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should show full name command-launcher-demo@default"
+  exit 1
+fi
+
+echo "* should show managed as true"
+echo "$RESULT" | grep -q "Managed:.*true"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should show managed as true"
+  exit 1
+fi
+
+echo "* should show sync policy"
+echo "$RESULT" | grep -q "Sync:"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should show sync policy"
+  exit 1
+fi
+
+################
+echo "> test inspect nonexistent package"
+RESULT=$($CL_PATH package inspect nonexistent-pkg 2>&1)
+EXIT_CODE=$?
+
+echo "* should fail with error"
+if [ $EXIT_CODE -ne 0 ]; then
+  echo "OK"
+else
+  echo "KO - should fail for nonexistent package"
+  exit 1
+fi
+
+echo "* should contain error message"
+echo "$RESULT" | grep -q "no package named nonexistent-pkg found"
+if [ $? -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - should contain error message"
+  exit 1
+fi
+
+################
 echo "> test install git package"
 RESULT=$($CL_PATH package install --git https://github.com/criteo/command-launcher-package-example)
 RESULT=$($CL_PATH package list --dropin --include-cmd)
 
 echo "* should contain package from git repo"
-echo "$RESULT" | grep -q "\- command-launcher-example-package                   0.0.1"
+echo "$RESULT" | grep -q "Package: command-launcher-example-package (v0.0.1)"
 if [ $? -eq 0 ]; then
   echo "OK"
 else
@@ -220,7 +340,7 @@ else
 fi
 
 echo "* should contain group command from git repo"
-echo "$RESULT" | grep -q "* cola-example                                      (group)"
+echo "$RESULT" | grep -q "\* cola-example"
 if [ $? -eq 0 ]; then
   echo "OK"
 else
@@ -229,7 +349,7 @@ else
 fi
 
 echo "* should contain greeting command from git repo"
-echo "$RESULT" | grep -q "\- greeting                                        (cmd)"
+echo "$RESULT" | grep -q "\- greeting"
 if [ $? -eq 0 ]; then
   echo "OK"
 else
@@ -249,7 +369,7 @@ fi
 
 echo "* should NOT contain package from git repo"
 RESULT=$($CL_PATH package list --dropin --include-cmd)
-echo "$RESULT" | grep -q "\- command-launcher-example-package                   0.0.1"
+echo "$RESULT" | grep -q "Package: command-launcher-example-package (v0.0.1)"
 if [ $? -ne 0 ]; then
   echo "OK"
 else
@@ -263,7 +383,7 @@ RESULT=$($CL_PATH package install --file https://github.com/criteo/command-launc
 
 echo "* should contain 2.0.0 demo package"
 RESULT=$($CL_PATH package list --dropin --include-cmd)
-echo "$RESULT" | grep -q "\- command-launcher-demo                              2.0.0"
+echo "$RESULT" | grep -q "Package: command-launcher-demo (v2.0.0)"
 if [ $? -eq 0 ]; then
   echo "OK"
 else
