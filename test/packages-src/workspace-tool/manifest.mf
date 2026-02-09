@@ -1,0 +1,12 @@
+{
+  "pkgName": "workspace-tool",
+  "version": "1.0.0",
+  "cmds": [
+    {
+      "name": "ws-hello",
+      "type": "executable",
+      "short": "a workspace hello command",
+      "executable": "{{.PackageDir}}/hello.sh"
+    }
+  ]
+}

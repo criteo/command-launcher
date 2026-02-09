@@ -16,35 +16,38 @@ import (
 // from a workspace at the given directory path.
 // Returns true if consent exists and is not expired.
 func CheckWorkspaceConsent(workspaceDir string) bool {
-	key := workspaceConsentKey(workspaceDir)
-	secretValue, err := helper.GetSecret(key)
+	consent, err := getWorkspaceConsent(workspaceDir)
 	if err != nil {
 		return false
 	}
+	return hasConsentValue(consent, "workspace")
+}
 
-	var consent Consent
-	if err := json.Unmarshal([]byte(secretValue), &consent); err != nil {
+// IsWorkspaceConsentDenied checks if the user has explicitly denied consent
+// for a workspace. Returns true if a non-expired denial record exists.
+func IsWorkspaceConsentDenied(workspaceDir string) bool {
+	consent, err := getWorkspaceConsent(workspaceDir)
+	if err != nil {
 		return false
 	}
-
-	if time.Unix(consent.ExpiresAt, 0).Before(time.Now()) {
-		return false
-	}
-
-	return true
+	return hasConsentValue(consent, "denied")
 }
 
 // RequestWorkspaceConsent prompts the user to trust a workspace.
 // Displays the workspace path and asks for y/N confirmation.
 // On approval, saves consent with expiration from USER_CONSENT_LIFE_KEY config.
+// On denial, saves denial with the same expiration.
 func RequestWorkspaceConsent(workspaceDir string) bool {
-	fmt.Printf("Workspace commands discovered at: %s\n", workspaceDir)
-	console.Reminder("Do you trust and want to load commands from this workspace? [yN]")
+	fmt.Printf("This command is provided by workspace: %s\n", workspaceDir)
+	console.Reminder("Do you trust and want to run commands from this workspace? [yN]")
 
 	var resp int
 	if _, err := fmt.Scanf("%c", &resp); err != nil || (resp != 'y' && resp != 'Y') {
-		fmt.Printf("Workspace commands not loaded.\n")
+		fmt.Printf("Workspace command execution denied.\n")
 		fmt.Printf("-----------------------------\n\n")
+		if err := saveWorkspaceConsentRecord(workspaceDir, "denied"); err != nil {
+			fmt.Printf("Warning: failed to save workspace denial: %v\n", err)
+		}
 		return false
 	}
 
@@ -57,6 +60,10 @@ func RequestWorkspaceConsent(workspaceDir string) bool {
 
 // SaveWorkspaceConsent persists consent for a workspace directory.
 func SaveWorkspaceConsent(workspaceDir string) error {
+	return saveWorkspaceConsentRecord(workspaceDir, "workspace")
+}
+
+func saveWorkspaceConsentRecord(workspaceDir string, consentType string) error {
 	keyLife := viper.GetDuration(config.USER_CONSENT_LIFE_KEY).Seconds()
 	if keyLife <= 0 {
 		// default: 30 days
@@ -66,13 +73,41 @@ func SaveWorkspaceConsent(workspaceDir string) error {
 	key := workspaceConsentKey(workspaceDir)
 	secretValue, err := json.Marshal(Consent{
 		ExpiresAt: time.Now().Unix() + int64(keyLife),
-		Consents:  []string{"workspace"},
+		Consents:  []string{consentType},
 	})
 	if err != nil {
 		return err
 	}
 
 	return helper.SetSecret(key, string(secretValue))
+}
+
+func getWorkspaceConsent(workspaceDir string) (*Consent, error) {
+	key := workspaceConsentKey(workspaceDir)
+	secretValue, err := helper.GetSecret(key)
+	if err != nil {
+		return nil, err
+	}
+
+	var consent Consent
+	if err := json.Unmarshal([]byte(secretValue), &consent); err != nil {
+		return nil, err
+	}
+
+	if time.Unix(consent.ExpiresAt, 0).Before(time.Now()) {
+		return nil, fmt.Errorf("consent expired")
+	}
+
+	return &consent, nil
+}
+
+func hasConsentValue(consent *Consent, value string) bool {
+	for _, c := range consent.Consents {
+		if c == value {
+			return true
+		}
+	}
+	return false
 }
 
 // workspaceConsentKey returns a keychain key for the workspace directory.
