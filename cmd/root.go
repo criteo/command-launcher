@@ -36,11 +36,10 @@ type rootContext struct {
 	metrics     metrics.Metrics
 }
 
-// builtinCommands lists commands that are built into the launcher and should
-// be excluded from auto-update checks and workspace consent prompts.
+// builtinCommands lists commands that are excluded from auto-update checks
+// and metrics collection.
 var builtinCommands = []string{
 	"version", "config", "completion", "help", "update",
-	"package", "login", "remote", "rename",
 	"__complete", "__completeNoDesc",
 }
 
