@@ -6,7 +6,7 @@
       "name": "ws-hello",
       "type": "executable",
       "short": "a workspace hello command",
-      "executable": "{{.PackageDir}}/hello.sh"
+      "executable": "{{.PackageDir}}/hello.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}"
     }
   ]
 }
