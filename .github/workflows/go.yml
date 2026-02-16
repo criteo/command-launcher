@@ -58,9 +58,8 @@ jobs:
         GOARCH: ${{matrix.arch}}
         CGO_ENABLED: ${{matrix.cgo}}
       run: |
-        go build -o build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}} -ldflags='-X main.version=${{github.ref_name}} -X main.buildNum=${{github.run_number}} -X main.appName=cdt'
-
-        go build -o build/cola_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}} -ldflags="-X main.version=${{github.ref_name}} -X main.buildNum=${{github.run_number}} -X main.appName=cola -X 'main.appLongName=Command Launcher'"
+        ./build.sh -v ${{github.ref_name}} -b ${{github.run_number}} -n cdt -l "Criteo Dev Toolkit" -o build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}}
+        ./build.sh -v ${{github.ref_name}} -b ${{github.run_number}} -n cola -l "Command Launcher" -o build/cola_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}}
 
     - name: Test & Benchmark
       run: go test -v ./...
