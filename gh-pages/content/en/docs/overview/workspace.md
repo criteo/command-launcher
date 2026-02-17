@@ -51,7 +51,7 @@ scripts/dev-helpers
 
 Each path listed in the packages file must be a directory containing a `manifest.mf` file, following the standard [manifest format](../manifest). The directory structure looks like this:
 
-```
+```text
 my-project/
 ├── .cdt-packages          # lists package paths
 ├── src/
@@ -92,7 +92,7 @@ When you run Command Launcher, it walks **up** from your current working directo
 
 For example, given this directory tree:
 
-```
+```text
 /home/user/
 ├── .cdt-packages          # project-wide tools
 └── repo/
@@ -122,7 +122,7 @@ Because workspace packages contain arbitrary scripts that execute on your machin
 
 When you invoke a workspace command, you will see a prompt like:
 
-```
+```text
 This command is provided by workspace: /home/user/my-project
 Do you trust and want to run commands from this workspace? [yN]
 ```
@@ -236,6 +236,7 @@ Hello from workspace!
 ## Troubleshooting
 
 **Commands not showing up:**
+
 - Verify the feature is enabled: `cdt config ENABLE_WORKSPACE_PACKAGES`
 - Check that you are running `cdt` from inside the workspace (or a subdirectory)
 - Ensure the `.cdt-packages` file name matches your app name (e.g., `.cola-packages` for `cola`)
@@ -243,10 +244,13 @@ Hello from workspace!
 - Enable logging for detailed diagnostics: `cdt config LOG_ENABLED true && cdt config LOG_LEVEL debug`
 
 **Consent prompt keeps appearing:**
+
 - The consent has expired. Increase the duration with `cdt config USER_CONSENT_LIFE 2160h` (90 days).
 
 **Command was denied and now it's hidden:**
+
 - Denial is remembered for the configured `USER_CONSENT_LIFE` duration. Wait for it to expire, or the consent will reset automatically after the configured period.
 
 **Path rejected with "parent directory traversal" warning:**
+
 - Paths in `.cdt-packages` must not contain `..`. Use paths relative to the packages file location that point downward into the project tree.
