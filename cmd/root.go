@@ -220,7 +220,10 @@ func initBackend() {
 	// is checked at execution time.
 	workspaceSources := []*backend.PackageSource{}
 	if viper.GetBool(config.ENABLE_WORKSPACE_PACKAGES_KEY) {
-		wd, _ := os.Getwd()
+		wd, err := os.Getwd()
+		if err != nil {
+			log.Warnf("workspace packages: failed to get working directory: %v", err)
+		}
 		for _, src := range backend.DiscoverWorkspaceSources(wd, rootCtxt.appCtx.AppName()) {
 			if !consent.IsWorkspaceConsentDenied(src.RepoDir) {
 				workspaceSources = append(workspaceSources, src)

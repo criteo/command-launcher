@@ -181,6 +181,22 @@ tools/../../outside/evil-pkg
 	assert.Empty(t, paths, "paths with .. should be rejected")
 }
 
+func TestParseWorkspaceFile_RejectAbsolutePaths(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create a package at an absolute path
+	createTestManifest(t, tmpDir, "abs-pkg")
+
+	content := filepath.Join(tmpDir, "abs-pkg") + "\n"
+	dotFile := filepath.Join(tmpDir, WorkspacePackagesFileName(testAppName))
+	err := os.WriteFile(dotFile, []byte(content), 0644)
+	assert.Nil(t, err)
+
+	paths, err := ParseWorkspaceFile(dotFile)
+	assert.Nil(t, err)
+	assert.Empty(t, paths, "absolute paths should be rejected")
+}
+
 func TestParseWorkspaceFile_AllowDotPaths(t *testing.T) {
 	tmpDir := t.TempDir()
 

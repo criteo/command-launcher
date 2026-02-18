@@ -53,8 +53,8 @@ func DiscoverWorkspaceSources(startDir string, appName string) []*PackageSource 
 
 // ParseWorkspaceFile reads a .cdt-packages file and returns absolute paths
 // to valid package directories. Lines starting with # are comments.
-// Paths containing ".." are rejected for security (packages must be under
-// the workspace directory).
+// Absolute paths and paths containing ".." are rejected for security
+// (packages must be under the workspace directory).
 func ParseWorkspaceFile(filePath string) ([]string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -74,7 +74,11 @@ func ParseWorkspaceFile(filePath string) ([]string, error) {
 			continue
 		}
 
-		// reject paths containing ".." for security
+		// reject absolute paths and paths containing ".." for security
+		if filepath.IsAbs(line) {
+			log.Warnf("workspace: rejecting path %q in %s: absolute paths are not allowed", line, filePath)
+			continue
+		}
 		if containsParentTraversal(line) {
 			log.Warnf("workspace: rejecting path %q in %s: parent directory traversal (..) is not allowed", line, filePath)
 			continue
