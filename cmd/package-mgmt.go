@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/criteo/command-launcher/internal/backend"
 	"github.com/criteo/command-launcher/internal/command"
 	"github.com/criteo/command-launcher/internal/config"
@@ -422,7 +424,9 @@ func printPackageDetails(pkg command.PackageManifest, source *backend.PackageSou
 	if source.IsManaged {
 		paused := false
 		pausedUntil := time.Time{}
-		if exists, _ := updateConfig.IsUpdateConfigExists(source.RepoDir); exists {
+		if exists, err := updateConfig.IsUpdateConfigExists(source.RepoDir); err != nil {
+			log.Warnf("failed to check update config in %s: %v", source.RepoDir, err)
+		} else if exists {
 			if cfg, err := updateConfig.ReadFromDir(source.RepoDir); err == nil {
 				if cfg.IsPackagePaused(pkg.Name()) {
 					paused = true
