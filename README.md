@@ -68,7 +68,12 @@ go build -o cdt -ldflags='-X main.version=dev -X main.appName=cdt -X "main.appLo
 
 Or simply call the `build.sh` scripts
 ```
-./build.sh [version] [app name] [app long name]
+./build.sh [version] [app name] [app long name] [--resign]
+```
+
+On macOS (Apple Silicon), copying the built binary to another location may invalidate its ad-hoc code signature, causing the system to kill the process. Use the `--resign` flag to re-sign the binary after build:
+```
+./build.sh dev cdt "Criteo Dev Toolkit" --resign
 ```
 
 ### Run tests

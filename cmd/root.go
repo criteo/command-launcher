@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/criteo/command-launcher/cmd/consent"
 	"github.com/criteo/command-launcher/cmd/metrics"
 	"github.com/criteo/command-launcher/internal/backend"
 	"github.com/criteo/command-launcher/internal/config"
@@ -33,6 +34,13 @@ type rootContext struct {
 	cmdUpdaters []*updater.CmdUpdater
 	user        user.User
 	metrics     metrics.Metrics
+}
+
+// builtinCommands lists commands that are excluded from auto-update checks
+// and metrics collection.
+var builtinCommands = []string{
+	"version", "config", "completion", "help", "update",
+	"__complete", "__completeNoDesc",
 }
 
 var (
@@ -136,9 +144,7 @@ func postRun(cmd *cobra.Command, args []string) {
 func isUpdatePossible(cmd *cobra.Command) bool {
 	cmdPath := cmd.CommandPath()
 	cmdPath = strings.TrimSpace(strings.TrimPrefix(cmdPath, rootCtxt.appCtx.AppName()))
-	// exclude commands for update check
-	// for example version command, you don't want to check new update when requesting current version
-	for _, w := range []string{"version", "config", "completion", "help", "update", "__complete"} {
+	for _, w := range builtinCommands {
 		if strings.HasPrefix(cmdPath, w) {
 			return false
 		}
@@ -158,6 +164,7 @@ func cmdUpdateEnabled(cmd *cobra.Command, args []string) bool {
 func metricsEnabled(cmd *cobra.Command, args []string) bool {
 	return viper.GetBool(config.USAGE_METRICS_ENABLED_KEY) && isUpdatePossible(cmd)
 }
+
 
 func initUser() {
 	var err error = nil
@@ -207,9 +214,27 @@ func initBackend() {
 		))
 	}
 
+	// Discover workspace packages if enabled.
+	// Sources with prior denial are excluded. Sources without any consent
+	// record are loaded so their commands appear in autocompletion; consent
+	// is checked at execution time.
+	workspaceSources := []*backend.PackageSource{}
+	if viper.GetBool(config.ENABLE_WORKSPACE_PACKAGES_KEY) {
+		wd, err := os.Getwd()
+		if err != nil {
+			log.Warnf("workspace packages: failed to get working directory: %v", err)
+		}
+		for _, src := range backend.DiscoverWorkspaceSources(wd, rootCtxt.appCtx.AppName()) {
+			if !consent.IsWorkspaceConsentDenied(src.RepoDir) {
+				workspaceSources = append(workspaceSources, src)
+			}
+		}
+	}
+
 	var err error
 	rootCtxt.backend, err = backend.NewDefaultBackend(
 		config.AppDir(),
+		workspaceSources,
 		backend.NewDropinSource(viper.GetString(config.DROPIN_FOLDER_KEY)),
 		backend.NewManagedSource(
 			"default",
