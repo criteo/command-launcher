@@ -83,6 +83,7 @@ go build -o cdt -ldflags='-X main.version=dev -X main.appName=cdt -X "main.appLo
 ```
 
 Or using the `build.sh` script
+
 ```shell
 ./build.sh -v VERSION -n APP_NAME -l APP_LONG_NAME
 ```

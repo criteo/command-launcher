@@ -37,6 +37,7 @@ go build -o cola -ldflags='-X main.version=dev -X main.appName=cola -X "main.app
 ```
 
 Or using the `build.sh` script
+
 ```shell
 ./build.sh -v VERSION -n APP_NAME -l APP_LONG_NAME
 ```
