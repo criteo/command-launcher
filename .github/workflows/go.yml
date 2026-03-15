@@ -57,6 +57,7 @@ jobs:
       env:
         GOARCH: ${{matrix.arch}}
         CGO_ENABLED: ${{matrix.cgo}}
+      shell: bash
       run: |
         ./build.sh -v ${{github.ref_name}} -b ${{github.run_number}} -n cdt -l "Criteo Dev Toolkit" -o build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}}
         ./build.sh -v ${{github.ref_name}} -b ${{github.run_number}} -n cola -l "Command Launcher" -o build/cola_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}}
