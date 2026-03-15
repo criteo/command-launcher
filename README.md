@@ -71,6 +71,11 @@ Or using the `build.sh` script
 ./build.sh -v VERSION -n APP_NAME -l APP_LONG_NAME
 ```
 
+On macOS (Apple Silicon), copying the built binary to another location may invalidate its ad-hoc code signature, causing the system to kill the process. Use the `--resign` flag to re-sign the binary after build:
+```shell
+./build.sh -v dev -n cdt -l "Criteo Dev Toolkit" --resign
+```
+
 ### Run tests
 
 Run unit tests

@@ -313,7 +313,7 @@ func (self *defaultFrontend) getExecutableCommand(group, name string) (command.C
 }
 
 // execute a cdt command
-func (self *defaultFrontend) executeCommand(group, name string, args []string, initialEnvCtx []string, consent []string) (int, error) {
+func (self *defaultFrontend) executeCommand(group, name string, args []string, initialEnvCtx []string, userConsent []string) (int, error) {
 	iCmd, err := self.getExecutableCommand(group, name)
 	if err != nil {
 		return 1, err
@@ -322,7 +322,15 @@ func (self *defaultFrontend) executeCommand(group, name string, args []string, i
 		return 1, errors.New(EXECUTABLE_NOT_DEFINED)
 	}
 
-	envCtx := self.getCmdEnvContext(iCmd, initialEnvCtx, consent)
+	// Check workspace consent before executing workspace commands
+	if strings.HasPrefix(iCmd.RepositoryID(), backend.WorkspaceSourcePrefix) {
+		workspaceDir := strings.TrimPrefix(iCmd.RepositoryID(), backend.WorkspaceSourcePrefix)
+		if !consent.CheckWorkspaceConsent(workspaceDir) && !consent.RequestWorkspaceConsent(workspaceDir) {
+			return 1, fmt.Errorf("workspace command execution denied: user did not consent to workspace %s", workspaceDir)
+		}
+	}
+
+	envCtx := self.getCmdEnvContext(iCmd, initialEnvCtx, userConsent)
 
 	exitCode, err := iCmd.Execute(envCtx, args...)
 	if err != nil {

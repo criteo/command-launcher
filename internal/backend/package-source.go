@@ -34,6 +34,8 @@ type PackageSource struct {
 	Failure error
 
 	Updater *updater.CmdUpdater
+
+	CustomRepoIndex repository.RepoIndex // nil for standard sources, set for workspace sources
 }
 
 func NewDropinSource(repoDir string) *PackageSource {

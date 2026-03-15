@@ -35,6 +35,7 @@ Options:
     -l, --long-name LONG_NAME  Set app long name
     -o, --output OUTPUT        Set output file name (default: APP_NAME)
     -b, --build-number NUMBER  Set build number (default: timestamp)
+    -r, --resign               Re-sign binary on macOS (for Apple Silicon)
     -d, --debug                Enable debug output
     -h, --help                 Show this help message
 
@@ -47,6 +48,7 @@ Examples:
     $program -l 'My App'                       # Set app long name only
     $program -v 1.0.0 -n myapp -l 'My App'    # Set all three
     $program -b 42                             # Set build number
+    $program -r                                # Re-sign after build (macOS)
 EOF
 }
 
@@ -65,6 +67,7 @@ APP_NAME=
 APP_LONG_NAME=
 OUTPUT=
 BUILD_NUMBER=
+RESIGN=0
 POSITIONAL_COUNT=0
 
 while [ $# -gt 0 ]; do
@@ -93,6 +96,10 @@ while [ $# -gt 0 ]; do
             validate_argument "$1" "$2"
             BUILD_NUMBER="$2"
             shift 2
+            ;;
+        -r|--resign)
+            RESIGN=1
+            shift 1
             ;;
         -d|--debug)
             DEBUG=1
@@ -151,3 +158,8 @@ debug "App long name: $APP_LONG_NAME"
 debug "Output: $OUTPUT"
 
 go build -o "$OUTPUT" -ldflags="${LD_FLAGS}"
+
+if [ "$RESIGN" -eq 1 ] && [ "$(uname)" = "Darwin" ]; then
+    debug "Re-signing binary for macOS"
+    codesign --force -s - "$OUTPUT"
+fi

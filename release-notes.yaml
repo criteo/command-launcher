@@ -1,3 +1,28 @@
+1.15.0:
+  version: 1.15.0
+  releaseNotes: |
+    # ✨ New Features
+      * Workspace packages: project-scoped commands automatically discovered from your working directory via `.cdt-packages` files. Includes per-workspace consent management and walk-up directory discovery. Enable with `cdt config ENABLE_WORKSPACE_PACKAGES true`.
+      * New built-in `package inspect` command to show detailed information about an installed package including its source, version, local path, pause status, and commands.
+      * New built-in `package pause` command to pause automatic updates for a managed package (default 24 hours).
+      * New built-in `remote set` command to update settings (e.g., sync policy) for an existing remote registry.
+      * `remote add` now supports `--sync-policy` flag to set the sync policy when adding a new remote.
+      * `package list` now supports `--workspace` flag to list workspace packages.
+    # 🐛 Bug Fixes
+      * Fix the `update` command not ignoring pause when explicitly updating a package.
+      * Fix update pause edge cases and unify pause terminology.
+      * Cleanup expired update pauses when writing update config.
+      * Fix setup errors being silently ignored; added backup/restore for package installations.
+      * Fix segfault when config.json contains invalid paths.
+      * Fix package update notification message.
+    # ⬆️ Dependencies
+      * Bump cobra to v1.10.1 and viper to v1.21.0.
+    # 📝 Documentation Updates
+      * Add workspace package documentation.
+      * Documentation linting and review pass.
+  startPartition: 0
+  endPartition: 9
+
 1.14.0:
   version: 1.14.0
   releaseNotes: |

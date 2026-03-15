@@ -38,6 +38,7 @@ const (
 	EXTRA_REMOTE_SYNC_POLICY_KEY         = "SYNC_POLICY"
 	ENABLE_PACKAGE_SETUP_HOOK_KEY        = "ENABLE_PACKAGE_SETUP_HOOK"
 	GROUP_HELP_BY_REGISTRY_KEY           = "GROUP_HELP_BY_REGISTRY"
+	ENABLE_WORKSPACE_PACKAGES_KEY        = "ENABLE_WORKSPACE_PACKAGES"
 
 	// internal commands are the commands with start partition number > INTERNAL_START_PARTITION
 	INTERNAL_COMMAND_ENABLED_KEY = "INTERNAL_COMMAND_ENABLED"
@@ -79,6 +80,7 @@ func init() {
 		SYSTEM_PACKAGE_PUBLIC_KEY_FILE_KEY,
 		ENABLE_PACKAGE_SETUP_HOOK_KEY,
 		GROUP_HELP_BY_REGISTRY_KEY,
+		ENABLE_WORKSPACE_PACKAGES_KEY,
 	)
 }
 
@@ -136,6 +138,8 @@ func SetSettingValue(key string, value string) error {
 	case ENABLE_PACKAGE_SETUP_HOOK_KEY:
 		return setBooleanConfig(upperKey, value)
 	case GROUP_HELP_BY_REGISTRY_KEY:
+		return setBooleanConfig(upperKey, value)
+	case ENABLE_WORKSPACE_PACKAGES_KEY:
 		return setBooleanConfig(upperKey, value)
 	}
 

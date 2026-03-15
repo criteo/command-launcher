@@ -6,7 +6,11 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
+	log "github.com/sirupsen/logrus"
+
+	"github.com/criteo/command-launcher/internal/backend"
 	"github.com/criteo/command-launcher/internal/command"
 	"github.com/criteo/command-launcher/internal/config"
 	"github.com/criteo/command-launcher/internal/console"
@@ -15,6 +19,7 @@ import (
 	"github.com/criteo/command-launcher/internal/pkg"
 	"github.com/criteo/command-launcher/internal/remote"
 	"github.com/criteo/command-launcher/internal/repository"
+	"github.com/criteo/command-launcher/internal/updateConfig"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -25,6 +30,7 @@ type PackageFlags struct {
 	dropin     bool
 	local      bool
 	remote     bool
+	workspace  bool
 	includeCmd bool
 }
 
@@ -49,13 +55,22 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 		Short: "List installed packages and commands",
 		Long:  "List installed packages and commands with details",
 		PreRun: func(cmd *cobra.Command, args []string) {
-			if !packageFlags.dropin && !packageFlags.local && !packageFlags.remote {
+			if !packageFlags.dropin && !packageFlags.local && !packageFlags.remote && !packageFlags.workspace {
 				packageFlags.dropin = true
 				packageFlags.local = true
 				packageFlags.remote = false
+				packageFlags.workspace = true
 			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
+			if packageFlags.workspace {
+				for _, s := range rootCtxt.backend.WorkspaceSources() {
+					if s.Repo != nil {
+						printPackages(s.Repo, fmt.Sprintf("workspace: %s", s.RepoDir), packageFlags.includeCmd)
+					}
+				}
+			}
+
 			if packageFlags.local {
 				for _, s := range rootCtxt.backend.AllPackageSources() {
 					if s.IsManaged && s.Repo != nil {
@@ -86,9 +101,10 @@ func AddPackageCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 	packageListCmd.Flags().BoolVar(&packageFlags.dropin, "dropin", false, "List only the dropin packages")
 	packageListCmd.Flags().BoolVar(&packageFlags.local, "local", false, "List only the local packages")
 	packageListCmd.Flags().BoolVar(&packageFlags.remote, "remote", false, "List only the remote packages")
+	packageListCmd.Flags().BoolVar(&packageFlags.workspace, "workspace", false, "List only the workspace packages")
 	packageListCmd.Flags().BoolVar(&packageFlags.includeCmd, "include-cmd", false, "List the packages with all commands")
 	packageListCmd.Flags().BoolP("all", "a", true, "List all packages")
-	packageListCmd.MarkFlagsMutuallyExclusive("all", "dropin", "local", "remote")
+	packageListCmd.MarkFlagsMutuallyExclusive("all", "dropin", "local", "remote", "workspace")
 
 	packageInstallCmd := &cobra.Command{
 		Use:   "install [package_name]",
@@ -158,6 +174,19 @@ To enable the automatic setup during package installation, enable the configurat
 		ValidArgsFunction: packageNameValidatonFunc(true, true, false),
 	}
 
+	packageInspectCmd := &cobra.Command{
+		Use:   "inspect [package_name]",
+		Short: "Show details of an installed package",
+		Long:  "Show detailed information about an installed package including its source, version, local path, pause status, and commands",
+		Args:  cobra.ExactArgs(1),
+		Example: fmt.Sprintf(`
+  %s package inspect my-pkg`, appCtx.AppName()),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return inspectPackage(args[0])
+		},
+		ValidArgsFunction: packageNameValidatonFunc(true, true, false),
+	}
+
 	packagePauseCmd := &cobra.Command{
 		Use:   "pause [package_name]",
 		Short: "Pause update for a package",
@@ -181,23 +210,25 @@ To enable the automatic setup during package installation, enable the configurat
 	packageCmd.AddCommand(packageDeleteCmd)
 	packageCmd.AddCommand(packageSetupCmd)
 	packageCmd.AddCommand(packagePauseCmd)
+	packageCmd.AddCommand(packageInspectCmd)
 	rootCmd.AddCommand(packageCmd)
 }
 
 func packageNameValidatonFunc(includeLocal bool, includeDropin bool, includeRemote bool) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
 	return func(c *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		localPkgs := rootCtxt.backend.DefaultRepository().InstalledPackages()
-		dropinPkgs := rootCtxt.backend.DropinRepository().InstalledPackages()
-
 		pkgTable := map[string]string{}
 
 		if includeLocal {
-			for _, pkg := range localPkgs {
-				pkgTable[pkg.Name()] = pkg.Version()
+			for _, s := range rootCtxt.backend.AllPackageSources() {
+				if s.IsManaged && s.Repo != nil {
+					for _, pkg := range s.Repo.InstalledPackages() {
+						pkgTable[pkg.Name()] = pkg.Version()
+					}
+				}
 			}
 		}
 		if includeDropin {
-			for _, pkg := range dropinPkgs {
+			for _, pkg := range rootCtxt.backend.DropinRepository().InstalledPackages() {
 				pkgTable[pkg.Name()] = pkg.Version()
 			}
 		}
@@ -227,12 +258,17 @@ func noArgCompletion(cmd *cobra.Command, args []string, toComplete string) ([]st
 func printPackages(repo repository.PackageRepository, name string, includeCmd bool) {
 	console.Highlight("=== %s ===\n", strings.Title(name))
 	for _, pkg := range repo.InstalledPackages() {
-		fmt.Printf("  - %-50s %s\n", pkg.Name(), pkg.Version())
 		if includeCmd {
+			fmt.Printf("  Package: %s (v%s)\n", pkg.Name(), pkg.Version())
 			printCommands(pkg.Commands())
+			fmt.Println()
+		} else {
+			fmt.Printf("  - %-50s %s\n", pkg.Name(), pkg.Version())
 		}
 	}
-	fmt.Println()
+	if !includeCmd {
+		fmt.Println()
+	}
 }
 
 func printPackageInfos(packages []remote.PackageInfo, name string) {
@@ -246,10 +282,12 @@ func printPackageInfos(packages []remote.PackageInfo, name string) {
 func printCommands(commands []command.Command) {
 	cmdMap := make(map[string][]command.Command)
 	cmdMap["__no_group__"] = make([]command.Command, 0)
+	groupDescs := make(map[string]string)
 
 	for _, cmd := range commands {
 		if cmd.Type() == "group" {
 			cmdMap[cmd.Name()] = make([]command.Command, 0)
+			groupDescs[cmd.Name()] = cmd.ShortDescription()
 		} else if cmd.Type() == "executable" {
 			if cmd.Group() != "" {
 				cmdMap[cmd.Group()] = append(cmdMap[cmd.Group()], cmd)
@@ -261,9 +299,19 @@ func printCommands(commands []command.Command) {
 
 	for g, cs := range cmdMap {
 		if len(cmdMap[g]) > 0 {
-			fmt.Printf("%4s %-49s %s\n", "*", g, "(group)")
+			desc := groupDescs[g]
+			if desc != "" {
+				fmt.Printf("%4s %-30s %s\n", "*", g, desc)
+			} else {
+				fmt.Printf("%4s %s\n", "*", g)
+			}
 			for _, c := range cs {
-				fmt.Printf("%6s %-47s %s\n", "-", c.Name(), "(cmd)")
+				cmdDesc := c.ShortDescription()
+				if cmdDesc != "" {
+					fmt.Printf("%6s %-28s %s\n", "-", c.Name(), cmdDesc)
+				} else {
+					fmt.Printf("%6s %s\n", "-", c.Name())
+				}
 			}
 		}
 	}
@@ -331,6 +379,81 @@ func installZipFile(fileUrl string) error {
 
 	console.Success("Package '%s' version %s installed in the dropin repository", mf.Name(), mf.Version())
 	return nil
+}
+
+type packageMatch struct {
+	pkg    command.PackageManifest
+	source *backend.PackageSource
+}
+
+func inspectPackage(pkgName string) error {
+	matches := []packageMatch{}
+
+	for _, s := range rootCtxt.backend.AllPackageSources() {
+		if s.Repo == nil {
+			continue
+		}
+		for _, p := range s.Repo.InstalledPackages() {
+			if p.Name() == pkgName {
+				matches = append(matches, packageMatch{pkg: p, source: s})
+				break
+			}
+		}
+	}
+
+	if len(matches) == 0 {
+		return fmt.Errorf("no package named %s found", pkgName)
+	}
+
+	for i, m := range matches {
+		if i > 0 {
+			fmt.Println()
+		}
+		printPackageDetails(m.pkg, m.source)
+	}
+
+	return nil
+}
+
+func printPackageDetails(pkg command.PackageManifest, source *backend.PackageSource) {
+	console.Highlight("Package: %s (source: %s)\n", pkg.Name(), source.Name)
+	fmt.Printf("  Full Name:  %s@%s\n", pkg.Name(), source.Name)
+	fmt.Printf("  Version:    %s\n", pkg.Version())
+	fmt.Printf("  Source:     %s\n", source.Name)
+	fmt.Printf("  Managed:    %v\n", source.IsManaged)
+
+	if source.IsManaged {
+		fmt.Printf("  Remote URL: %s\n", source.RemoteBaseURL)
+		fmt.Printf("  Registry:   %s\n", source.RemoteRegistryURL)
+		fmt.Printf("  Sync:       %s\n", source.SyncPolicy)
+	}
+
+	if repoFolder, err := source.Repo.RepositoryFolder(); err == nil {
+		fmt.Printf("  Local Path: %s\n", repoFolder)
+	}
+
+	if source.IsManaged {
+		paused := false
+		pausedUntil := time.Time{}
+		if exists, err := updateConfig.IsUpdateConfigExists(source.RepoDir); err != nil {
+			log.Warnf("failed to check update config in %s: %v", source.RepoDir, err)
+		} else if exists {
+			if cfg, err := updateConfig.ReadFromDir(source.RepoDir); err == nil {
+				if cfg.IsPackagePaused(pkg.Name()) {
+					paused = true
+					pausedUntil = cfg.PausedUntil[pkg.Name()]
+				}
+			}
+		}
+		fmt.Printf("  Paused:     %v\n", paused)
+		if paused {
+			fmt.Printf("  Paused Until: %s\n", pausedUntil.Format(time.RFC3339))
+		}
+	}
+
+	fmt.Println()
+	fmt.Println("  Commands:")
+	printCommands(pkg.Commands())
 }
 
 func findPackageFolder(pkgName string) (string, error) {

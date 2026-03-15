@@ -65,6 +65,9 @@ type Backend interface {
 	// Return dropin local repsository
 	DropinRepository() repository.PackageRepository
 
+	// Return workspace package sources
+	WorkspaceSources() []*PackageSource
+
 	// Print out the command resolution details
 	Debug()
 }

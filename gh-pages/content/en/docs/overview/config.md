@@ -46,6 +46,7 @@ toc: true
 | extra_remotes                    | map      | extra remote registry configurations, see extra remote configuration  (available 1.8+)                                        |
 | enable_package_setup_hook        | bool     | call setup hook after a new version of package is installed (available 1.9+)                                                  |
 | group_help_by_registry           | bool     | group help by registry, default true (available 1.13+)                                                                        |
+| enable_workspace_packages        | bool     | enable or disable workspace package discovery, default false (available 1.15+)                                                |
 
 ### extra remote configuration
 

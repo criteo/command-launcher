@@ -53,6 +53,9 @@ A collection of commands to manage installed packages and commands
 List installed packages and commands.
 
 ```shell
+# list all local and dropin packages (default)
+cola package list
+
 # list local installed packages
 cola package list --local
 
@@ -64,6 +67,9 @@ cola package list --dropin
 
 # list local dropin packages and commands
 cola package list --dropin --include-cmd
+
+# list workspace packages (available in 1.15+)
+cola package list --workspace
 
 # list remote packages
 cola package list --remote
@@ -88,6 +94,41 @@ Remove a *dropin package* from the package name defined in the manifest.
 ```shell
 cola package delete command-launcher-example-package
 ```
+
+### package inspect
+
+> available in 1.15+
+
+Show detailed information about an installed package, including its source, version, local path, pause status, and commands.
+
+```shell
+cola package inspect my-package
+```
+
+The output includes:
+
+- Full name (`<package>@<source>`)
+- Version
+- Source (dropin, managed, workspace, etc.)
+- Whether the package is managed
+- Remote URL, registry, and sync policy (for managed packages)
+- Local path
+- Update pause status and expiration (for managed packages)
+- List of commands in the package
+
+### package pause
+
+> available in 1.15+
+
+Pause automatic updates for a managed package. This prevents the package from being updated during auto-update cycles. The pause lasts **24 hours** by default. After the pause expires, the package will resume normal auto-update behavior.
+
+A package is also automatically paused when its update fails, to avoid repeated failures.
+
+```shell
+cola package pause my-package
+```
+
+You can check whether a package is paused (and when the pause expires) with [`package inspect`](#package-inspect).
 
 ### package setup
 
@@ -115,14 +156,32 @@ Add a new remote registry. Command launcher will synchronize from this remote re
 
 ```shell
 cola remote add myregistry https://raw.githubusercontent.com/criteo/command-launcher/main/examples/remote-repo
+
+# optionally specify a sync policy (defaults to "always")
+cola remote add myregistry https://example.com/repo --sync-policy daily
 ```
+
+### remote set
+
+> available in 1.15+
+
+Update settings for an existing remote registry. Currently supports updating the sync policy.
+
+```shell
+# update the sync policy of a remote
+cola remote set myregistry --sync-policy daily
+```
+
+Valid sync policies: `never`, `always`, `hourly`, `daily`, `weekly`, `monthly`.
+
+> Note: the `default` remote cannot be modified with this command.
 
 ### remote delete
 
 Delete a remote registry by its name.
 
 ```shell
-cola delete myregistry
+cola remote delete myregistry
 ```
 
 ## rename
