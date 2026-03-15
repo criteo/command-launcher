@@ -109,6 +109,11 @@ while [ $# -gt 0 ]; do
             show_usage
             exit 0
             ;;
+        --resign)
+            # Legacy compat: accept --resign without short flag in positional mode
+            RESIGN=1
+            shift 1
+            ;;
         -*)
             echo "Error: Unknown option $1" >&2
             show_usage
