@@ -40,24 +40,27 @@ else
 fi
 
 ##
-# test symlink resolves to original name
+# test symlink resolves to original name (skip on Windows, symlinks need elevated privileges)
 ##
-echo "> test symlink resolves to original binary name"
-LINK=$OUTPUT_DIR/myalias
-ln -sf $CL_PATH $LINK
+if ln -sf $CL_PATH $OUTPUT_DIR/myalias 2>/dev/null; then
+  echo "> test symlink resolves to original binary name"
+  LINK=$OUTPUT_DIR/myalias
 
-RESULT=$($LINK version)
-echo "$RESULT" | grep -q "^cl version"
-if [ $? -ne 0 ]; then
-  echo "KO - symlink should resolve to original name 'cl'"
-  rm -f $LINK $COPIED
-  rm -rf $MYAPP_HOME
-  exit 1
+  RESULT=$($LINK version)
+  echo "$RESULT" | grep -q "^cl version"
+  if [ $? -ne 0 ]; then
+    echo "KO - symlink should resolve to original name 'cl'"
+    rm -f $LINK $COPIED
+    rm -rf $MYAPP_HOME
+    exit 1
+  else
+    echo "OK"
+  fi
+
+  rm -f $LINK
 else
-  echo "OK"
+  echo "> test symlink resolves to original binary name - SKIPPED (symlinks not available)"
 fi
-
-rm -f $LINK
 
 ##
 # test long name from config
