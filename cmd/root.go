@@ -48,9 +48,28 @@ var (
 	rootCtxt = rootContext{}
 )
 
-func InitCommands(appName string, appLongName string, version string, buildNum string) {
+func InitCommands(appName string, defaultLongName string, version string, buildNum string) {
+	// Initialize context and load config first so we can read settings
+	log.SetLevel(log.FatalLevel)
+	rootCtxt.appCtx = ctx.InitContext(appName, version, buildNum)
+	config.LoadConfig(rootCtxt.appCtx)
+	config.InitLog(rootCtxt.appCtx.AppName())
+
+	// Resolve the long name: prefer config, fall back to compiled-in default
+	appLongName := viper.GetString(config.APP_LONG_NAME_KEY)
+	if appLongName == "" {
+		appLongName = defaultLongName
+	}
+
+	// Create root command with resolved names
 	rootCmd = createRootCmd(appName, appLongName)
-	initApp(appName, version, buildNum)
+
+	// Initialize remaining components
+	rootCtxt.cmdUpdaters = make([]*updater.CmdUpdater, 0)
+	initUser()
+	initBackend()
+	addBuiltinCommands()
+	initFrontend()
 }
 
 func createRootCmd(appName string, appLongName string) *cobra.Command {
@@ -74,21 +93,6 @@ Example:
 		PersistentPostRun: postRun,
 		SilenceUsage:      true,
 	}
-}
-
-func initApp(appName string, appVersion string, buildNum string) {
-	log.SetLevel(log.FatalLevel)
-	rootCtxt.appCtx = ctx.InitContext(appName, appVersion, buildNum)
-	config.LoadConfig(rootCtxt.appCtx)
-	config.InitLog(rootCtxt.appCtx.AppName())
-
-	rootCtxt.cmdUpdaters = make([]*updater.CmdUpdater, 0)
-
-	initUser()
-	initBackend()
-
-	addBuiltinCommands()
-	initFrontend()
 }
 
 // We have to add the ctrl+C
