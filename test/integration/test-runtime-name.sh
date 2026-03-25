@@ -40,11 +40,16 @@ else
 fi
 
 ##
-# test symlink resolves to original name (skip on Windows, symlinks need elevated privileges)
+# test symlink resolves to original name
+# Skip on Windows: Git Bash's ln -s creates a copy rather than a real symlink,
+# so EvalSymlinks cannot resolve back to the original binary.
 ##
-if ln -sf $CL_PATH $OUTPUT_DIR/myalias 2>/dev/null; then
+if [ "$(uname -o 2>/dev/null)" = "Msys" ] || [ "$(uname -o 2>/dev/null)" = "MS/Windows" ]; then
+  echo "> test symlink resolves to original binary name - SKIPPED (Windows)"
+else
   echo "> test symlink resolves to original binary name"
   LINK=$OUTPUT_DIR/myalias
+  ln -sf $CL_PATH $LINK
 
   RESULT=$($LINK version)
   echo "$RESULT" | grep -q "^cl version"
@@ -58,8 +63,6 @@ if ln -sf $CL_PATH $OUTPUT_DIR/myalias 2>/dev/null; then
   fi
 
   rm -f $LINK
-else
-  echo "> test symlink resolves to original binary name - SKIPPED (symlinks not available)"
 fi
 
 ##
