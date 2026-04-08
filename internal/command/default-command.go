@@ -412,26 +412,30 @@ func (cmd *DefaultCommand) interpolateCmd() string {
 	return cmd.interpolate(cmd.CmdExecutable)
 }
 
-func (cmd *DefaultCommand) binary(os string) string {
-	if os == "windows" {
+func (cmd *DefaultCommand) binary(osName string) string {
+	if osName == "windows" {
 		return fmt.Sprintf("%s.exe", cmd.CmdName)
 	}
 	return cmd.CmdName
 }
 
-func (cmd *DefaultCommand) extension(os string) string {
-	if os == "windows" {
+func (cmd *DefaultCommand) extension(osName string) string {
+	if osName == "windows" {
 		return ".exe"
 	}
 	return ""
 }
 
-func (cmd *DefaultCommand) script(os string) string {
-	return fmt.Sprintf("%s%s", cmd.CmdName, cmd.script_ext(os))
+func (cmd *DefaultCommand) script(osName string) string {
+	return fmt.Sprintf("%s%s", cmd.CmdName, cmd.scriptExt(osName))
 }
 
-func (cmd *DefaultCommand) script_ext(os string) string {
-	if os == "windows" {
+func (cmd *DefaultCommand) scriptExt(osName string) string {
+	// For windows, if MSYSTEM env variable is set, it means it's running in git bash or msys2.
+	// When running in shell compatible environments like Git Bash, we need use .sh as the script extension especially
+	// for command termination.
+	// Otherwise (PowerShell, cmd), use .bat.
+	if osName == "windows" && os.Getenv("MSYSTEM") == "" {
 		return ".bat"
 	}
 	return ".sh"
@@ -441,14 +445,14 @@ func (cmd *DefaultCommand) interpolate(text string) string {
 	return cmd.doInterpolate(runtime.GOOS, runtime.GOARCH, text)
 }
 
-func (cmd *DefaultCommand) doInterpolate(os string, arch string, text string) string {
+func (cmd *DefaultCommand) doInterpolate(osName string, arch string, text string) string {
 	output := strings.ReplaceAll(text, CACHE_DIR_PATTERN, filepath.ToSlash(cmd.PkgDir))
-	output = strings.ReplaceAll(output, OS_PATTERN, os)
+	output = strings.ReplaceAll(output, OS_PATTERN, osName)
 	output = strings.ReplaceAll(output, ARCH_PATTERN, arch)
-	output = strings.ReplaceAll(output, BINARY_PATTERN, cmd.binary(os))
-	output = strings.ReplaceAll(output, EXT_PATTERN, cmd.extension(os))
-	output = strings.ReplaceAll(output, SCRIPT_PATTERN, cmd.script(os))
-	output = strings.ReplaceAll(output, SCRIPT_EXT_PATTERN, cmd.script_ext(os))
+	output = strings.ReplaceAll(output, BINARY_PATTERN, cmd.binary(osName))
+	output = strings.ReplaceAll(output, EXT_PATTERN, cmd.extension(osName))
+	output = strings.ReplaceAll(output, SCRIPT_PATTERN, cmd.script(osName))
+	output = strings.ReplaceAll(output, SCRIPT_EXT_PATTERN, cmd.scriptExt(osName))
 	output = cmd.render(output)
 	return output
 }
@@ -476,7 +480,7 @@ func (cmd *DefaultCommand) render(text string) string {
 		Binary:          cmd.binary(runtime.GOOS),
 		Script:          cmd.script(runtime.GOOS),
 		Extension:       cmd.extension(runtime.GOOS),
-		ScriptExtension: cmd.script_ext(runtime.GOOS),
+		ScriptExtension: cmd.scriptExt(runtime.GOOS),
 	}
 
 	t, err := template.New("command-template").Parse(text)
