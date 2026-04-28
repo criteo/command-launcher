@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -125,28 +126,54 @@ func (cmd *DefaultCommand) Execute(envVars []string, args ...string) (int, error
 
 	log.Debug("Command line: ", command, " ", arguments)
 
-	ctx := exec.Command(command, arguments...)
+	proc := exec.Command(command, arguments...)
 	// inject additional environments
 	env := append(os.Environ(), envVars...)
-	ctx.Env = env
+	proc.Env = env
 
-	ctx.Stdout = os.Stdout
-	ctx.Stderr = os.Stderr
-	ctx.Stdin = os.Stdin
+	proc.Stdout = os.Stdout
+	proc.Stderr = os.Stderr
+	proc.Stdin = os.Stdin
 
 	log.Debug("Command start executing")
-	if err := ctx.Run(); err != nil {
+	if err := proc.Start(); err != nil {
+		return 1, err
+	}
+
+	// Intercept os.Interrupt so the Go runtime does not exit the parent process
+	// immediately on Ctrl+C. The child is in the same process group and already
+	// receives the signal from the OS; draining sigChan is enough to keep the
+	// parent alive until proc.Wait() returns, which prevents terminal crashes
+	// in environments like Git Bash on Windows.
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt)
+	go func() {
+		for range sigChan {
+			// Cosmetic new line to make sure the cursor is set to an empty new
+			// after an interruption
+			println()
+		}
+	}()
+
+	err := proc.Wait()
+	signal.Stop(sigChan)
+	close(sigChan)
+
+	// make sure to always restore the terminal cursor as some commands can leave
+	// the terminal in a funky state
+	print("\033[?25h")
+
+	if err != nil {
 		log.Debug("Command execution err: ", err)
 		if exitError, ok := err.(*exec.ExitError); ok {
 			log.Debug("Exit code: ", exitError.ExitCode())
 			return exitError.ExitCode(), err
-		} else {
-			exitcode := ctx.ProcessState.ExitCode()
-			return exitcode, err
 		}
+		exitcode := proc.ProcessState.ExitCode()
+		return exitcode, err
 	}
 
-	exitcode := ctx.ProcessState.ExitCode()
+	exitcode := proc.ProcessState.ExitCode()
 	log.Debug("Command executed successfully with exit code: ", exitcode)
 	return exitcode, nil
 }
