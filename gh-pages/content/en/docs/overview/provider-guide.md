@@ -175,7 +175,7 @@ You will have different monitoring vectors for each partition, which will help y
 
 Command launcher implements a built-in graphite exporter. Every command invocation emits three independent metric lines over UDP (port 3341) under the prefix:
 
-```
+```text
 devtools.cdt.[package name].[group].[name].[partition].[metric]
 ```
 
