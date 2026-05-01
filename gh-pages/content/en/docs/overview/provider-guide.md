@@ -173,12 +173,22 @@ You will have different monitoring vectors for each partition, which will help y
 
 ## Monitoring
 
-Command launcher current implements a built-in graphite exporter. It reports the following metrics to graphite:
+Command launcher implements a built-in graphite exporter. Every command invocation emits three independent metric lines over UDP (port 3341) under the prefix:
 
-1. success command execution count: `devtools.cdt.[package name].[group].[name].ok.count`
-2. success command duration: `devtools.cdt.[package name].[group].[name].ok.duration`
-3. fail command execution count: `devtools.cdt.[package name].[group].[name].ko.count`
-4. fail command duration: `devtools.cdt.[package name].[group].[name].ko.duration`
+```text
+devtools.cdt.[package name].[group].[name].[partition].[metric]
+```
+
+where `[partition]` is the user partition (0-9, see [Progressive Rollout](#progressive-rollout)) and `[metric]` is one of `count`, `duration`, `ok`, or `ko`.
+
+Each invocation emits:
+
+1. `…count` — value `1`, always emitted.
+2. `…duration` — execution time in **nanoseconds**, always emitted.
+3. `…ok` — value `1`, emitted only when the command succeeded (exit code 0, no error).
+4. `…ko` — value `1`, emitted only when the command failed (non-zero exit code or error).
+
+`ok` and `ko` are siblings of `count` and `duration` — they are not modifiers of them. A successful invocation produces three lines: `…count`, `…duration`, and `…ok`. A failed invocation produces `…count`, `…duration`, and `…ko`.
 
 You can add your custom metrics exporter by a `__metrics__` command hook in a system package, see [system package](../system-package)
 
