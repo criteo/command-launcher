@@ -72,11 +72,22 @@ A pre-built binary can be downloaded from the release page. Unzip it, and place 
 
 The two pre-built binaries are named `cola` (**Co**mmand **La**uncher) and `cdt` (**C**riteo **D**ev **T**oolkit), if you want to use a different name, you can pass your preferred name in the build. See the *build* section below.
 
+## Using a custom name
+
+The easiest way to use a custom name is to copy or rename the pre-built binary. The app name is derived from the binary's file name at startup:
+
+```shell
+cp cdt myapp
+myapp config app_long_name "My App"
+```
+
+Symlinks are treated as aliases (they resolve to the original binary name), while copies create a separate instance with its own config directory.
+
 ## Building
 
 Requirements: golang >= 1.17
 
-You can build the command launcher with your preferred name (in the example: `Criteo Developer Toolkit`, a.k.a `cdt`).
+You can also set the name at build time (in the example: `Criteo Developer Toolkit`, a.k.a `cdt`).
 
 ```shell
 go build -o cdt -ldflags='-X main.version=dev -X main.appName=cdt -X "main.appLongName=Criteo Dev Toolkit"' main.go
