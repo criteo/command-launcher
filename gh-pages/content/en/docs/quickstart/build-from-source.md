@@ -36,10 +36,10 @@ You can build the command launcher with your prefered name (in the example: `Com
 go build -o cola -ldflags='-X main.version=dev -X main.appName=cola -X "main.appLongName=Command Launcher"' main.go
 ```
 
-Or simply call the `build.sh` scripts
+Or using the `build.sh` script
 
 ```shell
-./build.sh [version] [app name] [app long name]
+./build.sh -v VERSION -n APP_NAME -l APP_LONG_NAME
 ```
 
 ## Run tests

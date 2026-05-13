@@ -66,14 +66,14 @@ You can build the command launcher with your prefered name (in the example: `Cri
 go build -o cdt -ldflags='-X main.version=dev -X main.appName=cdt -X "main.appLongName=Criteo Dev Toolkit"' main.go
 ```
 
-Or simply call the `build.sh` scripts
-```
-./build.sh [version] [app name] [app long name] [--resign]
+Or using the `build.sh` script
+```shell
+./build.sh -v VERSION -n APP_NAME -l APP_LONG_NAME
 ```
 
 On macOS (Apple Silicon), copying the built binary to another location may invalidate its ad-hoc code signature, causing the system to kill the process. Use the `--resign` flag to re-sign the binary after build:
-```
-./build.sh dev cdt "Criteo Dev Toolkit" --resign
+```shell
+./build.sh -v dev -n cdt -l "Criteo Dev Toolkit" --resign
 ```
 
 ### Run tests
