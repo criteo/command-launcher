@@ -24,7 +24,16 @@ Another pre-built binary is called `cdt` (Criteo Dev Toolkit), its home folder w
 
 > For compatibility concern, we highly recommend to reference resources in your command with prefix `COLA_`
 
-To use a different name, you need to build command launcher from source and pass the desired short and long name to the build scripts.
+The easiest way to use a different name is to simply copy or rename the pre-built binary. The app name is derived from the binary's file name at startup. You can then set the long display name via config:
+
+```shell
+cp cola myapp
+myapp config app_long_name "My App"
+```
+
+Symlinks are treated as aliases (they resolve to the original binary name), while copies create a separate instance with its own config directory (`~/.myapp/`).
+
+You can also set the name at build time if you prefer.
 
 ## Build from source
 
