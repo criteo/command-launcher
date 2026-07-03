@@ -162,6 +162,7 @@ func (self *defaultFrontend) addExecutableCommands() {
 				}
 
 				if exitCode, err := self.executeCommand(group, name, originalArgs, envVars, consents); err != nil {
+					console.Error("failed to execute command: %v", err)
 					RootExitCode = exitCode
 				}
 			},
