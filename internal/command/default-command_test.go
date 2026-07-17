@@ -225,6 +225,34 @@ func TestInterpolate(t *testing.T) {
 	assert.Equal(t, "/tmp/test/root/windows/x64/test.exe", cmd.doInterpolate("windows", "x64", "#CACHE#/#OS#/#ARCH#/test#EXT#"))
 }
 
+func TestEffectiveArgumentsUserArgsVerbatim(t *testing.T) {
+	cmd := getDefaultCommand()
+	cmd.CmdArguments = []string{}
+
+	userArgs := []string{"a < b", "{{.Os}}", "#OS#", "&lt;", "x  y", "a {{ b"}
+	result := cmd.effectiveArguments(userArgs...)
+
+	assert.Equal(t, userArgs, result, "user args must reach the executable byte-for-byte")
+}
+
+func TestEffectiveArgumentsInterpolatesManifestArgs(t *testing.T) {
+	cmd := getDefaultCommand()
+	cmd.CmdArguments = []string{"{{.Os}}"}
+
+	result := cmd.effectiveArguments("#OS#", "{{.Os}}")
+
+	assert.Equal(t, []string{runtime.GOOS, "#OS#", "{{.Os}}"}, result)
+}
+
+func TestEffectiveArgumentsDoesNotMutateManifest(t *testing.T) {
+	cmd := getDefaultCommand()
+	cmd.CmdArguments = []string{"{{.Os}}", "#OS#"}
+
+	cmd.effectiveArguments("user")
+
+	assert.Equal(t, []string{"{{.Os}}", "#OS#"}, cmd.CmdArguments, "manifest args must not be mutated by execution")
+}
+
 func TestRuntimeNameAndGroup(t *testing.T) {
 	cmd := getDefaultCommand()
 

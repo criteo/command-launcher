@@ -119,9 +119,18 @@ func CmdReverseID(repo, pkg, group, name string) string {
 	return fmt.Sprintf("%s@%s@%s@%s", name, group, pkg, repo)
 }
 
-func (cmd *DefaultCommand) Execute(envVars []string, args ...string) (int, error) {
-	arguments := append(cmd.CmdArguments, args...)
+// effectiveArguments returns the manifest-defined arguments with template
+// variables interpolated, followed by the user-provided args verbatim.
+// User args must not be interpolated: they are arbitrary payloads, and the
+// manifest documentation scopes variables to manifest fields only.
+func (cmd *DefaultCommand) effectiveArguments(args ...string) []string {
+	arguments := append([]string{}, cmd.CmdArguments...)
 	cmd.interpolateArray(&arguments)
+	return append(arguments, args...)
+}
+
+func (cmd *DefaultCommand) Execute(envVars []string, args ...string) (int, error) {
+	arguments := cmd.effectiveArguments(args...)
 	command := cmd.interpolateCmd()
 
 	log.Debug("Command line: ", command, " ", arguments)
@@ -183,8 +192,7 @@ func (cmd *DefaultCommand) ExecuteWithOutput(envVars []string, args ...string) (
 	if err != nil {
 		return 1, "", err
 	}
-	arguments := append(cmd.CmdArguments, args...)
-	cmd.interpolateArray(&arguments)
+	arguments := cmd.effectiveArguments(args...)
 	command := cmd.interpolateCmd()
 
 	env := append(os.Environ(), envVars...)
