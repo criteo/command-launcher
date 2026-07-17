@@ -31,8 +31,8 @@ The two most common use cases of variables in a Command Launcher's manifest.mf f
 | Os              | The OS: "windows", "linux", or "darwin"                                |
 | Arch            | The system architecture: "arm64", "amd64"                              |
 | Binary          | The binary file name of the Command Launcher                           |
-| Extension       | The system-aware binary extension, "" for linux, ".exe" for windows    |
-| ScriptExtension | The system-aware script extension, ".sh" for linux, ".bat" for windows |
+| Extension       | The system-aware binary extension, "" for linux and macos, ".exe" for windows    |
+| ScriptExtension | The system-aware script extension, ".sh" for linux and macos, ".bat" for windows |
 
 ## Fields that accept variables
 
