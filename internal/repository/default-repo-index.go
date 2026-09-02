@@ -135,6 +135,9 @@ func (repoIndex *defaultRepoIndex) AllPackages() []command.PackageManifest {
 		newPkg := p
 		pkgs = append(pkgs, newPkg)
 	}
+	sort.Slice(pkgs, func(i, j int) bool {
+		return pkgs[i].Name() < pkgs[j].Name()
+	})
 	return pkgs
 }
 
