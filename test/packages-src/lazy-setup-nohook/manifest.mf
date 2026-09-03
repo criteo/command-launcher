@@ -1,0 +1,12 @@
+{
+  "pkgName": "lazy-setup-nohook",
+  "version": "1.0.0",
+  "cmds": [
+    {
+      "name": "lazy-nohook",
+      "type": "executable",
+      "short": "command from a package without a __setup__ hook",
+      "executable": "{{.PackageDir}}/hello.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}"
+    }
+  ]
+}
