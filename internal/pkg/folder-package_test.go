@@ -63,3 +63,25 @@ func TestFolder_InstallToWithSetupError(t *testing.T) {
 	assert.Contains(t, err.Error(), fmt.Sprintf("setup hook of package %s failed to execute", p.Name()))
 	assert.Nil(t, mf)
 }
+
+func TestFolder_InstallToWithSetupSuccess(t *testing.T) {
+	p, err := CreateFolderPackage("assets/fake-good-setup")
+	assert.NotNil(t, p)
+	assert.Nil(t, err)
+
+	targetDir := t.TempDir()
+
+	var previousSetupHook = viper.GetBool(config.ENABLE_PACKAGE_SETUP_HOOK_KEY)
+	defer viper.Set(config.ENABLE_PACKAGE_SETUP_HOOK_KEY, previousSetupHook)
+	viper.Set(config.ENABLE_PACKAGE_SETUP_HOOK_KEY, true)
+
+	mf, err := p.InstallTo(targetDir)
+	assert.Nil(t, err)
+	assert.NotNil(t, mf)
+
+	pkgDir := filepath.Join(targetDir, p.Name())
+	assert.True(t, IsSetupDone(pkgDir))
+
+	_, err = os.Stat(filepath.Join(pkgDir, SETUP_MARKER_FILE))
+	assert.Nil(t, err)
+}

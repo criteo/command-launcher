@@ -153,9 +153,32 @@ func ExecSetupHookFromPackage(pkg command.PackageManifest, pkgDir string) error 
 			if err != nil {
 				return fmt.Errorf("setup hook of package %s failed to execute: %v", pkg.Name(), err)
 			}
+			if err := MarkSetupDone(c.PackageDir(), pkg.Version()); err != nil {
+				log.Warnf("failed to write setup marker for package %s: %v", pkg.Name(), err)
+			}
 			return nil
 		}
 	}
 	log.Warnf("No setup hook defined for package %s", pkg.Name())
+	if dir := effectivePackageDir(pkg, pkgDir); dir != "" {
+		if err := MarkSetupDone(dir, pkg.Version()); err != nil {
+			log.Warnf("failed to write setup marker for package %s: %v", pkg.Name(), err)
+		}
+	}
 	return nil
+}
+
+// effectivePackageDir returns pkgDir when provided, otherwise falls back to the
+// package directory already set on one of its commands (populated when the
+// package was loaded/registered).
+func effectivePackageDir(pkg command.PackageManifest, pkgDir string) string {
+	if pkgDir != "" {
+		return pkgDir
+	}
+	for _, c := range pkg.Commands() {
+		if c.PackageDir() != "" {
+			return c.PackageDir()
+		}
+	}
+	return ""
 }
