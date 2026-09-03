@@ -142,9 +142,26 @@ func copyFile(src string, dst string) error {
 	return os.Chmod(dst, srcInfo.Mode())
 }
 
+// SETUP_HOOK_NAME is the name of the system command a package may define as its setup hook.
+const SETUP_HOOK_NAME = "__setup__"
+
+func isSetupHook(c command.Command) bool {
+	return c.Name() == SETUP_HOOK_NAME && c.Type() == "system"
+}
+
+// HasSetupHook reports whether the package defines a __setup__ system command.
+func HasSetupHook(pkg command.PackageManifest) bool {
+	for _, c := range pkg.Commands() {
+		if isSetupHook(c) {
+			return true
+		}
+	}
+	return false
+}
+
 func ExecSetupHookFromPackage(pkg command.PackageManifest, pkgDir string) error {
 	for _, c := range pkg.Commands() {
-		if c.Name() == "__setup__" && c.Type() == "system" {
+		if isSetupHook(c) {
 			if pkgDir != "" {
 				c.SetPackageDir(pkgDir)
 			}

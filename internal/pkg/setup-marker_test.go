@@ -34,6 +34,25 @@ func TestMarkSetupDone(t *testing.T) {
 	assert.False(t, marker.CompletedAt.IsZero())
 }
 
+// An empty package directory must never be resolved relative to the cwd.
+func TestSetupMarker_EmptyDir(t *testing.T) {
+	cwd, err := os.Getwd()
+	assert.NoError(t, err)
+	tmpDir := t.TempDir()
+	assert.NoError(t, os.Chdir(tmpDir))
+	t.Cleanup(func() { _ = os.Chdir(cwd) })
+
+	assert.False(t, IsSetupDone(""))
+
+	err = MarkSetupDone("", "1.0.0")
+	assert.Error(t, err)
+
+	// nothing was written in the cwd
+	_, err = os.Stat(filepath.Join(tmpDir, SETUP_MARKER_FILE))
+	assert.True(t, os.IsNotExist(err))
+	assert.False(t, IsSetupDone(""))
+}
+
 func TestIsSetupDone_Table(t *testing.T) {
 	tests := []struct {
 		name      string
