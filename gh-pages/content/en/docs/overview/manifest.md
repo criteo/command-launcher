@@ -557,6 +557,12 @@ When a package is installed, sometimes it requires some setup to make it work pr
 
 > Make sure the setup hook is _idempotent_, when a new version is installed the setup hook will be called again.
 
+Once the setup hook has run successfully, Command Launcher writes a `.setup` marker file in the package folder. The marker is a small JSON document (`completedAt`, `packageVersion`) and is removed together with the package folder when the package is uninstalled or updated. Remove it manually to force the setup to run again. The built-in `cola package inspect [package_name]` shows the setup state (`done`, `pending`, or `n/a` when the package has no `__setup__` hook).
+
+**Lazy setup:** when the configuration `enable_lazy_setup` is `true` (default `false`), Command Launcher runs the `__setup__` hook of a package right before the first command of that package is called, if the setup has not been done yet (no `.setup` marker). This is useful when the setup hook is not run at installation time (`enable_package_setup_hook` is `false` by default), or when the package is installed by simply dropping it in the dropin folder. `enable_lazy_setup` is independent from `enable_package_setup_hook`, which only controls the setup at installation time; packages without a `__setup__` hook are not affected.
+
+> The lazy setup hook runs in the same terminal as the command: its output is mixed with the command output, so keep the hook quiet if the command output is meant to be parsed. The hook only receives the process environment (not the `COLA_*` variables), use `{{.PackageDir}}` to locate the package folder. For [workspace packages](../workspace), add `.setup` to your `.gitignore`.
+
 **Example:**
 
 ```yaml
