@@ -451,9 +451,27 @@ func printPackageDetails(pkg command.PackageManifest, source *backend.PackageSou
 		}
 	}
 
+	fmt.Printf("  Setup:      %s\n", setupState(pkg))
+
 	fmt.Println()
 	fmt.Println("  Commands:")
 	printCommands(pkg.Commands())
+}
+
+// setupState describes whether the package's __setup__ hook has run, based on the
+// .setup marker written in the package directory.
+func setupState(mf command.PackageManifest) string {
+	if !pkg.HasSetupHook(mf) {
+		return "n/a (no __setup__ hook)"
+	}
+	cmds := mf.Commands()
+	if len(cmds) == 0 || cmds[0].PackageDir() == "" {
+		return "unknown"
+	}
+	if pkg.IsSetupDone(cmds[0].PackageDir()) {
+		return "done"
+	}
+	return "pending"
 }
 
 func findPackageFolder(pkgName string) (string, error) {

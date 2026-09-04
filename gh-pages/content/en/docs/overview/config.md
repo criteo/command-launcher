@@ -47,6 +47,7 @@ toc: true
 | enable_package_setup_hook        | bool     | call setup hook after a new version of package is installed (available 1.9+)                                                  |
 | group_help_by_registry           | bool     | group help by registry, default true (available 1.13+)                                                                        |
 | enable_workspace_packages        | bool     | enable or disable workspace package discovery, default false (available 1.15+)                                                |
+| enable_lazy_setup                | bool     | run the package setup hook before the first command of the package if not done yet, default false (available 1.16+)          |
 
 ### extra remote configuration
 

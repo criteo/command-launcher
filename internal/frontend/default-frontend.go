@@ -15,6 +15,7 @@ import (
 	"github.com/criteo/command-launcher/internal/console"
 	"github.com/criteo/command-launcher/internal/context"
 	"github.com/criteo/command-launcher/internal/helper"
+	"github.com/criteo/command-launcher/internal/pkg"
 
 	log "github.com/sirupsen/logrus"
 
@@ -331,6 +332,19 @@ func (self *defaultFrontend) executeCommand(group, name string, args []string, i
 		}
 	}
 
+	// Lazy setup: when enabled by the user (ENABLE_LAZY_SETUP), run the __setup__ hook of
+	// the command's package before the command if it has not been done yet. The package
+	// dir must be known so the marker is never looked up or written relative to the cwd.
+	if viper.GetBool(config.ENABLE_LAZY_SETUP_KEY) {
+		if iCmd.PackageDir() == "" {
+			log.Warnf("package %s has no package directory, skipping lazy setup", iCmd.PackageName())
+		} else if !pkg.IsSetupDone(iCmd.PackageDir()) {
+			if err := self.runLazySetup(iCmd); err != nil {
+				return 1, fmt.Errorf("lazy setup failed for package %s: %v", iCmd.PackageName(), err)
+			}
+		}
+	}
+
 	envCtx := self.getCmdEnvContext(iCmd, initialEnvCtx, userConsent)
 
 	exitCode, err := iCmd.Execute(envCtx, args...)
@@ -339,6 +353,25 @@ func (self *defaultFrontend) executeCommand(group, name string, args []string, i
 	}
 
 	return exitCode, nil
+}
+
+// runLazySetup runs the __setup__ hook of the package that owns iCmd before the
+// command executes. Packages without a __setup__ hook are left untouched (no marker).
+func (self *defaultFrontend) runLazySetup(iCmd command.Command) error {
+	for _, src := range self.backend.AllPackageSources() {
+		if src.Repo == nil || src.Name != iCmd.RepositoryID() {
+			continue
+		}
+		manifest, err := src.Repo.Package(iCmd.PackageName())
+		if err != nil {
+			return err
+		}
+		if !pkg.HasSetupHook(manifest) {
+			return nil
+		}
+		return pkg.ExecSetupHookFromPackage(manifest, iCmd.PackageDir())
+	}
+	return fmt.Errorf("cannot find package %s to run its setup", iCmd.PackageName())
 }
 
 // execute the valid args command of the cdt command
