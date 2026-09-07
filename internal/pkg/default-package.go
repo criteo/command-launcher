@@ -142,9 +142,26 @@ func copyFile(src string, dst string) error {
 	return os.Chmod(dst, srcInfo.Mode())
 }
 
+// SETUP_HOOK_NAME is the name of the system command a package may define as its setup hook.
+const SETUP_HOOK_NAME = "__setup__"
+
+func isSetupHook(c command.Command) bool {
+	return c.Name() == SETUP_HOOK_NAME && c.Type() == "system"
+}
+
+// HasSetupHook reports whether the package defines a __setup__ system command.
+func HasSetupHook(pkg command.PackageManifest) bool {
+	for _, c := range pkg.Commands() {
+		if isSetupHook(c) {
+			return true
+		}
+	}
+	return false
+}
+
 func ExecSetupHookFromPackage(pkg command.PackageManifest, pkgDir string) error {
 	for _, c := range pkg.Commands() {
-		if c.Name() == "__setup__" && c.Type() == "system" {
+		if isSetupHook(c) {
 			if pkgDir != "" {
 				c.SetPackageDir(pkgDir)
 			}
@@ -153,9 +170,32 @@ func ExecSetupHookFromPackage(pkg command.PackageManifest, pkgDir string) error 
 			if err != nil {
 				return fmt.Errorf("setup hook of package %s failed to execute: %v", pkg.Name(), err)
 			}
+			if err := MarkSetupDone(c.PackageDir(), pkg.Version()); err != nil {
+				log.Warnf("failed to write setup marker for package %s: %v", pkg.Name(), err)
+			}
 			return nil
 		}
 	}
 	log.Warnf("No setup hook defined for package %s", pkg.Name())
+	if dir := effectivePackageDir(pkg, pkgDir); dir != "" {
+		if err := MarkSetupDone(dir, pkg.Version()); err != nil {
+			log.Warnf("failed to write setup marker for package %s: %v", pkg.Name(), err)
+		}
+	}
 	return nil
+}
+
+// effectivePackageDir returns pkgDir when provided, otherwise falls back to the
+// package directory already set on one of its commands (populated when the
+// package was loaded/registered).
+func effectivePackageDir(pkg command.PackageManifest, pkgDir string) string {
+	if pkgDir != "" {
+		return pkgDir
+	}
+	for _, c := range pkg.Commands() {
+		if c.PackageDir() != "" {
+			return c.PackageDir()
+		}
+	}
+	return ""
 }

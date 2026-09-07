@@ -136,3 +136,29 @@ func Test_defaultRepoIndex_Query(t *testing.T) {
 	assert.NotNil(t, cmd)
 	assert.Equal(t, "executable", cmd.Type(), "The type must be executable")
 }
+
+func Test_defaultRepoIndex_AllPackages_SortedByName(t *testing.T) {
+	reg, err := newDefaultRepoIndex("default")
+	assert.Nil(t, err)
+
+	// insert package names out of lexicographic order on purpose
+	names := []string{"zeta", "alpha", "mu", "beta"}
+	for _, name := range names {
+		pkg := defaultRepoIndexEntry{
+			PkgName:     name,
+			PkgVersion:  "1.0.0",
+			PkgCommands: []*command.DefaultCommand{},
+		}
+		err := reg.Add(&pkg, "", "test-pkg-dir-name")
+		assert.Nil(t, err)
+	}
+
+	pkgs := reg.AllPackages()
+	assert.Equal(t, len(names), len(pkgs))
+
+	sortedNames := make([]string, len(pkgs))
+	for i, pkg := range pkgs {
+		sortedNames[i] = pkg.Name()
+	}
+	assert.Equal(t, []string{"alpha", "beta", "mu", "zeta"}, sortedNames, "AllPackages must return packages sorted lexicographically by name")
+}

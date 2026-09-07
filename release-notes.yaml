@@ -1,3 +1,25 @@
+1.16.0:
+  version: 1.16.0
+  releaseNotes: |
+    # ✨ New Features
+      * Record that a package `__setup__` hook has run with a `.setup` marker file in the package folder.
+      * Lazy setup: run the package setup hook right before the first command of the package when it has not run yet. Enable with `cdt config ENABLE_LAZY_SETUP true`.
+      * `package inspect` now shows the package setup state (done / pending / n/a).
+  startPartition: 0
+  endPartition: 9
+
+1.15.2:
+  version: 1.15.2
+  releaseNotes: |
+    # ✨ New Features
+      * Display the command's error message when execution fails, instead of failing silently.
+    # 🐛 Bug Fixes
+      * Pass user-provided arguments to commands verbatim: only manifest-defined arguments are interpolated now, so user payloads containing `<`, `{{...}}`, or `#OS#` are no longer rewritten. This also fixes a latent aliasing bug that could mutate manifest arguments across invocations.
+    # 📝 Documentation Updates
+      * Document the `Extension` and `ScriptExtension` variable values on macOS.
+  startPartition: 0
+  endPartition: 9
+
 1.15.1:
   version: 1.15.1
   releaseNotes: |

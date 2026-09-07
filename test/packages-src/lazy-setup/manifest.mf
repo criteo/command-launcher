@@ -1,0 +1,17 @@
+{
+  "pkgName": "lazy-setup",
+  "version": "1.0.0",
+  "cmds": [
+    {
+      "name": "__setup__",
+      "type": "system",
+      "executable": "{{.PackageDir}}/setup.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}"
+    },
+    {
+      "name": "lazy-hello",
+      "type": "executable",
+      "short": "print hello from a package with a setup hook",
+      "executable": "{{.PackageDir}}/hello.{{if eq .Os \"windows\"}}bat{{else}}sh{{end}}"
+    }
+  ]
+}
