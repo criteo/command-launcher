@@ -142,6 +142,35 @@ func postRun(cmd *cobra.Command, args []string) {
 	}
 }
 
+// isBuiltinInvocation reports whether the invoked command is a builtin one (config, remote,
+// update, help, ...) or a bare flag such as `--help`. It runs in initApp(), before Cobra
+// parses/dispatches the command, so it inspects os.Args directly rather than relying on
+// isUpdatePossible's cmd.CommandPath().
+//
+// It is intentionally broader than builtinCommands: that list only drives the auto-update
+// and metrics exclusion, while this one must cover every command a user needs to repair a
+// broken package source (e.g. `remote delete`, `package ...`).
+func isBuiltinInvocation() bool {
+	if len(os.Args) < 2 {
+		return false
+	}
+	arg := os.Args[1]
+	if strings.HasPrefix(arg, "-") {
+		return true
+	}
+	for _, w := range builtinCommands {
+		if arg == w {
+			return true
+		}
+	}
+	for _, w := range []string{"login", "package", "rename", "remote"} {
+		if arg == w {
+			return true
+		}
+	}
+	return false
+}
+
 func isUpdatePossible(cmd *cobra.Command) bool {
 	cmdPath := cmd.CommandPath()
 	cmdPath = strings.TrimSpace(strings.TrimPrefix(cmdPath, rootCtxt.appCtx.AppName()))
@@ -278,7 +307,13 @@ func initBackend() {
 			for _, e := range errPool {
 				console.Error(e.Error())
 			}
-			log.Fatal("Initialization failed")
+			if isBuiltinInvocation() {
+				// don't block builtin commands (e.g. `config`, `remote`) so users can
+				// still fix a broken package source instead of getting stuck
+				console.Error("Initialization failed, builtin commands remain available to fix the configuration")
+			} else {
+				log.Fatal("Initialization failed")
+			}
 		}
 		rootCtxt.backend.Reload()
 	}
