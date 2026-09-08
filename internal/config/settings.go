@@ -40,6 +40,7 @@ const (
 	ENABLE_LAZY_SETUP_KEY                = "ENABLE_LAZY_SETUP"
 	GROUP_HELP_BY_REGISTRY_KEY           = "GROUP_HELP_BY_REGISTRY"
 	ENABLE_WORKSPACE_PACKAGES_KEY        = "ENABLE_WORKSPACE_PACKAGES"
+	APP_LONG_NAME_KEY                    = "APP_LONG_NAME"
 
 	// internal commands are the commands with start partition number > INTERNAL_START_PARTITION
 	INTERNAL_COMMAND_ENABLED_KEY = "INTERNAL_COMMAND_ENABLED"
@@ -83,6 +84,7 @@ func init() {
 		ENABLE_LAZY_SETUP_KEY,
 		GROUP_HELP_BY_REGISTRY_KEY,
 		ENABLE_WORKSPACE_PACKAGES_KEY,
+		APP_LONG_NAME_KEY,
 	)
 }
 
@@ -145,6 +147,8 @@ func SetSettingValue(key string, value string) error {
 		return setBooleanConfig(upperKey, value)
 	case ENABLE_WORKSPACE_PACKAGES_KEY:
 		return setBooleanConfig(upperKey, value)
+	case APP_LONG_NAME_KEY:
+		return setStringConfig(upperKey, value)
 	}
 
 	return fmt.Errorf("unsupported config %s", key)

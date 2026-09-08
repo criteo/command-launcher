@@ -89,13 +89,9 @@ else
   exit 1
 fi
 
-# Make a copy and run the copy to ensure FULL_COMMAND_NAME starts
-# with the name of the actual executable that runs the launcher
-cp "$OUTPUT_DIR/"{cl,clcopy}
-
 echo "> test FULL_COMMAND_NAME environment variable (with group)"
-RESULT=$("$OUTPUT_DIR"/clcopy greeting saybonjour)
-echo "$RESULT" | grep -q "^command name: clcopy greeting saybonjour$"
+RESULT=$("$CL_PATH" greeting saybonjour)
+echo "$RESULT" | grep -q "^command name: cl greeting saybonjour$"
 if [ $? -eq 0 ]; then
   echo "OK"
 else
@@ -104,8 +100,8 @@ else
 fi
 
 echo "> test FULL_COMMAND_NAME environment variable (no group)"
-RESULT=$("$OUTPUT_DIR"/clcopy bonjour)
-echo "$RESULT" | grep -q "^command name: clcopy bonjour$"
+RESULT=$("$CL_PATH" bonjour)
+echo "$RESULT" | grep -q "^command name: cl bonjour$"
 if [ $? -eq 0 ]; then
   echo "OK"
 else
