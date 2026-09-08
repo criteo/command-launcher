@@ -82,10 +82,10 @@ You can build the command launcher with your preferred name (in the example: `Cr
 go build -o cdt -ldflags='-X main.version=dev -X main.appName=cdt -X "main.appLongName=Criteo Dev Toolkit"' main.go
 ```
 
-Or simply call the `build.sh` script
+Or using the `build.sh` script
 
 ```shell
-./build.sh [version] [app name] [app long name]
+./build.sh -v VERSION -n APP_NAME -l APP_LONG_NAME
 ```
 
 ## Running tests
