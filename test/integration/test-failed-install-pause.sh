@@ -34,15 +34,17 @@ cat > $TEST_REMOTE_DIR/index.json << 'EOF'
 EOF
 
 # Configure the command launcher to use our test remote repository
+# Note: any `cl` invocation (config commands included) runs the same backend
+# initialization, so setting command_update_enabled here (once the broken remote
+# is already configured) is itself the first attempt to install broken-package.
 $CL_PATH config command_repository_base_url "file://$TEST_REMOTE_DIR"
-$CL_PATH config command_update_enabled true
 
 ################
 echo "> test failed installation creates pause file"
 
-# First run - triggers automatic update which should fail to install the broken package
-echo "* running first command (triggers automatic update, expecting installation failure)"
-RESULT=$($CL_PATH 2>&1)
+# First run - triggers the initial install of the broken package
+echo "* running first command (triggers initial install, expecting installation failure)"
+RESULT=$($CL_PATH config command_update_enabled true 2>&1)
 
 # Check that installation was attempted
 echo "$RESULT" | grep -q "install new package 'broken-package'"
@@ -54,8 +56,8 @@ else
   exit 1
 fi
 
-# Check that installation failed (could be "Cannot get" or "Cannot install")
-echo "$RESULT" | grep -q "Cannot .* the package broken-package"
+# Check that installation failed (could be "cannot get" or "cannot install")
+echo "$RESULT" | grep -qi "cannot .* the package broken-package"
 if [ $? -eq 0 ]; then
   echo "OK - installation failed as expected"
 else
