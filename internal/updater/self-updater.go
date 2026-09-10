@@ -6,6 +6,8 @@ import (
 	"net/url"
 	"path"
 	"runtime"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/criteo/command-launcher/internal/console"
@@ -102,10 +104,45 @@ func (u *SelfUpdater) checkSelfUpdate() <-chan bool {
 			return
 		}
 
-		ch <- u.latestVersion.Version != u.CurrentVersion &&
+		ch <- isNewerVersion(u.latestVersion.Version, u.CurrentVersion) &&
 			u.User.InPartition(u.latestVersion.StartPartition, u.latestVersion.EndPartition)
 	}()
 	return ch
+}
+
+func isNewerVersion(remote, current string) bool {
+	remoteParts, remoteOk := splitVersionInts(remote)
+	currentParts, currentOk := splitVersionInts(current)
+	if !remoteOk || !currentOk {
+		return remote != current
+	}
+
+	for i := 0; i < len(remoteParts) || i < len(currentParts); i++ {
+		var r, c int
+		if i < len(remoteParts) {
+			r = remoteParts[i]
+		}
+		if i < len(currentParts) {
+			c = currentParts[i]
+		}
+		if r != c {
+			return r > c
+		}
+	}
+	return false
+}
+
+func splitVersionInts(v string) ([]int, bool) {
+	parts := strings.Split(v, ".")
+	nums := make([]int, len(parts))
+	for i, p := range parts {
+		n, err := strconv.Atoi(p)
+		if err != nil {
+			return nil, false
+		}
+		nums[i] = n
+	}
+	return nums, true
 }
 
 func (u *SelfUpdater) doSelfUpdate(url string) error {
