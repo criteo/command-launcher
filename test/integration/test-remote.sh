@@ -47,7 +47,7 @@ else
 fi
 
 echo "> test update command"
-RESULT=$($OUTPUT_DIR/cl update --package)
+RESULT=$($OUTPUT_DIR/cl update --package 2>&1)
 echo "$RESULT" | grep "upgrade package 'command-launcher-demo' from version 1.0.0 to version 2.0.0"
 if [ $? -eq 0 ]; then
   echo "OK"
