@@ -27,6 +27,13 @@ var (
 	lockTimeout    = 5 * time.Second
 	lockRetryDelay = 50 * time.Millisecond
 	rename         = os.Rename
+
+	// a rename over a file that another process has open fails on Windows;
+	// readers only keep it open briefly, so retry with a backoff (~1s total)
+	isRetryableRenameErr = isTransientRenameError
+	renameAttempts       = 10
+	renameRetryDelay     = 10 * time.Millisecond
+	renameMaxRetryDelay  = 200 * time.Millisecond
 )
 
 // WriteConfig persists the current settings to the active config file.
@@ -170,10 +177,28 @@ func replaceFile(v *viper.Viper, target string) (err error) {
 	if err = tmp.Close(); err != nil {
 		return fmt.Errorf("cannot close temporary configuration file: %w", err)
 	}
-	if err = rename(tmpName, target); err != nil {
+	if err = renameWithRetry(tmpName, target); err != nil {
 		return fmt.Errorf("cannot replace configuration file %s: %w", target, err)
 	}
+	// persist the rename itself, otherwise a crash can bring back the old file
+	// or, on some filesystems, an empty one
+	if syncErr := syncDir(filepath.Dir(target)); syncErr != nil {
+		log.Debugf("cannot sync configuration directory: %v", syncErr)
+	}
 	return nil
+}
+
+func renameWithRetry(src, dst string) error {
+	delay := renameRetryDelay
+	for attempt := 1; ; attempt++ {
+		err := rename(src, dst)
+		if err == nil || attempt >= renameAttempts || !isRetryableRenameErr(err) {
+			return err
+		}
+		log.Debugf("rename %s failed (attempt %d/%d), retrying in %s: %v", dst, attempt, renameAttempts, delay, err)
+		time.Sleep(delay)
+		delay = min(2*delay, renameMaxRetryDelay)
+	}
 }
 
 // writeInPlace is the fallback when no temp file can be created next to the

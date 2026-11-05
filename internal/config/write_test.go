@@ -308,3 +308,60 @@ func TestWriteConfig_ReadOnlyDirFallsBackToInPlace(t *testing.T) {
 
 	assert.Equal(t, "debug", readJSON(t, cfg)["log_level"])
 }
+
+var errTransient = errors.New("transient")
+
+func stubRename(t *testing.T, failures int, failWith error) *int {
+	t.Helper()
+	calls := 0
+	savedRename, savedRetryable, savedDelay := rename, isRetryableRenameErr, renameRetryDelay
+	rename = func(src, dst string) error {
+		calls++
+		if calls <= failures {
+			return failWith
+		}
+		return os.Rename(src, dst)
+	}
+	isRetryableRenameErr = func(err error) bool { return errors.Is(err, errTransient) }
+	renameRetryDelay = time.Millisecond
+	t.Cleanup(func() { rename, isRetryableRenameErr, renameRetryDelay = savedRename, savedRetryable, savedDelay })
+	return &calls
+}
+
+func TestRenameWithRetry_SucceedsAfterTransientErrors(t *testing.T) {
+	dir := t.TempDir()
+	cfg := filepath.Join(dir, "config.json")
+	calls := stubRename(t, 2, errTransient)
+
+	require.NoError(t, writeConfigFile(newTestViper(map[string]any{"log_level": "debug"}), cfg, filepath.Join(dir, configLockFileName), false))
+
+	assert.Equal(t, 3, *calls)
+	assert.Equal(t, "debug", readJSON(t, cfg)["log_level"])
+	assert.Empty(t, tempFiles(t, dir))
+}
+
+func TestRenameWithRetry_GivesUpOnNonRetryableError(t *testing.T) {
+	dir := t.TempDir()
+	cfg := filepath.Join(dir, "config.json")
+	calls := stubRename(t, 1, errors.New("permanent"))
+
+	err := writeConfigFile(newTestViper(nil), cfg, filepath.Join(dir, configLockFileName), false)
+
+	assert.ErrorContains(t, err, "permanent")
+	assert.Equal(t, 1, *calls)
+	assert.Empty(t, tempFiles(t, dir))
+}
+
+func TestRenameWithRetry_GivesUpAfterMaxAttempts(t *testing.T) {
+	dir := t.TempDir()
+	cfg := filepath.Join(dir, "config.json")
+	require.NoError(t, os.WriteFile(cfg, []byte(`{"log_level":"fatal"}`), 0644))
+	calls := stubRename(t, renameAttempts, errTransient)
+
+	err := writeConfigFile(newTestViper(map[string]any{"log_level": "debug"}), cfg, filepath.Join(dir, configLockFileName), false)
+
+	assert.ErrorIs(t, err, errTransient)
+	assert.Equal(t, renameAttempts, *calls)
+	assert.Equal(t, "fatal", readJSON(t, cfg)["log_level"])
+	assert.Empty(t, tempFiles(t, dir))
+}
