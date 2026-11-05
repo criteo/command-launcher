@@ -56,7 +56,7 @@ func LoadConfig(appCtx context.LauncherContext) {
 
 	viper.AutomaticEnv()
 
-	if err := viper.ReadInConfig(); err != nil {
+	if err := ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			initDefaultConfigFile()
 		} else {
@@ -68,7 +68,9 @@ func LoadConfig(appCtx context.LauncherContext) {
 
 	if remoteConfigLoaded {
 		log.Info("Remote Configuration loaded...")
-		viper.WriteConfig()
+		if err := WriteConfig(); err != nil {
+			log.Warn("cannot persist the remote configuration: ", err)
+		}
 	}
 
 }
@@ -125,7 +127,7 @@ func setDefaultConfig() {
 func initDefaultConfigFile() {
 	log.Info("Create default config file")
 	createAppDir()
-	if err := viper.SafeWriteConfig(); err != nil {
+	if err := SafeWriteConfig(); err != nil {
 		log.Error("cannot write the default configuration: ", err)
 	}
 }

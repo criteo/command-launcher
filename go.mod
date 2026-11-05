@@ -8,6 +8,7 @@ require (
 	github.com/cavaliergopher/grab/v3 v3.0.1
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/fatih/color v1.13.0
+	github.com/gofrs/flock v0.12.1
 	github.com/inconshreveable/go-update v0.0.0-20160112193335-8152e7eb6ccf
 	github.com/marpaia/graphite-golang v0.0.0-20190519024811-caf161d2c2b1
 	github.com/mitchellh/go-ps v1.0.0
