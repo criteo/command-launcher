@@ -55,7 +55,7 @@ func AddRemoteCmd(rootCmd *cobra.Command, appCtx context.LauncherContext, back b
 				return fmt.Errorf("can't delete the default remote repository")
 			}
 			config.RemoveRemote(args[0])
-			if err := viper.WriteConfig(); err != nil {
+			if err := config.WriteConfig(); err != nil {
 				log.Error("cannot write the default configuration: ", err)
 				return err
 			}
@@ -100,7 +100,7 @@ func AddRemoteCmd(rootCmd *cobra.Command, appCtx context.LauncherContext, back b
 			if err := config.AddRemote(args[0], repoDir, args[1], syncPolicy); err != nil {
 				return err
 			}
-			if err := viper.WriteConfig(); err != nil {
+			if err := config.WriteConfig(); err != nil {
 				log.Error("cannot write the default configuration: ", err)
 				return err
 			}
@@ -137,7 +137,7 @@ func AddRemoteCmd(rootCmd *cobra.Command, appCtx context.LauncherContext, back b
 			if err := config.UpdateRemote(args[0], setSyncPolicy); err != nil {
 				return err
 			}
-			if err := viper.WriteConfig(); err != nil {
+			if err := config.WriteConfig(); err != nil {
 				log.Error("cannot write the default configuration: ", err)
 				return err
 			}

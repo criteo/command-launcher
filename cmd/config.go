@@ -62,7 +62,7 @@ func AddConfigCmd(rootCmd *cobra.Command, appCtx context.LauncherContext) {
 					fmt.Println(err)
 					return
 				}
-				if err := viper.WriteConfig(); err != nil {
+				if err := config.WriteConfig(); err != nil {
 					log.Error("cannot write the default configuration: ", err)
 					return
 				}
