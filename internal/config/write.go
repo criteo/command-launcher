@@ -31,12 +31,13 @@ var (
 	lockRetryDelay = 50 * time.Millisecond
 	rename         = os.Rename
 
-	// a rename over a file that another process has open fails on Windows;
-	// readers only keep it open briefly, so retry with a backoff (~1s total)
-	isRetryableRenameErr = isTransientRenameError
-	renameAttempts       = 10
-	renameRetryDelay     = 10 * time.Millisecond
-	renameMaxRetryDelay  = 200 * time.Millisecond
+	// On Windows, replacing a file that another process has open fails, and so
+	// does opening a file while it is being replaced. Both only last a moment,
+	// so retry with a backoff (~1s total).
+	isFileInUse            = isFileInUseError
+	fileInUseAttempts      = 10
+	fileInUseRetryDelay    = 10 * time.Millisecond
+	fileInUseMaxRetryDelay = 200 * time.Millisecond
 )
 
 // WriteConfig persists the current settings to the active config file.
@@ -192,15 +193,25 @@ func replaceFile(v *viper.Viper, target string) (err error) {
 }
 
 func renameWithRetry(src, dst string) error {
-	delay := renameRetryDelay
+	return retryWhileFileInUse("replace "+dst, func() error { return rename(src, dst) })
+}
+
+// ReadInConfig is viper.ReadInConfig, retried while the config file is being
+// replaced by another process (Windows only).
+func ReadInConfig() error {
+	return retryWhileFileInUse("read configuration", viper.ReadInConfig)
+}
+
+func retryWhileFileInUse(what string, op func() error) error {
+	delay := fileInUseRetryDelay
 	for attempt := 1; ; attempt++ {
-		err := rename(src, dst)
-		if err == nil || attempt >= renameAttempts || !isRetryableRenameErr(err) {
+		err := op()
+		if err == nil || attempt >= fileInUseAttempts || !isFileInUse(err) {
 			return err
 		}
-		log.Debugf("rename %s failed (attempt %d/%d), retrying in %s: %v", dst, attempt, renameAttempts, delay, err)
+		log.Debugf("%s failed (attempt %d/%d), retrying in %s: %v", what, attempt, fileInUseAttempts, delay, err)
 		time.Sleep(delay)
-		delay = min(2*delay, renameMaxRetryDelay)
+		delay = min(2*delay, fileInUseMaxRetryDelay)
 	}
 }
 

@@ -14,9 +14,11 @@ func chownLike(f *os.File, like os.FileInfo) error {
 	return nil
 }
 
-// isTransientRenameError reports the errors MoveFileEx returns while another
-// process (a cdt reader, an antivirus, the indexer) has the target open.
-func isTransientRenameError(err error) bool {
+// isFileInUseError reports the errors returned while another process (a cdt
+// reader or writer, an antivirus, the indexer) has the file open: by
+// MoveFileEx when replacing it, and by CreateFile when opening it during a
+// replace.
+func isFileInUseError(err error) bool {
 	return errors.Is(err, errorSharingViolation) || errors.Is(err, syscall.ERROR_ACCESS_DENIED)
 }
 

@@ -21,8 +21,9 @@ func chownLike(f *os.File, like os.FileInfo) error {
 	return f.Chown(int(st.Uid), int(st.Gid))
 }
 
-// isTransientRenameError: rename(2) does not fail because the target is open.
-func isTransientRenameError(err error) bool {
+// isFileInUseError: on Unix, an open file can be replaced and a file being
+// replaced can be opened.
+func isFileInUseError(err error) bool {
 	return false
 }
 

@@ -319,7 +319,7 @@ var errTransient = errors.New("transient")
 func stubRename(t *testing.T, failures int, failWith error) *int {
 	t.Helper()
 	calls := 0
-	savedRename, savedRetryable, savedDelay := rename, isRetryableRenameErr, renameRetryDelay
+	savedRename, savedRetryable, savedDelay := rename, isFileInUse, fileInUseRetryDelay
 	rename = func(src, dst string) error {
 		calls++
 		if calls <= failures {
@@ -327,9 +327,9 @@ func stubRename(t *testing.T, failures int, failWith error) *int {
 		}
 		return os.Rename(src, dst)
 	}
-	isRetryableRenameErr = func(err error) bool { return errors.Is(err, errTransient) }
-	renameRetryDelay = time.Millisecond
-	t.Cleanup(func() { rename, isRetryableRenameErr, renameRetryDelay = savedRename, savedRetryable, savedDelay })
+	isFileInUse = func(err error) bool { return errors.Is(err, errTransient) }
+	fileInUseRetryDelay = time.Millisecond
+	t.Cleanup(func() { rename, isFileInUse, fileInUseRetryDelay = savedRename, savedRetryable, savedDelay })
 	return &calls
 }
 
@@ -361,12 +361,38 @@ func TestRenameWithRetry_GivesUpAfterMaxAttempts(t *testing.T) {
 	dir := t.TempDir()
 	cfg := filepath.Join(dir, "config.json")
 	require.NoError(t, os.WriteFile(cfg, []byte(`{"log_level":"fatal"}`), 0644))
-	calls := stubRename(t, renameAttempts, errTransient)
+	calls := stubRename(t, fileInUseAttempts, errTransient)
 
 	err := writeConfigFile(newTestViper(map[string]any{"log_level": "debug"}), cfg, filepath.Join(dir, configLockFileName), false)
 
 	assert.ErrorIs(t, err, errTransient)
-	assert.Equal(t, renameAttempts, *calls)
+	assert.Equal(t, fileInUseAttempts, *calls)
 	assert.Equal(t, "fatal", readJSON(t, cfg)["log_level"])
 	assert.Empty(t, tempFiles(t, dir))
+}
+
+func TestRetryWhileFileInUse(t *testing.T) {
+	savedRetryable, savedDelay := isFileInUse, fileInUseRetryDelay
+	isFileInUse = func(err error) bool { return errors.Is(err, errTransient) }
+	fileInUseRetryDelay = time.Millisecond
+	t.Cleanup(func() { isFileInUse, fileInUseRetryDelay = savedRetryable, savedDelay })
+
+	calls := 0
+	err := retryWhileFileInUse("read", func() error {
+		calls++
+		if calls < 3 {
+			return &os.PathError{Op: "open", Path: "config.json", Err: errTransient}
+		}
+		return nil
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, 3, calls)
+
+	calls = 0
+	err = retryWhileFileInUse("read", func() error {
+		calls++
+		return errors.New("While parsing config: unexpected end of JSON input")
+	})
+	assert.Error(t, err)
+	assert.Equal(t, 1, calls, "parse errors must not be retried")
 }

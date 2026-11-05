@@ -56,7 +56,7 @@ func LoadConfig(appCtx context.LauncherContext) {
 
 	viper.AutomaticEnv()
 
-	if err := viper.ReadInConfig(); err != nil {
+	if err := ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			initDefaultConfigFile()
 		} else {
