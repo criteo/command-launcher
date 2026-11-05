@@ -93,6 +93,13 @@ func Fprogress(w io.Writer, format string, a ...interface{}) {
 	fmt.Fprintf(w, format+"\n", a...)
 }
 
+// ShowCursor makes the cursor of w visible again when it is a terminal.
+func ShowCursor(w io.Writer) {
+	if ansiSupported(w) {
+		fmt.Fprint(w, "\033[?25h")
+	}
+}
+
 // ClearPreviousLine erases the previous line of w when it is a terminal.
 func ClearPreviousLine(w io.Writer) {
 	if ansiSupported(w) {
