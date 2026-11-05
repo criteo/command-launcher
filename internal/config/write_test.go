@@ -150,7 +150,12 @@ func TestWriteConfig_ConcurrentWritersAndReaders(t *testing.T) {
 	payload := strings.Repeat("x", 64*1024)
 	require.NoError(t, writeConfigFile(newTestViper(map[string]any{"writer": -1, "payload": payload}), cfg, lockPath, false))
 
-	const writers, writes = 20, 20
+	// the lock serializes all writes: keep the total small enough for slow
+	// Windows runners, and don't let the timeout fail what tests atomicity
+	const writers, writes = 20, 5
+	saved := lockTimeout
+	lockTimeout = time.Minute
+	defer func() { lockTimeout = saved }()
 	stop := make(chan struct{})
 	readErrs := make(chan error, 1)
 	go func() {

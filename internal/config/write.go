@@ -24,7 +24,10 @@ const configLockFileName = ".config.lock"
 const defaultConfigFileMode fs.FileMode = 0644
 
 var (
-	lockTimeout    = 5 * time.Second
+	// writers wait in line for the lock; on Windows each write can take tens
+	// of milliseconds (antivirus scan of the temp file, rename retries), so
+	// leave room for a few dozen concurrent invocations
+	lockTimeout    = 15 * time.Second
 	lockRetryDelay = 50 * time.Millisecond
 	rename         = os.Rename
 
