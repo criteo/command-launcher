@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gofrs/flock"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -53,6 +54,8 @@ func writeConfigFile(v *viper.Viper, path string, lockPath string, onlyIfMissing
 	}
 	defer lock.Unlock()
 
+	removeOrphanTempFiles(path)
+
 	if onlyIfMissing {
 		if _, err := os.Stat(path); err == nil {
 			return nil
@@ -82,12 +85,30 @@ func lockConfig(lockPath string) (*flock.Flock, error) {
 	return lock, nil
 }
 
+func tempFilePattern(target string) string {
+	return "." + filepath.Base(target) + ".*.tmp"
+}
+
+// removeOrphanTempFiles deletes temp files left behind by a writer that was
+// killed before renaming. It must be called with the lock held: no other
+// writer can be running, so every matching file is an orphan.
+func removeOrphanTempFiles(target string) {
+	matches, err := filepath.Glob(filepath.Join(filepath.Dir(target), tempFilePattern(target)))
+	if err != nil {
+		return
+	}
+	for _, m := range matches {
+		if err := os.Remove(m); err != nil {
+			log.Debugf("cannot remove orphan temporary configuration file %s: %v", m, err)
+		}
+	}
+}
+
 // replaceFile writes the configuration to a temp file in the target's
 // directory (rename is only atomic within a filesystem), flushes it to disk
 // and renames it over the target. The target is left untouched on any error.
 func replaceFile(v *viper.Viper, target string) (err error) {
-	dir, base := filepath.Split(target)
-	tmp, err := os.CreateTemp(dir, "."+base+".*.tmp")
+	tmp, err := os.CreateTemp(filepath.Dir(target), tempFilePattern(target))
 	if err != nil {
 		return fmt.Errorf("cannot create temporary configuration file: %w", err)
 	}

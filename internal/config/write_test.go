@@ -199,3 +199,40 @@ func TestWriteConfig_ConcurrentWritersAndReaders(t *testing.T) {
 	assert.Equal(t, payload, content["payload"])
 	assert.Empty(t, tempFiles(t, dir))
 }
+
+func TestWriteConfig_RemovesOrphanTempFiles(t *testing.T) {
+	dir := t.TempDir()
+	cfg := filepath.Join(dir, "config.json")
+	orphans := []string{
+		filepath.Join(dir, ".config.json.123.tmp"),
+		filepath.Join(dir, ".config.json.456.tmp"),
+	}
+	unrelated := []string{
+		filepath.Join(dir, ".other.json.789.tmp"),
+		filepath.Join(dir, "config.json.bak"),
+	}
+	for _, f := range append(orphans, unrelated...) {
+		require.NoError(t, os.WriteFile(f, []byte("{"), 0644))
+	}
+
+	require.NoError(t, writeConfigFile(newTestViper(nil), cfg, filepath.Join(dir, configLockFileName), false))
+
+	for _, f := range orphans {
+		assert.NoFileExists(t, f)
+	}
+	for _, f := range unrelated {
+		assert.FileExists(t, f)
+	}
+}
+
+func TestSafeWriteConfig_RemovesOrphanTempFilesWhenFileExists(t *testing.T) {
+	dir := t.TempDir()
+	cfg := filepath.Join(dir, "config.json")
+	orphan := filepath.Join(dir, ".config.json.123.tmp")
+	require.NoError(t, os.WriteFile(cfg, []byte(`{}`), 0644))
+	require.NoError(t, os.WriteFile(orphan, []byte("{"), 0644))
+
+	require.NoError(t, writeConfigFile(newTestViper(nil), cfg, filepath.Join(dir, configLockFileName), true))
+
+	assert.NoFileExists(t, orphan)
+}
