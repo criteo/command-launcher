@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"runtime"
 	"time"
@@ -54,19 +55,19 @@ func (u *SelfUpdater) Update() error {
 		return nil
 	}
 
-	fmt.Println("\n-----------------------------------")
-	fmt.Printf("🚀 %s version %s \n", u.BinaryName, u.CurrentVersion)
-	fmt.Printf("\nan update of %s (%s) is available:\n\n", u.BinaryName, u.latestVersion.Version)
-	fmt.Println(u.latestVersion.ReleaseNotes)
-	fmt.Println()
+	fmt.Fprintln(os.Stderr, "\n-----------------------------------")
+	fmt.Fprintf(os.Stderr, "🚀 %s version %s \n", u.BinaryName, u.CurrentVersion)
+	fmt.Fprintf(os.Stderr, "\nan update of %s (%s) is available:\n\n", u.BinaryName, u.latestVersion.Version)
+	fmt.Fprintln(os.Stderr, u.latestVersion.ReleaseNotes)
+	fmt.Fprintln(os.Stderr)
 	console.Reminder("do you want to update it? [yN]")
 	var resp int
 	if _, err := fmt.Scanf("%c", &resp); err != nil || (resp != 'y' && resp != 'Y') {
-		fmt.Println("aborted by user")
+		fmt.Fprintln(os.Stderr, "aborted by user")
 		return fmt.Errorf("Aborted by user")
 	}
 
-	fmt.Printf("update and install the latest version of %s (%s)\n", u.BinaryName, u.latestVersion.Version)
+	fmt.Fprintf(os.Stderr, "update and install the latest version of %s (%s)\n", u.BinaryName, u.latestVersion.Version)
 	downloadUrl, err := u.downloadUrl(u.latestVersion.Version)
 	if err != nil {
 		console.Error("update failed: %s\n", err)

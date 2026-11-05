@@ -103,7 +103,7 @@ func requestConsent(cmdGroup string, cmdName string, requests []string) bool {
 		fmt.Printf("  - %s\n", request)
 	}
 	fmt.Println()
-	console.Reminder("authorize the access? [yN]")
+	console.Prompt("authorize the access? [yN]")
 	var resp int
 	if _, err := fmt.Scanf("%c", &resp); err != nil || (resp != 'y' && resp != 'Y') {
 		fmt.Printf("Authorization refused by user\n")

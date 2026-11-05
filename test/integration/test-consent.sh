@@ -40,8 +40,15 @@ fi
 
 echo "> test consent enabled - user refused"
 $CL_PATH config enable_user_consent true
-RESULT=$(echo 'n' | $CL_PATH print-credentials-with-consent)
+RESULT=$(echo 'n' | $CL_PATH print-credentials-with-consent 2> $CL_HOME/consent-stderr)
 echo "$RESULT"
+if [ -s $CL_HOME/consent-stderr ]; then
+  echo "KO - consent flow should write only to stdout"
+  cat $CL_HOME/consent-stderr
+  exit 1
+else
+  echo "OK"
+fi
 echo "$RESULT" | grep -q "authorize the access?"
 if [ $? -eq 0 ]; then
   echo "OK"

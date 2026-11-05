@@ -11,6 +11,7 @@ import (
 	"time"
 
 	grab "github.com/cavaliergopher/grab/v3"
+	"github.com/criteo/command-launcher/internal/console"
 )
 
 // Load file from http(s) or local disk
@@ -65,7 +66,7 @@ func DownloadFileFromUrl(url string, dest string, showProgress bool) error {
 	// Fix issues when downloading files from Github, now it requires a User-Agent header
 	req.HTTPRequest.Header.Set("User-Agent", "Command Launcher")
 
-	fmt.Println("Initializing download...")
+	fmt.Fprintln(os.Stderr, "Initializing download...")
 	resp := client.Do(req)
 
 	if showProgress {
@@ -75,13 +76,13 @@ func DownloadFileFromUrl(url string, dest string, showProgress bool) error {
 		for !resp.IsComplete() {
 			select {
 			case <-t.C:
-				fmt.Printf("\033[1Atransferred %.2f%%\033[K\n", 100*resp.Progress())
+				console.Fprogress(os.Stderr, "transferred %.2f%%", 100*resp.Progress())
 			default:
 			}
 		}
 
 		// clear progress line
-		fmt.Printf("\033[1A\033[K")
+		console.ClearPreviousLine(os.Stderr)
 	}
 
 	// check for errors

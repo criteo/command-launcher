@@ -182,7 +182,7 @@ $CL_PATH config command_update_enabled true
 rm -rf $CL_HOME/extra1/command-launcher-demo
 
 echo "* should install new package"
-RESULT=$($CL_PATH)
+RESULT=$($CL_PATH 2>&1)
 echo "$RESULT" | grep -q "Update done! Enjoy coding!"
 if [ $? -eq 0 ]; then
   echo "OK"
@@ -203,7 +203,7 @@ fi
 # now remove the package again, should not install the package again
 rm -rf $CL_HOME/extra1/command-launcher-demo
 echo "* should NOT install new package"
-RESULT=$($CL_PATH)
+RESULT=$($CL_PATH 2>&1)
 echo "$RESULT" | grep -q "Update done! Enjoy coding!"
 if [ $? -eq 0 ]; then
   echo "KO - should NOT install new package"
