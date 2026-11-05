@@ -99,7 +99,8 @@ func TestAnsiDecidedPerWriter(t *testing.T) {
 		Fprompt(w, "question")
 		Fprogress(w, "transferred %d%%", 50)
 		ClearPreviousLine(w)
+		ShowCursor(w)
 	}
-	require.Equal(t, "\x1b[35mquestion\n\x1b[0m\x1b[1Atransferred 50%\x1b[K\n\x1b[1A\x1b[K", term.String())
+	require.Equal(t, "\x1b[35mquestion\n\x1b[0m\x1b[1Atransferred 50%\x1b[K\n\x1b[1A\x1b[K\x1b[?25h", term.String())
 	require.Equal(t, "questiontransferred 50%\n", plain.String())
 }
