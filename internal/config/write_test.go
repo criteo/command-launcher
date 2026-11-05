@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -235,4 +236,75 @@ func TestSafeWriteConfig_RemovesOrphanTempFilesWhenFileExists(t *testing.T) {
 	require.NoError(t, writeConfigFile(newTestViper(nil), cfg, filepath.Join(dir, configLockFileName), true))
 
 	assert.NoFileExists(t, orphan)
+}
+
+func skipOnWindows(t *testing.T) {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("POSIX symlinks/permissions")
+	}
+}
+
+func TestWriteConfig_FollowsSymlink(t *testing.T) {
+	skipOnWindows(t)
+	dir := t.TempDir()
+	realDir := filepath.Join(dir, "dotfiles")
+	require.NoError(t, os.Mkdir(realDir, 0755))
+	realCfg := filepath.Join(realDir, "config.json")
+	require.NoError(t, os.WriteFile(realCfg, []byte(`{"log_level":"fatal"}`), 0644))
+	link := filepath.Join(dir, "config.json")
+	require.NoError(t, os.Symlink(realCfg, link))
+
+	require.NoError(t, writeConfigFile(newTestViper(map[string]any{"log_level": "debug"}), link, filepath.Join(dir, configLockFileName), false))
+
+	fi, err := os.Lstat(link)
+	require.NoError(t, err)
+	assert.NotZero(t, fi.Mode()&os.ModeSymlink, "config symlink was replaced by a regular file")
+	assert.Equal(t, "debug", readJSON(t, realCfg)["log_level"])
+	assert.Empty(t, tempFiles(t, dir))
+	assert.Empty(t, tempFiles(t, realDir))
+}
+
+func TestWriteConfig_PreservesMode(t *testing.T) {
+	skipOnWindows(t)
+	dir := t.TempDir()
+	cfg := filepath.Join(dir, "config.json")
+	require.NoError(t, os.WriteFile(cfg, []byte(`{}`), 0600))
+	require.NoError(t, os.Chmod(cfg, 0640))
+
+	require.NoError(t, writeConfigFile(newTestViper(nil), cfg, filepath.Join(dir, configLockFileName), false))
+
+	fi, err := os.Stat(cfg)
+	require.NoError(t, err)
+	assert.Equal(t, os.FileMode(0640), fi.Mode().Perm())
+}
+
+func TestWriteConfig_NewFileMode(t *testing.T) {
+	skipOnWindows(t)
+	dir := t.TempDir()
+	cfg := filepath.Join(dir, "config.json")
+
+	require.NoError(t, writeConfigFile(newTestViper(nil), cfg, filepath.Join(dir, configLockFileName), true))
+
+	fi, err := os.Stat(cfg)
+	require.NoError(t, err)
+	assert.Equal(t, os.FileMode(0644), fi.Mode().Perm())
+}
+
+func TestWriteConfig_ReadOnlyDirFallsBackToInPlace(t *testing.T) {
+	skipOnWindows(t)
+	if os.Geteuid() == 0 {
+		t.Skip("root ignores directory permissions")
+	}
+	dir := t.TempDir()
+	cfgDir := filepath.Join(dir, "shared")
+	require.NoError(t, os.Mkdir(cfgDir, 0755))
+	cfg := filepath.Join(cfgDir, "config.json")
+	require.NoError(t, os.WriteFile(cfg, []byte(`{"log_level":"fatal"}`), 0644))
+	require.NoError(t, os.Chmod(cfgDir, 0555))
+	t.Cleanup(func() { os.Chmod(cfgDir, 0755) })
+
+	require.NoError(t, writeConfigFile(newTestViper(map[string]any{"log_level": "debug"}), cfg, filepath.Join(dir, configLockFileName), false))
+
+	assert.Equal(t, "debug", readJSON(t, cfg)["log_level"])
 }

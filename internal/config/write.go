@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"time"
@@ -19,6 +20,8 @@ import (
 // SIGKILL), so it cannot go stale, while deleting it could let two processes
 // lock two different inodes at the same path.
 const configLockFileName = ".config.lock"
+
+const defaultConfigFileMode fs.FileMode = 0644
 
 var (
 	lockTimeout    = 5 * time.Second
@@ -54,15 +57,32 @@ func writeConfigFile(v *viper.Viper, path string, lockPath string, onlyIfMissing
 	}
 	defer lock.Unlock()
 
-	removeOrphanTempFiles(path)
+	target := resolveSymlink(path)
+	removeOrphanTempFiles(target)
 
 	if onlyIfMissing {
-		if _, err := os.Stat(path); err == nil {
+		if _, err := os.Stat(target); err == nil {
 			return nil
 		}
 	}
 
-	return replaceFile(v, path)
+	return replaceFile(v, target)
+}
+
+// resolveSymlink returns the file a symlinked config points to, so that the
+// rename replaces that file instead of turning the link into a regular file
+// (dotfile managers commonly symlink the config).
+func resolveSymlink(path string) string {
+	fi, err := os.Lstat(path)
+	if err != nil || fi.Mode()&os.ModeSymlink == 0 {
+		return path
+	}
+	resolved, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		log.Debugf("cannot resolve configuration symlink %s: %v", path, err)
+		return path
+	}
+	return resolved
 }
 
 func lockConfig(lockPath string) (*flock.Flock, error) {
@@ -107,8 +127,20 @@ func removeOrphanTempFiles(target string) {
 // replaceFile writes the configuration to a temp file in the target's
 // directory (rename is only atomic within a filesystem), flushes it to disk
 // and renames it over the target. The target is left untouched on any error.
+// The existing file's mode (and owner, when running as root) is kept.
 func replaceFile(v *viper.Viper, target string) (err error) {
+	mode := defaultConfigFileMode
+	existing, statErr := os.Stat(target)
+	if statErr == nil {
+		mode = existing.Mode().Perm()
+	}
+
 	tmp, err := os.CreateTemp(filepath.Dir(target), tempFilePattern(target))
+	if errors.Is(err, fs.ErrPermission) {
+		// the directory is read-only but the file itself may be writable
+		log.Debugf("cannot create a temporary file next to %s (%v), writing it in place", target, err)
+		return writeInPlace(v, target, mode)
+	}
 	if err != nil {
 		return fmt.Errorf("cannot create temporary configuration file: %w", err)
 	}
@@ -123,6 +155,15 @@ func replaceFile(v *viper.Viper, target string) (err error) {
 	if err = v.WriteConfigTo(tmp); err != nil {
 		return fmt.Errorf("cannot write configuration: %w", err)
 	}
+	// CreateTemp creates the file with mode 0600
+	if err = tmp.Chmod(mode); err != nil {
+		return fmt.Errorf("cannot set configuration file mode: %w", err)
+	}
+	if existing != nil {
+		if err = chownLike(tmp, existing); err != nil {
+			return fmt.Errorf("cannot set configuration file owner: %w", err)
+		}
+	}
 	if err = tmp.Sync(); err != nil {
 		return fmt.Errorf("cannot flush configuration: %w", err)
 	}
@@ -133,4 +174,23 @@ func replaceFile(v *viper.Viper, target string) (err error) {
 		return fmt.Errorf("cannot replace configuration file %s: %w", target, err)
 	}
 	return nil
+}
+
+// writeInPlace is the fallback when no temp file can be created next to the
+// target: it truncates and rewrites the file like viper does. Concurrent
+// writers are still serialized by the lock, but a reader may see a partial file.
+func writeInPlace(v *viper.Viper, target string, mode fs.FileMode) error {
+	f, err := os.OpenFile(target, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, mode)
+	if err != nil {
+		return fmt.Errorf("cannot open configuration file: %w", err)
+	}
+	defer f.Close()
+
+	if err := v.WriteConfigTo(f); err != nil {
+		return fmt.Errorf("cannot write configuration: %w", err)
+	}
+	if err := f.Sync(); err != nil {
+		return fmt.Errorf("cannot flush configuration: %w", err)
+	}
+	return f.Close()
 }
