@@ -53,16 +53,24 @@ fi
 echo "> test concurrent config read and write"
 # writers replace config.json while readers load it: no process may see a
 # partial file ("Cannot read configuration file") and the file must stay valid
+CONCURRENT_LOGS=$OUTPUT_DIR/concurrent-config
+rm -rf $CONCURRENT_LOGS && mkdir -p $CONCURRENT_LOGS
 PIDS=()
+NAMES=()
 for i in $(seq 50); do
-  $OUTPUT_DIR/cl config log_level debug > /dev/null 2>&1 &
+  $OUTPUT_DIR/cl config log_level debug > /dev/null 2> $CONCURRENT_LOGS/write-$i.err &
   PIDS+=($!)
-  $OUTPUT_DIR/cl config --json > /dev/null 2>&1 &
+  NAMES+=(write-$i)
+  $OUTPUT_DIR/cl config --json > /dev/null 2> $CONCURRENT_LOGS/read-$i.err &
   PIDS+=($!)
+  NAMES+=(read-$i)
 done
 FAILED=0
-for pid in "${PIDS[@]}"; do
-  wait $pid || FAILED=$((FAILED+1))
+for idx in "${!PIDS[@]}"; do
+  if ! wait ${PIDS[$idx]}; then
+    FAILED=$((FAILED+1))
+    echo "  ${NAMES[$idx]} failed: $(cat $CONCURRENT_LOGS/${NAMES[$idx]}.err)"
+  fi
 done
 if [ $FAILED -eq 0 ]; then
   echo "OK"
