@@ -1,0 +1,15 @@
+{
+    "pkgName": "fake-forced-setup-nohook",
+    "version": "1.0.0",
+    "options": {
+        "forceSetupOnInstall": true
+    },
+    "cmds": [
+	    {
+            "name": "hello",
+            "type": "executable",
+            "executable": "echo",
+            "args": [ "hello" ]
+        }
+    ]
+}
