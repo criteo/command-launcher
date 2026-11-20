@@ -20,5 +20,12 @@
     "checksum": "34aea3ed1ccdfca85a5e52ff4edf42e0abe5f15fdd3453af4f09bb80f25bb6df",
     "startPartition": 0,
     "endPartition": 9
+  },
+  {
+    "name": "fake-wrong-setup",
+    "version": "1.0.0",
+    "checksum": "f33b76ac452dbe82776983ba13bc16762de02370686e917bd50c15585ad6f91c",
+    "startPartition": 21,
+    "endPartition": 29
   }
 ]

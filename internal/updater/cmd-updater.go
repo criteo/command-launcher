@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/criteo/command-launcher/internal/console"
+	"github.com/criteo/command-launcher/internal/context"
 	"github.com/criteo/command-launcher/internal/helper"
 	"github.com/criteo/command-launcher/internal/remote"
 	"github.com/criteo/command-launcher/internal/repository"
@@ -88,7 +89,6 @@ func (u *CmdUpdater) Update() error {
 			console.Highlight("- remove deprecated package '%s', it will not be available from now on\n", pkg)
 			if err = repo.Uninstall(pkg); err != nil {
 				errPool = append(errPool, err)
-				fmt.Printf("Cannot uninstall the package %s: %v\n", pkg, err)
 			}
 		}
 	}
@@ -377,12 +377,23 @@ func (u *CmdUpdater) UpdateSyncTimestamp() error {
 
 // pausePackageOnFailure pauses a package after an installation failure
 func (u *CmdUpdater) pausePackageOnFailure(pkgName string) {
-	if err := u.LocalRepo.PausePackageUpdate(pkgName); err != nil {
+	PausePackageOnFailure(u.LocalRepo, pkgName)
+}
+
+// PausePackageOnFailure pauses further update/install attempts for a package after a failure,
+// so subsequent runs skip it until an explicit retry (`<app> update --package`). Shared with the
+// initial-install path (see backend.PackageSource.InitialInstallCommands), which hits the same
+// fetch/verify failure modes as the regular Update().
+func PausePackageOnFailure(repo repository.PackageRepository, pkgName string) {
+	if err := repo.PausePackageUpdate(pkgName); err != nil {
 		console.Warn("Failed to pause update for package %s: %v", pkgName, err)
-	} else {
-		console.Reminder(
-			"Package %s has been paused due to installation failure, explicitly run `update package` to retry installation.",
-			pkgName,
-		)
+		return
 	}
+	appCtx, _ := context.AppContext()
+	appName := appCtx.AppName()
+	console.Reminder(
+		"Package %s has been paused due to installation failure, explicitly run `%s update --package` to retry installation.",
+		pkgName,
+		appName,
+	)
 }
