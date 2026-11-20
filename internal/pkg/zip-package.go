@@ -9,10 +9,8 @@ import (
 	"path/filepath"
 
 	"github.com/criteo/command-launcher/internal/command"
-	"github.com/criteo/command-launcher/internal/config"
 	"github.com/criteo/command-launcher/internal/console"
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 )
 
 type zipPackage struct {
@@ -118,7 +116,7 @@ func (pkg *zipPackage) installFromZip(targetDir string) error {
 	}
 
 	// Run setup hook if enabled
-	if viper.GetBool(config.ENABLE_PACKAGE_SETUP_HOOK_KEY) {
+	if shouldRunSetupOnInstall(pkg.Manifest) {
 		if err := pkg.RunSetup(targetDir); err != nil {
 			return err
 		}

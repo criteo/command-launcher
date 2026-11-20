@@ -78,17 +78,17 @@ func (u *CmdUpdater) Update() error {
 		return err
 	}
 
-	fmt.Println("\n-----------------------------------")
-	fmt.Println("Some commands require update, please wait...")
+	fmt.Fprintln(os.Stderr, "\n-----------------------------------")
+	fmt.Fprintln(os.Stderr, "Some commands require update, please wait...")
 	repo := u.LocalRepo
 
 	// first delete deprecated packages
 	if u.toBeDeleted != nil && len(u.toBeDeleted) > 0 {
 		for pkg := range u.toBeDeleted {
-			console.Highlight("- remove deprecated package '%s', it will not be available from now on\n", pkg)
+			console.Fhighlight(os.Stderr, "- remove deprecated package '%s', it will not be available from now on\n", pkg)
 			if err = repo.Uninstall(pkg); err != nil {
 				errPool = append(errPool, err)
-				fmt.Printf("Cannot uninstall the package %s: %v\n", pkg, err)
+				fmt.Fprintf(os.Stderr, "Cannot uninstall the package %s: %v\n", pkg, err)
 			}
 		}
 	}
@@ -105,23 +105,23 @@ func (u *CmdUpdater) Update() error {
 			if remote.IsVersionSmaller(remoteVersion, localPkg.Version()) {
 				op = "downgrade"
 			}
-			console.Highlight("- %s package '%s' from version %s to version %s ...\n", op, pkgName, localPkg.Version(), remoteVersion)
+			console.Fhighlight(os.Stderr, "- %s package '%s' from version %s to version %s ...\n", op, pkgName, localPkg.Version(), remoteVersion)
 			pkg, err := remoteRepo.Package(pkgName, remoteVersion)
 			if err != nil {
 				errPool = append(errPool, err)
-				fmt.Printf("Cannot get the package %s: %v\n", pkgName, err)
+				fmt.Fprintf(os.Stderr, "Cannot get the package %s: %v\n", pkgName, err)
 				u.pausePackageOnFailure(pkgName)
 				continue
 			}
 			if ok, err := remoteRepo.Verify(pkg, u.VerifyChecksum, u.VerifySignature); !ok || err != nil {
 				errPool = append(errPool, err)
-				fmt.Printf("Failed to verify package %s, skip it: %v\n", pkgName, err)
+				fmt.Fprintf(os.Stderr, "Failed to verify package %s, skip it: %v\n", pkgName, err)
 				u.pausePackageOnFailure(pkgName)
 				continue
 			}
 			if err = repo.Update(pkg); err != nil {
 				errPool = append(errPool, err)
-				fmt.Printf("Cannot update the package %s: %v\n", pkgName, err)
+				fmt.Fprintf(os.Stderr, "Cannot update the package %s: %v\n", pkgName, err)
 				// Note: repo.Update() calls repo.Install() which already handles pausing on failure
 			}
 		}
@@ -132,23 +132,23 @@ func (u *CmdUpdater) Update() error {
 		for pkgName, remoteVersion := range u.toBeInstalled {
 			_, err = repo.Package(pkgName)
 			if err != nil { // only install package that doesn't exist locally
-				console.Highlight("- install new package '%s'\n", pkgName)
+				console.Fhighlight(os.Stderr, "- install new package '%s'\n", pkgName)
 				pkg, err := remoteRepo.Package(pkgName, remoteVersion)
 				if err != nil {
 					errPool = append(errPool, err)
-					fmt.Printf("Cannot get the package %s: %v\n", pkgName, err)
+					fmt.Fprintf(os.Stderr, "Cannot get the package %s: %v\n", pkgName, err)
 					u.pausePackageOnFailure(pkgName)
 					continue
 				}
 				if ok, err := remoteRepo.Verify(pkg, u.VerifyChecksum, u.VerifySignature); !ok || err != nil {
 					errPool = append(errPool, err)
-					fmt.Printf("Failed to verify package %s, skip it: %v\n", pkgName, err)
+					fmt.Fprintf(os.Stderr, "Failed to verify package %s, skip it: %v\n", pkgName, err)
 					u.pausePackageOnFailure(pkgName)
 					continue
 				}
 				if err = repo.Install(pkg); err != nil {
 					errPool = append(errPool, err)
-					fmt.Printf("Cannot install the package %s: %v\n", pkgName, err)
+					fmt.Fprintf(os.Stderr, "Cannot install the package %s: %v\n", pkgName, err)
 					// Note: repo.Install() already handles pausing on failure
 				}
 			} else {
@@ -165,7 +165,7 @@ func (u *CmdUpdater) Update() error {
 			log.Error(err)
 		}
 
-		fmt.Println("Update done! Enjoy coding!")
+		fmt.Fprintln(os.Stderr, "Update done! Enjoy coding!")
 		return nil
 	} else {
 		return errPool[0]
