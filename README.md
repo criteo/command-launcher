@@ -53,7 +53,16 @@ Developers run command launcher to access these commands, for example, you have 
 
 Pre-built binary can be downloaded from the release page. Unzip it, copy the binary into your PATH.
 
-The pre-built binary is named `cdt` (Criteo Dev Toolkit), if you want to use a different name, you can pass your prefered name in the build. See build section below.
+The pre-built binary is named `cdt` (Criteo Dev Toolkit). To use a different name, just copy or rename the binary — the app name is derived from the binary's file name at startup:
+
+```
+cp cdt myapp
+myapp config app_long_name "My App"
+```
+
+Symlinks are treated as aliases (they resolve to the original binary name), while copies create a separate instance with its own config directory (`~/.myapp/`).
+
+You can also set the name at build time if you prefer. See the build section below.
 
 ## Contribute
 
