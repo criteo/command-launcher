@@ -1,0 +1,15 @@
+{
+    "pkgName": "fake-forced-setup",
+    "version": "1.0.0",
+    "options": {
+        "forceSetupOnInstall": true
+    },
+    "cmds": [
+	    {
+            "name": "__setup__",
+            "type": "system",
+            "executable": "echo",
+            "args": [ "setup" ]
+        }
+    ]
+}
