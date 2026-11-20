@@ -39,7 +39,7 @@ func IsWorkspaceConsentDenied(workspaceDir string) bool {
 // On denial, saves denial with the same expiration.
 func RequestWorkspaceConsent(workspaceDir string) bool {
 	fmt.Printf("This command is provided by workspace: %s\n", workspaceDir)
-	console.Reminder("Do you trust and want to run commands from this workspace? [yN]")
+	console.Prompt("Do you trust and want to run commands from this workspace? [yN]")
 
 	var resp int
 	if _, err := fmt.Scanf("%c", &resp); err != nil || (resp != 'y' && resp != 'Y') {
