@@ -47,11 +47,17 @@ jobs:
 
     - name: generate vars
       id: vars
+      shell: bash
       run: |
-        echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
-        echo "::set-output name=arch::${{matrix.arch}}"
-        echo "::set-output name=os::$(go run test/get-os.go)"
-        echo "::set-output name=ext::$(go run test/get-os.go extension)"
+        sha_short=$(git rev-parse --short HEAD)
+        os=$(go run test/get-os.go)
+        ext=$(go run test/get-os.go extension)
+        {
+          echo "sha_short=$sha_short"
+          echo "arch=${{matrix.arch}}"
+          echo "os=$os"
+          echo "ext=$ext"
+        } >> "$GITHUB_OUTPUT"
 
     - name: Build
       env:
