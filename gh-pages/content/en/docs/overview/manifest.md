@@ -21,11 +21,13 @@ A `manifest.mf` file is a file located at the root of your Command Launcher pack
 
 ## Format of manifest.mf
 
-The `manifest.mf` file can be in either JSON or YAML format. It contains three top-level keys:
+The `manifest.mf` file can be in either JSON or YAML format. It contains the following top-level keys:
 
 - `pkgName`: a unique name of your package
 - `version`: the version of your package
 - `cmds`: a list of command definitions, see the _Command Definition_ section
+- `options` (optional): package level options (available in 1.17+)
+  - `forceSetupOnInstall` (default `false`): always run the [`__setup__` hook](#__setup__) when the package is installed or updated, even if `enable_package_setup_hook` is `false`
 
 Here is an example
 
@@ -556,6 +558,25 @@ Besides the [system command](../system-package/#system-commands) defined in a [s
 When a package is installed, sometimes it requires some setup to make it work properly. For example, a command written in javascript could require a `npm install` to install all of its dependencies. You can define a system command `__setup__` in your package as a normal command, with type `system`, it will be called when the package is installed. (You can disable this behavior, by turning the configuration `enable_package_setup_hook` to `false`). You can also manually trigger it through the built-in command: `cola package setup`
 
 > Make sure the setup hook is _idempotent_, when a new version is installed the setup hook will be called again.
+
+Once the setup hook has run successfully, Command Launcher writes a `.setup` marker file in the package folder. The marker is a small JSON document (`completedAt`, `packageVersion`) and is removed together with the package folder when the package is uninstalled or updated. Remove it manually to force the setup to run again. The built-in `cola package inspect [package_name]` shows the setup state (`done`, `pending`, or `n/a` when the package has no `__setup__` hook).
+
+**Lazy setup:** when the configuration `enable_lazy_setup` is `true` (default `false`), Command Launcher runs the `__setup__` hook of a package right before the first command of that package is called, if the setup has not been done yet (no `.setup` marker). This is useful when the setup hook is not run at installation time (`enable_package_setup_hook` is `false` by default), or when the package is installed by simply dropping it in the dropin folder. `enable_lazy_setup` is independent from `enable_package_setup_hook`, which only controls the setup at installation time; packages without a `__setup__` hook are not affected.
+
+**Forced setup:** set `options.forceSetupOnInstall` to `true` in the manifest to run the `__setup__` hook every time the package is installed or updated, whatever the `enable_package_setup_hook` and `enable_lazy_setup` configurations. Use it when the setup must not be delayed, for example to run security checks on each new version. A failure of the forced setup hook fails the installation, like any install-time setup. The option is ignored, with a warning, when the package has no `__setup__` hook.
+
+```yaml
+pkgName: package-demo
+version: 1.0.0
+options:
+    forceSetupOnInstall: true
+cmds:
+    - name: __setup__
+      type: system
+      executable: "{{.PackageDir}}/hooks/setup-hook"
+```
+
+> The lazy setup hook runs in the same terminal as the command: its output is mixed with the command output, so keep the hook quiet if the command output is meant to be parsed. The hook only receives the process environment (not the `COLA_*` variables), use `{{.PackageDir}}` to locate the package folder. For [workspace packages](../workspace), add `.setup` to your `.gitignore`.
 
 **Example:**
 

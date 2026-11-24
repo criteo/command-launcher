@@ -96,6 +96,14 @@ type PackageManifest interface {
 	Version() string
 
 	Commands() []Command
+
+	Options() PackageOptions
+}
+
+// package level options, defined under the "options" key of the manifest
+type PackageOptions struct {
+	// run the __setup__ hook at install time, even when ENABLE_PACKAGE_SETUP_HOOK is false
+	ForceSetupOnInstall bool `json:"forceSetupOnInstall" yaml:"forceSetupOnInstall"`
 }
 
 type Package interface {

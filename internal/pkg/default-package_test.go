@@ -26,6 +26,16 @@ func TestReadManifest(t *testing.T) {
 	assert.Equal(t, 2, len(cmds[0].Arguments()))
 }
 
+func TestHasSetupHook(t *testing.T) {
+	withHook, err := CreateFolderPackage("assets/fake-good-setup")
+	assert.Nil(t, err)
+	assert.True(t, HasSetupHook(withHook))
+
+	withoutHook, err := CreateFolderPackage("assets/folder-package")
+	assert.Nil(t, err)
+	assert.False(t, HasSetupHook(withoutHook))
+}
+
 func TestReadManifestInYaml(t *testing.T) {
 	file, _ := os.Open("assets/fake-yaml.mf")
 	mf, err := ReadManifest(file)
