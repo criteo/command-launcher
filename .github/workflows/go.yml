@@ -98,11 +98,12 @@ jobs:
         mv build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}} build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{github.ref_name}}${{steps.vars.outputs.ext}}
         mv build/cola_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}} build/cola_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{github.ref_name}}${{steps.vars.outputs.ext}}
 
-    - name: Release
-      uses: softprops/action-gh-release@v1
+    - name: Upload release binaries
+      uses: actions/upload-artifact@v7
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: |
+        name: release-${{steps.vars.outputs.os}}-${{matrix.arch}}
+        path: |
           build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{github.ref_name}}${{steps.vars.outputs.ext}}
           build/cola_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{github.ref_name}}${{steps.vars.outputs.ext}}
 
@@ -163,18 +164,15 @@ jobs:
         run: ls -R
         working-directory: output
 
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: output/cdt_${{github.ref_name}}.zip
-
-
   update-latest-version:
     needs: [ packaging ]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Generate latest version file
         run: |
@@ -190,11 +188,30 @@ jobs:
           name: latest.yaml
           path: output/latest.yaml
 
-      - name: Release & Update the version index
-        uses: softprops/action-gh-release@v1
+      - name: Download release binaries
         if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/download-artifact@v8
         with:
-          files: output/latest.yaml
+          pattern: release-*
+          merge-multiple: true
+          path: dist
 
+      - name: Download all-in-one package
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/download-artifact@v8
+        with:
+          name: all-in-one.zip
+          path: dist
 
+      - name: Display release files
+        if: startsWith(github.ref, 'refs/tags/')
+        run: ls -l dist output/latest.yaml
 
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v3.0.4
+        with:
+          fail_on_unmatched_files: true
+          files: |
+            dist/*
+            output/latest.yaml
