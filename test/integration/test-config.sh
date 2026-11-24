@@ -49,3 +49,55 @@ else
   echo "KO - incorrect config value"
   exit 1
 fi
+
+echo "> test concurrent config read and write"
+# writers replace config.json while readers load it: no process may see a
+# partial file ("Cannot read configuration file") and the file must stay valid
+CONCURRENT_LOGS=$OUTPUT_DIR/concurrent-config
+rm -rf $CONCURRENT_LOGS && mkdir -p $CONCURRENT_LOGS
+PIDS=()
+NAMES=()
+for i in $(seq 50); do
+  $OUTPUT_DIR/cl config log_level debug > /dev/null 2> $CONCURRENT_LOGS/write-$i.err &
+  PIDS+=($!)
+  NAMES+=(write-$i)
+  $OUTPUT_DIR/cl config --json > /dev/null 2> $CONCURRENT_LOGS/read-$i.err &
+  PIDS+=($!)
+  NAMES+=(read-$i)
+done
+FAILED=0
+for idx in "${!PIDS[@]}"; do
+  if ! wait ${PIDS[$idx]}; then
+    FAILED=$((FAILED+1))
+    echo "  ${NAMES[$idx]} failed: $(cat $CONCURRENT_LOGS/${NAMES[$idx]}.err)"
+  fi
+done
+if [ $FAILED -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - $FAILED of ${#PIDS[@]} concurrent config commands failed"
+  exit 1
+fi
+
+if jq . $CL_HOME/config.json > /dev/null; then
+  echo "OK"
+else
+  echo "KO - config.json is not valid JSON after concurrent writes"
+  exit 1
+fi
+
+RESULT=$($OUTPUT_DIR/cl config log_level)
+if [ "$RESULT" == "debug" ]; then
+  echo "OK"
+else
+  echo "KO - incorrect config value after concurrent writes: $RESULT"
+  exit 1
+fi
+
+LEFTOVER=$(ls -a $CL_HOME | grep -c '\.tmp$')
+if [ $LEFTOVER -eq 0 ]; then
+  echo "OK"
+else
+  echo "KO - $LEFTOVER temporary config files left in $CL_HOME"
+  exit 1
+fi

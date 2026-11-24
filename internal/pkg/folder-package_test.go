@@ -85,3 +85,57 @@ func TestFolder_InstallToWithSetupSuccess(t *testing.T) {
 	_, err = os.Stat(filepath.Join(pkgDir, SETUP_MARKER_FILE))
 	assert.Nil(t, err)
 }
+
+func TestFolder_InstallToWithSetupHookDisabled(t *testing.T) {
+	p, err := CreateFolderPackage("assets/fake-good-setup")
+	assert.NotNil(t, p)
+	assert.Nil(t, err)
+
+	targetDir := t.TempDir()
+
+	var previousSetupHook = viper.GetBool(config.ENABLE_PACKAGE_SETUP_HOOK_KEY)
+	defer viper.Set(config.ENABLE_PACKAGE_SETUP_HOOK_KEY, previousSetupHook)
+	viper.Set(config.ENABLE_PACKAGE_SETUP_HOOK_KEY, false)
+
+	mf, err := p.InstallTo(targetDir)
+	assert.Nil(t, err)
+	assert.NotNil(t, mf)
+
+	assert.False(t, IsSetupDone(filepath.Join(targetDir, p.Name())))
+}
+
+func TestFolder_InstallToWithForcedSetup(t *testing.T) {
+	p, err := CreateFolderPackage("assets/fake-forced-setup")
+	assert.NotNil(t, p)
+	assert.Nil(t, err)
+
+	targetDir := t.TempDir()
+
+	var previousSetupHook = viper.GetBool(config.ENABLE_PACKAGE_SETUP_HOOK_KEY)
+	defer viper.Set(config.ENABLE_PACKAGE_SETUP_HOOK_KEY, previousSetupHook)
+	viper.Set(config.ENABLE_PACKAGE_SETUP_HOOK_KEY, false)
+
+	mf, err := p.InstallTo(targetDir)
+	assert.Nil(t, err)
+	assert.NotNil(t, mf)
+
+	assert.True(t, IsSetupDone(filepath.Join(targetDir, p.Name())))
+}
+
+func TestFolder_InstallToWithForcedSetupWithoutHook(t *testing.T) {
+	p, err := CreateFolderPackage("assets/fake-forced-setup-nohook")
+	assert.NotNil(t, p)
+	assert.Nil(t, err)
+
+	targetDir := t.TempDir()
+
+	var previousSetupHook = viper.GetBool(config.ENABLE_PACKAGE_SETUP_HOOK_KEY)
+	defer viper.Set(config.ENABLE_PACKAGE_SETUP_HOOK_KEY, previousSetupHook)
+	viper.Set(config.ENABLE_PACKAGE_SETUP_HOOK_KEY, false)
+
+	mf, err := p.InstallTo(targetDir)
+	assert.Nil(t, err)
+	assert.NotNil(t, mf)
+
+	assert.False(t, IsSetupDone(filepath.Join(targetDir, p.Name())))
+}

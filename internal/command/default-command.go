@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/criteo/command-launcher/internal/console"
 	"github.com/criteo/command-launcher/internal/helper"
 	log "github.com/sirupsen/logrus"
 )
@@ -170,7 +171,7 @@ func (cmd *DefaultCommand) Execute(envVars []string, args ...string) (int, error
 
 	// make sure to always restore the terminal cursor as some commands can leave
 	// the terminal in a funky state
-	print("\033[?25h")
+	console.ShowCursor(os.Stderr)
 
 	if err != nil {
 		log.Debug("Command execution err: ", err)
