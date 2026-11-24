@@ -1,3 +1,18 @@
+1.17.0:
+  version: 1.17.0
+  releaseNotes: |
+    # ✨ New Features
+      * Packages can force their `__setup__` hook to run at every install and update with the new `options.forceSetupOnInstall` manifest field, even when `enable_package_setup_hook` is `false`. Warning: this option is reserved for critical packages that must run specific security checks as soon as a new version is installed.
+    # 🐛 Bug Fixes
+      * Fix a race condition on the configuration file: running several cdt commands at the same time could fail or corrupt the configuration. Configuration changes are now written one at a time and saved in a single step, so other commands always read a complete configuration, on Linux, macOS and Windows.
+      * Skip the install-time setup of packages without a `__setup__` hook, instead of logging a warning and writing a useless `.setup` marker.
+      * Only restore the cursor when stderr is a terminal, so redirected output and CI logs no longer get a stray escape code.
+      * Automatic update output (update banners, download progress, install diagnostics) and success/warning/error messages are now written to stderr, so captured command output stays clean. Scripts that parse these messages from stdout must read stderr instead.
+    # 📝 Documentation Updates
+      * Document the manifest `options` key and `forceSetupOnInstall`.
+  startPartition: 0
+  endPartition: 9
+
 1.16.0:
   version: 1.16.0
   releaseNotes: |
