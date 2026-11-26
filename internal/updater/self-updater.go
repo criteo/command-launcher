@@ -89,7 +89,7 @@ func (u *SelfUpdater) checkSelfUpdate() <-chan bool {
 	go func() {
 		data, err := helper.LoadFile(u.LatestVersionUrl)
 		if err != nil {
-			log.Infof(err.Error())
+			log.Info(err.Error())
 			ch <- false
 			return
 		}
@@ -98,7 +98,7 @@ func (u *SelfUpdater) checkSelfUpdate() <-chan bool {
 		// YAML is a supper set of json, should work with JSON as well.
 		err = yaml.Unmarshal(data, &u.latestVersion)
 		if err != nil {
-			log.Errorf(err.Error())
+			log.Error(err.Error())
 			ch <- false
 			return
 		}
