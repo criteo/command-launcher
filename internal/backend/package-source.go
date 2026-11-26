@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/criteo/command-launcher/internal/console"
 	"github.com/criteo/command-launcher/internal/remote"
 	"github.com/criteo/command-launcher/internal/repository"
 	"github.com/criteo/command-launcher/internal/updater"
@@ -88,6 +89,10 @@ func (src PackageSource) IsInstalled() bool {
 
 func (src *PackageSource) InitialInstallCommands(user *user.User, enableCI bool, lockFilePath string, verifyChecksum bool, verifySignature bool) error {
 	remote := remote.CreateRemoteRepository(src.RemoteBaseURL)
+	if !remote.IsRemoteURLValid() {
+		log.Warnf("remote URL \"%s\" is not valid, skip initial installation", src.RemoteBaseURL)
+		return nil
+	}
 	errors := make([]string, 0)
 
 	// check locked packages if ci is enabled
@@ -101,6 +106,13 @@ func (src *PackageSource) InitialInstallCommands(user *user.User, enableCI bool,
 
 	if pkgs, err := remote.PackageNames(); err == nil {
 		for _, pkgName := range pkgs {
+			if paused, err := src.Repo.IsPackageUpdatePaused(pkgName); err != nil {
+				log.Errorf("Cannot check if package %s is paused: %v", pkgName, err)
+			} else if paused {
+				log.Infof("Skipping paused package %s", pkgName)
+				continue
+			}
+
 			pkgVersion := "unspecified"
 			if lockedVersion, ok := lockedPackages[pkgName]; ok {
 				pkgVersion = lockedVersion
@@ -108,7 +120,8 @@ func (src *PackageSource) InitialInstallCommands(user *user.User, enableCI bool,
 				latest, err := remote.LatestPackageInfo(pkgName)
 				if err != nil {
 					log.Error(err)
-					errors = append(errors, fmt.Sprintf("cannot get the latest version of the package %s: %v", latest.Name, err))
+					errors = append(errors, fmt.Sprintf("cannot get the latest version of the package %s: %v", pkgName, err))
+					updater.PausePackageOnFailure(src.Repo, pkgName)
 					continue
 				}
 				if !user.InPartition(latest.StartPartition, latest.EndPartition) {
@@ -118,10 +131,12 @@ func (src *PackageSource) InitialInstallCommands(user *user.User, enableCI bool,
 				pkgVersion = latest.Version
 			}
 
+			console.Highlight("- install new package '%s'\n", pkgName)
 			pkg, err := remote.Package(pkgName, pkgVersion)
 			if err != nil {
 				log.Error(err)
 				errors = append(errors, fmt.Sprintf("cannot get the package %s: %v", pkgName, err))
+				updater.PausePackageOnFailure(src.Repo, pkgName)
 				continue
 			}
 			if ok, err := remote.Verify(pkg,
@@ -130,10 +145,12 @@ func (src *PackageSource) InitialInstallCommands(user *user.User, enableCI bool,
 			); !ok || err != nil {
 				log.Error(err)
 				errors = append(errors, fmt.Sprintf("failed to verify package %s, skip it: %v", pkgName, err))
+				updater.PausePackageOnFailure(src.Repo, pkgName)
 				continue
 			}
 			err = src.Repo.Install(pkg)
 			if err != nil {
+				// no PausePackageOnFailure here: Repo.Install already pauses the package itself
 				errors = append(errors, fmt.Sprintf("cannot install the package %s: %v", pkgName, err))
 				continue
 			}
