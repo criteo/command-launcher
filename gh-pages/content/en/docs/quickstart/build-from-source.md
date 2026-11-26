@@ -28,7 +28,7 @@ To use a different name, you need to build command launcher from source and pass
 
 ## Build from source
 
-Requirements: golang >= 1.17
+Requirements: golang >= 1.27
 
 You can build the command launcher with your prefered name (in the example: `Command Launcher`, a.k.a `cola`).
 

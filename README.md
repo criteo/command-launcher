@@ -59,7 +59,7 @@ The pre-built binary is named `cdt` (Criteo Dev Toolkit), if you want to use a d
 
 ### Build
 
-Requirements: golang >= 1.17
+Requirements: golang >= 1.27
 
 You can build the command launcher with your prefered name (in the example: `Criteo Developer Toolkit`, a.k.a `cdt`).
 ```

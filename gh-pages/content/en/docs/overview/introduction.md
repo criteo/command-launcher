@@ -74,7 +74,7 @@ The two pre-built binaries are named `cola` (**Co**mmand **La**uncher) and `cdt`
 
 ## Building
 
-Requirements: golang >= 1.17
+Requirements: golang >= 1.27
 
 You can build the command launcher with your preferred name (in the example: `Criteo Developer Toolkit`, a.k.a `cdt`).
 
