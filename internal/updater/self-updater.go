@@ -9,10 +9,10 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/creativeprojects/go-selfupdate/update"
 	"github.com/criteo/command-launcher/internal/console"
 	"github.com/criteo/command-launcher/internal/helper"
 	"github.com/criteo/command-launcher/internal/user"
-	"github.com/inconshreveable/go-update"
 	log "github.com/sirupsen/logrus"
 	"go.yaml.in/yaml/v3"
 )
