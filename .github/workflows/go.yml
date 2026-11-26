@@ -31,27 +31,33 @@ jobs:
             cgo: 1
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v7
 
     - name: Set up Go
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v7
       with:
-        go-version: 1.22
+        go-version-file: go.mod
 
     - name: Set up Node
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v7
       with:
-        node-version: '16'
+        node-version: '26'
         cache: 'npm'
         cache-dependency-path: gh-pages/package-lock.json
 
     - name: generate vars
       id: vars
+      shell: bash
       run: |
-        echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
-        echo "::set-output name=arch::${{matrix.arch}}"
-        echo "::set-output name=os::$(go run test/get-os.go)"
-        echo "::set-output name=ext::$(go run test/get-os.go extension)"
+        sha_short=$(git rev-parse --short HEAD)
+        os=$(go run test/get-os.go)
+        ext=$(go run test/get-os.go extension)
+        {
+          echo "sha_short=$sha_short"
+          echo "arch=${{matrix.arch}}"
+          echo "os=$os"
+          echo "ext=$ext"
+        } >> "$GITHUB_OUTPUT"
 
     - name: Build
       env:
@@ -75,13 +81,13 @@ jobs:
       run: cd gh-pages && npm install && npm run test
 
     - name: Upload CDT
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{steps.vars.outputs.os}}-cdt-${{matrix.arch}}
         path: build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}}
 
     - name: Upload COLA
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{steps.vars.outputs.os}}-cola-${{matrix.arch}}
         path: build/cola_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}}
@@ -92,11 +98,12 @@ jobs:
         mv build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}} build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{github.ref_name}}${{steps.vars.outputs.ext}}
         mv build/cola_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{steps.vars.outputs.sha_short}} build/cola_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{github.ref_name}}${{steps.vars.outputs.ext}}
 
-    - name: Release
-      uses: softprops/action-gh-release@v1
+    - name: Upload release binaries
+      uses: actions/upload-artifact@v7
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: |
+        name: release-${{steps.vars.outputs.os}}-${{matrix.arch}}
+        path: |
           build/cdt_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{github.ref_name}}${{steps.vars.outputs.ext}}
           build/cola_${{steps.vars.outputs.os}}_${{matrix.arch}}_${{github.ref_name}}${{steps.vars.outputs.ext}}
 
@@ -105,27 +112,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download linux amd64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: linux-cdt-amd64
           path: output/linux/amd64/
       - name: Download linux arm64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: linux-cdt-arm64
           path: output/linux/arm64/
       - name: Download windows amd64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: windows-cdt-amd64
           path: output/windows/amd64/
       - name: Download darwin amd64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: darwin-cdt-amd64
           path: output/darwin/amd64/
       - name: Download darwin-arm64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: darwin-cdt-arm64
           path: output/darwin/arm64/
@@ -147,7 +154,7 @@ jobs:
           directory: output
 
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: startsWith(github.ref, 'refs/tags/')
         with:
           name: all-in-one.zip
@@ -157,18 +164,15 @@ jobs:
         run: ls -R
         working-directory: output
 
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: output/cdt_${{github.ref_name}}.zip
-
-
   update-latest-version:
     needs: [ packaging ]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Generate latest version file
         run: |
@@ -179,16 +183,35 @@ jobs:
         run: cat output/latest.yaml
 
       - name: Upload latest version index
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: latest.yaml
           path: output/latest.yaml
 
-      - name: Release & Update the version index
-        uses: softprops/action-gh-release@v1
+      - name: Download release binaries
         if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/download-artifact@v8
         with:
-          files: output/latest.yaml
+          pattern: release-*
+          merge-multiple: true
+          path: dist
 
+      - name: Download all-in-one package
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/download-artifact@v8
+        with:
+          name: all-in-one.zip
+          path: dist
 
+      - name: Display release files
+        if: startsWith(github.ref, 'refs/tags/')
+        run: ls -l dist output/latest.yaml
 
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v3.0.4
+        with:
+          fail_on_unmatched_files: true
+          files: |
+            dist/*
+            output/latest.yaml
