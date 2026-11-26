@@ -4,7 +4,7 @@ import (
 	"os"
 	"syscall"
 
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 func ReadPassword() ([]byte, error) {
@@ -13,5 +13,5 @@ func ReadPassword() ([]byte, error) {
 		return []byte(passwd), nil
 	}
 
-	return terminal.ReadPassword(int(syscall.Stdin))
+	return term.ReadPassword(int(syscall.Stdin))
 }

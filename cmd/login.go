@@ -12,7 +12,7 @@ import (
 	"github.com/criteo/command-launcher/internal/context"
 	"github.com/criteo/command-launcher/internal/helper"
 	"github.com/spf13/cobra"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -76,7 +76,7 @@ The credential will be stored in your system vault.`, appCtx.PasswordEnvVar()),
 				passwd = os.Getenv(appCtx.PasswordEnvVar())
 				if passwd == "" {
 					fmt.Printf("Please enter your password: ")
-					pass, err := terminal.ReadPassword(int(syscall.Stdin))
+					pass, err := term.ReadPassword(int(syscall.Stdin))
 					if err != nil {
 						return err
 					}
