@@ -9,12 +9,12 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/creativeprojects/go-selfupdate/update"
 	"github.com/criteo/command-launcher/internal/console"
 	"github.com/criteo/command-launcher/internal/helper"
 	"github.com/criteo/command-launcher/internal/user"
-	"github.com/inconshreveable/go-update"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
+	"go.yaml.in/yaml/v3"
 )
 
 type LatestVersion struct {
@@ -89,7 +89,7 @@ func (u *SelfUpdater) checkSelfUpdate() <-chan bool {
 	go func() {
 		data, err := helper.LoadFile(u.LatestVersionUrl)
 		if err != nil {
-			log.Infof(err.Error())
+			log.Info(err.Error())
 			ch <- false
 			return
 		}
@@ -98,7 +98,7 @@ func (u *SelfUpdater) checkSelfUpdate() <-chan bool {
 		// YAML is a supper set of json, should work with JSON as well.
 		err = yaml.Unmarshal(data, &u.latestVersion)
 		if err != nil {
-			log.Errorf(err.Error())
+			log.Error(err.Error())
 			ch <- false
 			return
 		}

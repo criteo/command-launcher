@@ -11,7 +11,7 @@ import (
 
 	"github.com/criteo/command-launcher/internal/command"
 	"github.com/criteo/command-launcher/internal/repository"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 // DefaultBackend supports multiple managed repositories, 1 dropin repository,

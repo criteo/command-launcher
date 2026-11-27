@@ -11,3 +11,14 @@ updates:
         update-types:
           - minor
           - patch
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      go-modules:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
